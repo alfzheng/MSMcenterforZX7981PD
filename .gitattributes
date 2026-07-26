@@ -1,0 +1,17 @@
+* text=auto
+
+*.sh       text eol=lf
+*.uc       text eol=lf
+*.js       text eol=lf
+*.json     text eol=lf
+*.po       text eol=lf
+Makefile   text eol=lf
+
+*.ps1      text eol=crlf
+
+*.apk      binary
+*.iso      binary
+*.qcow2    binary
+*.tar      binary
+*.gz       binary
+*.zst      binary

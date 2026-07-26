@@ -1,0 +1,259 @@
+msgid "SMS Center"
+msgstr "短信中心"
+
+msgid "Messages"
+msgstr "短信"
+
+msgid "Inbox"
+msgstr "收件箱"
+
+msgid "Outbox"
+msgstr "发件箱"
+
+msgid "Compose"
+msgstr "发送短信"
+
+msgid "Recipient"
+msgstr "收件号码"
+
+msgid "Message"
+msgstr "短信内容"
+
+msgid "Refresh modem"
+msgstr "刷新模块"
+
+msgid "Review and send"
+msgstr "确认并发送"
+
+msgid "SMS details"
+msgstr "短信详情"
+
+msgid "Confirm deletion"
+msgstr "确认删除"
+
+msgid "Delete this message from modem storage? This cannot be undone."
+msgstr "从模块存储中删除这条短信？此操作无法撤销。"
+
+msgid "SMS backend is unavailable. Mobile data service is not affected."
+msgstr "短信后端当前不可用，移动数据业务不受影响。"
+
+msgid "Read and send standard SMS messages through the modem. Messages and identifiers are masked by default."
+msgstr "通过移动通信模块接收和发送通用短信。号码和设备标识默认脱敏。"
+
+msgid "Enter a message to see encoding and segment count."
+msgstr "输入内容后显示编码和短信段数。"
+
+msgid "%s · %d unit(s) · %d segment(s)"
+msgstr "%s · %d 个编码单元 · %d 段短信"
+
+msgid "%s · %d segment(s). Your carrier may charge per segment."
+msgstr "%s · %d 段短信。运营商可能按每段计费。"
+
+msgid "Confirm SMS"
+msgstr "确认短信"
+
+msgid "Sending SMS"
+msgstr "正在发送短信"
+
+msgid "Submitted"
+msgstr "已提交网络"
+
+msgid "Diagnostics"
+msgstr "诊断"
+
+msgid "Backend"
+msgstr "后端"
+
+msgid "Transport"
+msgstr "传输方式"
+
+msgid "Encodings"
+msgstr "编码"
+
+msgid "Storage"
+msgstr "存储区"
+
+msgid "Actions"
+msgstr "操作"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Delete"
+msgstr "删除"
+
+msgid "Delivered"
+msgstr "已送达"
+
+msgid "Delivery failed"
+msgstr "送达失败"
+
+msgid "Details"
+msgstr "详情"
+
+msgid "Encoding"
+msgstr "编码"
+
+msgid "Encoding / status"
+msgstr "编码 / 状态"
+
+msgid "Enter a valid number and a non-empty message"
+msgstr "请输入有效号码和非空短信内容"
+
+msgid "Failed"
+msgstr "失败"
+
+msgid "Never"
+msgstr "从未"
+
+msgid "No messages"
+msgstr "没有短信"
+
+msgid "Not loaded"
+msgstr "尚未读取"
+
+msgid "Number"
+msgstr "号码"
+
+msgid "Operation failed: %s"
+msgstr "操作失败：%s"
+
+msgid "Queued"
+msgstr "已排队"
+
+msgid "Received"
+msgstr "已接收"
+
+msgid "Send"
+msgstr "发送"
+
+msgid "Send to %s?"
+msgstr "发送到 %s？"
+
+msgid "Sending"
+msgstr "发送中"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Stored"
+msgstr "已存储"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Unable to analyse message"
+msgstr "无法分析短信内容"
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Unknown error"
+msgstr "未知错误"
+
+msgid "Updated %s"
+msgstr "更新于 %s"
+
+msgid "%d/%d parts"
+msgstr "%d/%d 段"
+
+msgid "SMS storage is at least 80% full. Consider deleting unneeded messages."
+msgstr "短信存储已使用至少 80%，建议删除不需要的短信。"
+
+msgid "SMS storage is at least 90% full. Delete unneeded messages before sending or receiving more."
+msgstr "短信存储已使用至少 90%，请先删除不需要的短信再继续收发。"
+
+msgid "Confirmation pending"
+msgstr "正在确认提交结果"
+
+msgid "Submitted to modem"
+msgstr "已提交到模块"
+
+msgid "Partially submitted"
+msgstr "部分提交"
+
+msgid "Every segment was accepted by the modem. This is not a handset delivery receipt."
+msgstr "所有短信分段均已被模块接受，但这不代表接收方手机已经收到。"
+
+msgid "A delivery report confirms handset delivery."
+msgstr "送达报告已确认接收方手机收到短信。"
+
+msgid "A delivery report says that handset delivery failed."
+msgstr "送达报告显示短信未能送达接收方手机。"
+
+msgid "Only %d of %d segments are known to have been submitted. Do not resend until you have checked for duplicates."
+msgstr "已知仅提交了 %d/%d 个分段。确认是否存在重复短信前请勿重新发送。"
+
+msgid "The submission outcome is unknown. The same request ID is retained and no automatic resend will occur."
+msgstr "提交结果未知。系统会保留同一个请求 ID，并且不会自动重新发送。"
+
+msgid "The modem rejected the submission. The message draft has been kept."
+msgstr "模块拒绝了本次提交，短信草稿已保留。"
+
+msgid "The message is queued for submission to the modem."
+msgstr "短信正在排队等待提交到模块。"
+
+msgid "The modem is submitting the message segments."
+msgstr "模块正在提交短信分段。"
+
+msgid "The submit response was not received. Checking the same request ID without resending."
+msgstr "未收到提交响应，正在使用同一个请求 ID 查询，不会重新发送短信。"
+
+msgid "SMS submission status"
+msgstr "短信提交状态"
+
+msgid "Progress"
+msgstr "进度"
+
+msgid "Request ID"
+msgstr "请求 ID"
+
+msgid "Error code"
+msgstr "错误代码"
+
+msgid "Check status"
+msgstr "查询状态"
+
+msgid "%d/%d segments submitted"
+msgstr "已提交 %d/%d 个分段"
+
+msgid "Status check failed temporarily (%s). The draft was kept and no resend occurred."
+msgstr "状态查询暂时失败（%s）。草稿已保留，短信未被重新发送。"
+msgid "A previous request ID is still protected against duplicate submission: %s"
+msgstr "上一次请求 ID 仍受防重复提交保护：%s"
+
+msgid "Release request ID"
+msgstr "释放请求 ID"
+
+msgid "The previous request ID was released. Sending again may duplicate a message whose outcome was unknown."
+msgstr "已释放上一次请求 ID。再次发送可能会重复一条结果未知的短信。"
+
+msgid "View status"
+msgstr "查看状态"
+
+msgid "SMS messages could not be loaded: %s"
+msgstr "无法加载短信：%s"
+
+msgid "Some modem storage could not be read. The displayed message list may be incomplete."
+msgstr "部分模块存储无法读取，当前显示的短信列表可能不完整。"
+
+msgid "Stored as sent"
+msgstr "已发送并存储"
+
+msgid "Stored as unsent"
+msgstr "未发送并存储"
+
+msgid "Received unread"
+msgstr "已接收（未读）"
+
+msgid "Received read"
+msgstr "已接收（已读）"
+
+msgid " %d physical part(s) were already deleted; refresh before retrying."
+msgstr " 已删除 %d 个物理分段；重试前请刷新。"
+
+msgid "Refreshing messages may change REC UNREAD to REC READ in modem storage."
+msgstr "刷新短信可能会将模块存储中的 REC UNREAD 改为 REC READ。"

@@ -1,0 +1,147 @@
+#!/usr/bin/ucode
+'use strict';
+
+const ubus_module = require('ubus');
+let ubus = null;
+
+function fail(code, message) {
+	printf('%.J\n', { schema_version: '1.0', ok: false, error_code: code, message: message });
+	exit(2);
+}
+
+function usage() {
+	print('Usage:\n');
+	print('  modem-smsctl list [--box inbox|outbox|all] [--storage ALL|SM|ME] [--limit N] [--refresh] --json\n');
+	print('  modem-smsctl get <message_id> --json\n');
+	print('  modem-smsctl send --to <number> --text <text> --confirm --request-id <id> --json\n');
+	print('  modem-smsctl status <request_id> [--wait seconds] --json\n');
+	print('  modem-smsctl history-clear --confirm --json\n');
+	print('  modem-smsctl summary --json\n');
+}
+
+function option(args, name, fallback) {
+	for (let i = 0; i < length(args); i++)
+		if (args[i] == name && i + 1 < length(args))
+			return args[i + 1];
+	return fallback;
+}
+
+function has(args, name) {
+	return index(args, name) >= 0;
+}
+
+function validate(args, value_options, flag_options, positional_count) {
+	let seen = {};
+	let positional = [];
+	for (let i = 0; i < length(args); i++) {
+		let arg = args[i];
+		if (substr(arg, 0, 2) != '--') {
+			push(positional, arg);
+			continue;
+		}
+		if (seen[arg])
+			fail('INVALID_ARGUMENT', `duplicate option '${arg}'`);
+		seen[arg] = true;
+		if (index(value_options, arg) >= 0) {
+			if (i + 1 >= length(args) || substr(args[i + 1], 0, 2) == '--')
+				fail('INVALID_ARGUMENT', `option '${arg}' requires a value`);
+			i++;
+		}
+		else if (index(flag_options, arg) < 0) {
+			fail('INVALID_ARGUMENT', `unknown option '${arg}'`);
+		}
+	}
+	if (length(positional) != positional_count)
+		fail('INVALID_ARGUMENT', `expected ${positional_count} positional argument(s), got ${length(positional)}`);
+	return positional;
+}
+
+function call(method, args) {
+	if (!ubus) {
+		/* A cold dual-storage refresh is measured at up to 44 seconds on ZX7981PD. */
+		ubus = ubus_module.connect(null, 120);
+		if (!ubus)
+			fail('SERVICE_UNAVAILABLE', 'unable to connect to ubus');
+	}
+	let reply = ubus.call('modem.sms', method, args ?? {});
+	if (reply == null)
+		fail('SERVICE_UNAVAILABLE', ubus.error() ?? 'modem.sms is unavailable');
+	return reply;
+}
+
+let args = slice(ARGV);
+if (!length(args) || has(args, '--help') || has(args, '-h')) {
+	usage();
+	exit(length(args) ? 0 : 2);
+}
+
+let command = shift(args);
+let result;
+
+if (!has(args, '--json'))
+	fail('INVALID_ARGUMENT', '--json is required');
+
+if (command == 'list') {
+	validate(args, ['--box', '--storage', '--limit'], ['--refresh', '--json'], 0);
+	let box = option(args, '--box', 'inbox');
+	let storage = option(args, '--storage', 'ALL');
+	let limit = option(args, '--limit', '50');
+	if (index(['inbox', 'outbox', 'all'], box) < 0)
+		fail('INVALID_ARGUMENT', '--box must be inbox, outbox or all');
+	if (index(['ALL', 'SM', 'ME'], storage) < 0)
+		fail('INVALID_ARGUMENT', '--storage must be ALL, SM or ME');
+	if (!match(limit, /^[1-9][0-9]{0,2}$/) || +limit > 200)
+		fail('INVALID_ARGUMENT', '--limit must be an integer from 1 to 200');
+	result = call('list', {
+		box: box,
+		storage: storage,
+		limit: +limit,
+		refresh: has(args, '--refresh')
+	});
+}
+else if (command == 'get') {
+	let positional = validate(args, [], ['--json'], 1);
+	result = call('get', { id: positional[0] });
+}
+else if (command == 'send') {
+	validate(args, ['--to', '--text', '--request-id'], ['--confirm', '--json'], 0);
+	if (!has(args, '--confirm')) fail('CONFIRMATION_REQUIRED', '--confirm is required');
+	let to = option(args, '--to', null);
+	let text = option(args, '--text', null);
+	let request_id = option(args, '--request-id', null);
+	if (!to || text == null || !request_id)
+		fail('INVALID_ARGUMENT', '--to, --text and --request-id are required');
+	result = call('send', { to: to, text: text, request_id: request_id });
+}
+else if (command == 'status') {
+	let positional = validate(args, ['--wait'], ['--json'], 1);
+	let request_id = positional[0];
+	let wait_value = option(args, '--wait', '0');
+	if (!match(wait_value, /^(0|[1-9][0-9]{0,2})$/) || +wait_value > 120)
+		fail('INVALID_ARGUMENT', '--wait must be an integer from 0 to 120');
+	let wait_seconds = +wait_value;
+	let deadline = time() + wait_seconds;
+	while (true) {
+		result = call('status', { request_id: request_id });
+		let state = result.request?.state ?? result.state;
+		if (!result.ok || index(['queued', 'sending'], state) < 0 || time() >= deadline)
+			break;
+		sleep(1000);
+	}
+}
+else if (command == 'history-clear') {
+	validate(args, [], ['--confirm', '--json'], 0);
+	if (!has(args, '--confirm'))
+		fail('CONFIRMATION_REQUIRED', '--confirm is required and may permit old request IDs to be reused');
+	result = call('history_clear', { confirm: 'PURGE-IDEMPOTENCY-HISTORY' });
+}
+else if (command == 'summary') {
+	validate(args, [], ['--json'], 0);
+	result = call('summary', {});
+}
+else {
+	fail('INVALID_COMMAND', `Unknown command '${command}'`);
+}
+
+printf('%.J\n', result);
+exit(result.ok ? 0 : 1);

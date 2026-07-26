@@ -1,0 +1,14 @@
+Status: PENDING
+
+The ZX7981PD device was not reachable during this build. No claim of runtime,
+modem, ubus, LuCI, upgrade, rollback or persistence verification is made yet.
+
+When connectivity is restored, verify at minimum:
+  1. Device OpenWrt release, target and package architecture compatibility.
+  2. Back up current configuration and establish a rollback path.
+  3. Install modem-smsd, luci-app-modem-sms and the optional zh-cn package.
+  4. Confirm ubus service registration and procd service health.
+  5. Confirm LuCI ACL, page loading and API behavior.
+  6. Exercise receive, decode and send flows against the actual lteat backend.
+  7. Reboot and confirm configuration permissions and service persistence.
+  8. Record commands, outputs and final result in VERIFY-ZX7981PD.log.

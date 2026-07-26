@@ -1,0 +1,51 @@
+Build status: PASS (offline build and package validation)
+Build date: 2026-07-26 (Asia/Shanghai)
+
+Target
+  OpenWrt: 25.12.5
+  Target: mediatek/filogic
+  Package architecture: aarch64_cortex-a53
+  Package format: APK v3
+
+Official SDK
+  File: openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+  SHA-256: ff4a38a397caa2cfe1c39e18f84ddede14878221b3593c3f2c4cfe24e3ec4c25
+
+Pinned sources
+  OpenWrt/base: f0a60eee2fe051741c643ea6118718aae1ef17fb
+  packages feed: 5caa62e0bc9f7fb9b0c12a23267bceb7724214dd
+  LuCI feed: 128a7812f4be233c5dd7f7466f534fd888785caf
+
+Guest build environment
+  Alpine Linux: 3.23.5 x86_64
+  Kernel: 6.18.39-0-virt
+  GCC (host tools): 15.2.0
+  GNU Make: 4.4.1
+  apk-tools: 3.0.5
+  Parallel jobs: 4
+
+Windows host
+  Lenovo machine type: 21FEFVT002
+  CPU: AMD Ryzen 5 7640HS (6 cores / 12 logical processors)
+  RAM: approximately 28 GiB
+  QEMU: 11.0.50, x86_64 software emulation
+  CPU virtualization capability: present
+  BIOS/UEFI virtualization state during build: disabled
+  WSL: not installed/available during build
+
+Source compatibility adjustment
+  packages/luci-app-modem-sms/Makefile received the standard LuCI
+  "# call BuildPackage - OpenWrt buildroot signature" marker so the
+  OpenWrt feed scanner can discover the package.
+
+Validation
+  tests/static.ps1: PASS
+  APK structural/data integrity (--allow-untrusted): PASS for all three APKs
+  Metadata, architecture, expected payload paths and backend config mode 0600: PASS
+
+Trust note
+  OpenWrt SDK creates individual APK payloads without a directly trusted
+  standalone signature; repository indexes are the signed distribution unit.
+  For direct device-side installation of these files, use the device's
+  supported local-package workflow (which may require --allow-untrusted).
+  Do not treat this as ZX7981PD runtime verification.

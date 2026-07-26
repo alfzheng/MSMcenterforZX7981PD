@@ -1,0 +1,126 @@
+Offline APK verification
+2026-07-26T16:04:37+08:00
+apk-tools:
+apk-tools 3.0.5, compiled for x86_64.
+
+[integrity]
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/base/modem-smsd-0.1.0-r1.apk: OK
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci/luci-app-modem-sms-0.1.0-r1.apk: OK
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci/luci-i18n-modem-sms-zh-cn-0.apk: OK
+
+[metadata: modem-smsd]
+#%SCHEMA: 676B6370
+# ADB block, size: 2404, compat: 0, ver: 0
+info:
+  name: modem-smsd
+  version: 0.1.0-r1
+  hashes: a62cd1808306e81a468f41cdd879d15fc6565905
+  description: |
+    A small ubus service that validates, decodes and sends SMS messages through a replaceable modem backend. The initial backend wraps the firmware lteat ubus object and never opens a modem TTY directly.
+  arch: aarch64_cortex-a53
+  license: MIT
+  origin: feeds/base/modem-smsd
+  maintainer: ZX7981PD SMS Project
+  installed-size: 82417
+  depends: # 7 items
+    - libc
+    - ubus
+    - ucode
+    - ucode-mod-fs
+    - ucode-mod-ubus
+    - ucode-mod-uci
+    - ucode-mod-uloop
+  provides: # 1 items
+    - modem-smsd-any
+paths: # 12 items
+  - acl:
+      mode: 0755
+      user: root
+      group: root
+  - name: etc
+    acl:
+      mode: 0755
+      user: root
+
+[metadata: luci-app]
+#%SCHEMA: 676B6370
+# ADB block, size: 2288, compat: 0, ver: 0
+info:
+  name: luci-app-modem-sms
+  version: 0.1.0-r1
+  hashes: 2fe8f9a71363bdfd05e79bf66f4c8decaf3fd14b
+  description: LuCI support for the modem SMS service
+  arch: noarch
+  origin: feeds/luci/feeds/luci/applications/luci-app-modem-sms
+  maintainer: OpenWrt LuCI community
+  url: https://github.com/openwrt/luci
+  installed-size: 24737
+  depends: # 2 items
+    - libc
+    - modem-smsd
+  provides: # 1 items
+    - luci-app-modem-sms-any
+paths: # 15 items
+  - acl:
+      mode: 0755
+      user: root
+      group: root
+  - name: lib
+    acl:
+
+[metadata: i18n]
+#%SCHEMA: 676B6370
+# ADB block, size: 1728, compat: 0, ver: 0
+info:
+  name: luci-i18n-modem-sms-zh-cn
+  version: 0
+  hashes: 57523294ebbf88593a6afe33c7563b4e9df361d6
+  description: Translation for luci-app-modem-sms - 简体中文 (Simplified Chinese)
+  arch: noarch
+  origin: feeds/luci/feeds/luci/applications/luci-app-modem-sms
+  installed-size: 3989
+  depends: # 2 items
+    - libc
+    - luci-app-modem-sms
+  provides: # 1 items
+    - luci-i18n-modem-sms-zh-cn-any
+paths: # 11 items
+  - acl:
+      mode: 0755
+      user: root
+      group: root
+  - name: etc
+    acl:
+      mode: 0755
+      user: root
+
+[manifest: modem-smsd]
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+sha256:7943965b2d2e038499f0b395886949df2c31ce8046478af1a58c5b92a6b9d6d0  etc/config/modem-sms
+sha256:522db79ac1a39fff81a3688d8637641fe14a21979ad798b87151e6eda820ec79  etc/init.d/modem-smsd
+sha256:6ece56e714cc9b70e60a7331481d85b96ed57c81ecde4f7f4914c865ae302eeb  lib/apk/packages/modem-smsd.conffiles
+sha256:4672da5e294b79e4a10b45170473d7c3fb06c1569ffb725472c21d1b98d2f4b0  lib/apk/packages/modem-smsd.conffiles_static
+sha256:79103c2749414d6cef9964d61b6f87e4e1a43a9050fb812b9a3a3ca56af3dc2b  lib/apk/packages/modem-smsd.list
+sha256:0564e3ad15d02685a929f1bf399cd449491d7940d873c15986547e4c18c2078d  usr/bin/modem-smsctl
+sha256:351afc21b851ea9a99b9a5b39925458fdd45ca6a4037beb36ed23bd24a517edc  usr/sbin/modem-smsd
+sha256:0cfd81df42630acd0079b078bcc066ceda25a835a507a2c81b34fda91037b499  usr/share/modem-sms/backend-lteat.uc
+sha256:719efa537f3ee88c6da8a543deb0083a7ab346e44e4087305600bc945029c548  usr/share/modem-sms/core.uc
+
+[manifest: luci-app]
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+sha256:60f4fb6ab2c4b5898716f28726809d14dc247bf99aa8cbbadec85aee5c9e7915  lib/apk/packages/luci-app-modem-sms.list
+sha256:183bd697a8e1569e3649af613b2c0807caaa62ba3370ae8e32ab51ed8bf2810d  usr/share/luci/menu.d/luci-app-modem-sms.json
+sha256:7c2aa9ea66c2f9cb130e8a545d37b5e2e6c83626ab12a78e487e516ea9525d8b  usr/share/rpcd/acl.d/luci-app-modem-sms.json
+sha256:2a6921f48b895fe7a627167fb630503fe8096042173ecc37c7d7b73c72c1133b  www/luci-static/resources/view/modem/sms.js
+
+[manifest: i18n]
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+sha256:c272c8973a1bc727c9ad0607c3675dc9f8be3844eacee3dbc188248f6332c8f0  etc/uci-defaults/luci-i18n-modem-sms-zh-cn
+sha256:67170eb6409b8f1e5984004b95ea510f53dfe606ff8448d318b79e6a81ba3eac  lib/apk/packages/luci-i18n-modem-sms-zh-cn.list
+sha256:a6935f120e16ebe240a9801ac65222edfb6b2025f82544dcf3a2c353b38b75a9  usr/lib/lua/luci/i18n/modem-sms.zh-cn.lmo
+
+[assertions]
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+WARNING: opening from cache http://dl-cdn.alpinelinux.org/alpine/v3.23/main/x86_64/APKINDEX.tar.gz: No such file or directory
+RESULT: PASS

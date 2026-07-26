@@ -1,0 +1,24 @@
+# Local build environments and downloaded toolchains
+/.build-temp/
+
+# Credentials and local environment files
+*.key
+*.pem
+.env
+.env.*
+id_rsa
+id_ed25519
+
+# Editor and operating-system noise
+.reasonix/
+.idea/
+.vscode/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+
+# Test scratch and coverage output
+/tmp/
+/coverage/
+*.tmp

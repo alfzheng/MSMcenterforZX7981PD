@@ -1,0 +1,15 @@
+{
+	"luci-app-modem-sms": {
+		"description": "View and manage modem SMS messages",
+		"read": {
+			"ubus": {
+				"modem.sms": [ "capabilities", "analyse", "list", "get", "status", "summary" ]
+			}
+		},
+		"write": {
+			"ubus": {
+				"modem.sms": [ "send", "delete" ]
+			}
+		}
+	}
+}

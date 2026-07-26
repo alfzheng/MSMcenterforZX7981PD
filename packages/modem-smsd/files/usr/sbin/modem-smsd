@@ -1,0 +1,1241 @@
+#!/usr/bin/ucode
+'use strict';
+
+const ubus_module = require('ubus');
+const uloop = require('uloop');
+const uci = require('uci').cursor();
+const fs = require('fs');
+
+push(REQUIRE_SEARCH_PATH, '/usr/share/modem-sms/*.uc');
+const core = require('core');
+
+const selected_backend = uci.get('modem-sms', 'main', 'backend') ?? 'lteat';
+if (!match(selected_backend, /^[a-z0-9][a-z0-9_-]*$/))
+	die(`Invalid backend name '${selected_backend}'\n`);
+
+const config = {
+	backend: selected_backend,
+	cache_seconds: +(uci.get('modem-sms', 'main', 'cache_seconds') ?? 10),
+	limit_max: +(uci.get('modem-sms', 'main', 'list_limit_max') ?? 200),
+	history_max: +(uci.get('modem-sms', 'main', 'request_history_max') ?? 500),
+	minimum_free_slots: +(uci.get('modem-sms', 'main', 'minimum_free_slots') ?? 4),
+	concat_window_seconds: +(uci.get('modem-sms', 'main', 'concat_window_seconds') ?? 600),
+	send_queue_max: +(uci.get('modem-sms', 'main', 'send_queue_max') ?? 20),
+	send_rate_limit_seconds: +(uci.get('modem-sms', 'main', 'send_rate_limit_seconds') ?? 1),
+	request_state_path: uci.get('modem-sms', 'main', 'request_state_path') ?? '/etc/modem-sms-idempotency.json',
+	default_storage: uci.get('modem-sms', selected_backend, 'default_storage') ?? 'SM',
+	storage_order: split(uci.get('modem-sms', selected_backend, 'storage_order') ?? 'SM ME', /\s+/)
+};
+
+config.history_max = config.history_max < 1 ? 1 : config.history_max;
+config.concat_window_seconds = config.concat_window_seconds < 1 ? 1 : config.concat_window_seconds;
+config.send_queue_max = config.send_queue_max < 1 ? 1 : config.send_queue_max;
+config.send_rate_limit_seconds = config.send_rate_limit_seconds < 0 ? 0 : config.send_rate_limit_seconds;
+
+uloop.init();
+const read_timeout = +(uci.get('modem-sms', selected_backend, 'read_call_timeout_seconds') ??
+	uci.get('modem-sms', selected_backend, 'call_timeout_seconds') ?? 30);
+const send_timeout = +(uci.get('modem-sms', selected_backend, 'send_call_timeout_seconds') ?? 120);
+const bus = ubus_module.connect(null, read_timeout);
+if (!bus)
+	die('Unable to connect to ubus\n');
+const send_bus = ubus_module.connect(null, send_timeout);
+if (!send_bus)
+	die('Unable to connect to ubus for sending\n');
+
+const backend_module = loadfile('/usr/share/modem-sms/backend-' + config.backend + '.uc')();
+const backend_options = {
+	object: uci.get('modem-sms', selected_backend, 'object'),
+	switch_method: uci.get('modem-sms', selected_backend, 'switch_method'),
+	switch_argument: uci.get('modem-sms', selected_backend, 'switch_argument'),
+	list_method: uci.get('modem-sms', selected_backend, 'list_method'),
+	send_method: uci.get('modem-sms', selected_backend, 'send_method'),
+	delete_method: uci.get('modem-sms', selected_backend, 'delete_method'),
+	default_storage: config.default_storage
+};
+const backend = backend_module.create(bus, backend_options);
+const send_backend = backend_module.create(send_bus, backend_options);
+
+let cache = { messages: [], by_id: {}, updated_at: 0, loaded: false, errors: [], storage: {}, storage_records: {} };
+let operations = [];
+let operation_busy = false;
+let load_waiters = [];
+let load_enqueued = false;
+let send_requests = {};
+let send_order = [];
+let active_sends = 0;
+let reserved_send_slots = 0;
+let last_send_accepted_at = 0;
+let inflight_deletes = {};
+let idempotency_journal_ready = true;
+
+function envelope(fields) {
+	let result = { schema_version: core.SCHEMA_VERSION, ok: true };
+	for (let key in fields ?? {})
+		result[key] = fields[key];
+	return result;
+}
+
+function error_result(code, detail) {
+	return envelope({ ok: false, error_code: code, detail: detail ?? null });
+}
+
+function audit(event, fields) {
+	let details = [];
+	for (let key in fields ?? {})
+		push(details, `${key}=${fields[key]}`);
+	warn(`modem-smsd audit event=${event}${length(details) ? ' ' + join(' ', details) : ''}\n`);
+}
+
+function run_next_operation() {
+	if (operation_busy || !length(operations))
+		return;
+	operation_busy = true;
+	let queued = shift(operations);
+	let operation = type(queued) == 'object' ? queued.run : queued;
+	let completed = false;
+	function complete_operation() {
+		if (completed)
+			return;
+		completed = true;
+		operation_busy = false;
+		run_next_operation();
+	}
+	try {
+		operation(complete_operation);
+	}
+	catch (exception) {
+		audit('operation_exception', { error: exception });
+		if (type(queued) == 'object' && queued.on_exception) {
+			try {
+				queued.on_exception(exception);
+			}
+			catch (cleanup_exception) {
+				audit('operation_cleanup_exception', { error: cleanup_exception });
+			}
+		}
+		complete_operation();
+	}
+}
+
+function enqueue(operation, on_exception) {
+	push(operations, { run: operation, on_exception: on_exception ?? null });
+	run_next_operation();
+}
+
+function timestamp_seconds(value) {
+	let parts = match(value ?? '', /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(([+-])(\d{2}):(\d{2}))?$/);
+	if (!parts)
+		return null;
+
+	let year = +parts[1];
+	let month = +parts[2];
+	let day = +parts[3];
+	let hour = +parts[4];
+	let minute = +parts[5];
+	let second = +parts[6];
+	let timezone_hour = +(parts[9] ?? 0);
+	let timezone_minute = +(parts[10] ?? 0);
+	if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 60 ||
+		timezone_hour > 23 || timezone_minute > 59)
+		return null;
+
+	let stamp = timegm({ year: year, mon: month, mday: day, hour: hour, min: minute, sec: second });
+	if (type(stamp) != 'int' && type(stamp) != 'double')
+		return null;
+	let timezone_offset = timezone_hour * 3600 + timezone_minute * 60;
+	if (parts[8] == '+')
+		stamp -= timezone_offset;
+	else if (parts[8] == '-')
+		stamp += timezone_offset;
+	return stamp;
+}
+
+function normalize_storage_status(value) {
+	let status = uc(trim(`${value ?? ''}`));
+	let numeric = {
+		'0': 'REC UNREAD',
+		'1': 'REC READ',
+		'2': 'STO UNSENT',
+		'3': 'STO SENT'
+	};
+	if (exists(numeric, status))
+		return numeric[status];
+	return index(['REC UNREAD', 'REC READ', 'STO UNSENT', 'STO SENT'], status) >= 0 ? status : null;
+}
+
+function aggregate(raw_records) {
+	let singles = [];
+	let groups = {};
+
+	for (let record in raw_records) {
+		let decoded = core.decode_pdu(record.pdu);
+		if (!decoded.ok) {
+			let fp = core.message_fingerprint(record.storage, record.index ?? -1, {
+				direction: 'unknown',
+				number: '',
+				timestamp: '',
+				text: record.pdu
+			});
+			push(singles, {
+				id: core.message_id(record.storage, record.index ?? -1, fp),
+				direction: 'unknown',
+				number: null,
+				timestamp: null,
+				text: '',
+				encoding: 'UNKNOWN',
+				status: 'decode-failed',
+				storage_status: normalize_storage_status(record.storage_status),
+				storage: record.storage,
+				indexes: record.index == null ? [] : [record.index],
+				locations: record.index == null ? [] : [{ storage: record.storage, index: record.index }],
+				fingerprint: fp,
+				segments: 1,
+				parts_received: 1,
+				complete: false
+			});
+			continue;
+		}
+
+		let fp = core.message_fingerprint(record.storage, record.index ?? -1, decoded);
+		let item = {
+			direction: decoded.direction,
+			number: decoded.number,
+			timestamp: decoded.timestamp,
+			text: decoded.text,
+			encoding: decoded.encoding,
+			status: decoded.status,
+			storage_status: normalize_storage_status(record.storage_status),
+			storage: record.storage,
+			indexes: record.index == null ? [] : [record.index],
+			locations: record.index == null ? [] : [{ storage: record.storage, index: record.index }],
+			fingerprint: fp,
+			segments: decoded.concat?.total ?? 1,
+			parts_received: 1,
+			complete: true,
+			concat: decoded.concat
+		};
+
+		if (!decoded.concat) {
+			item.id = core.message_id(record.storage, record.index ?? -1, fp);
+			push(singles, item);
+			continue;
+		}
+
+		let total = +decoded.concat.total;
+		let part_number = +decoded.concat.part;
+		if (total < 2 || total > 255 || part_number < 1 || part_number > total) {
+			item.id = core.message_id(record.storage, record.index ?? -1, fp);
+			item.complete = false;
+			push(singles, item);
+			continue;
+		}
+
+		let key = `${record.storage}|${decoded.direction}|${decoded.number}|${decoded.encoding}|${decoded.concat.reference_bits}|${decoded.concat.reference}|${total}`;
+		if (!exists(groups, key))
+			groups[key] = [];
+
+		let stamp = timestamp_seconds(decoded.timestamp);
+		let selected = null;
+		let ambiguous = false;
+		if (stamp != null) {
+			for (let candidate in groups[key]) {
+				if (exists(candidate.parts, `${part_number}`) || candidate.latest == null || candidate.earliest == null)
+					continue;
+				let earliest = stamp < candidate.earliest ? stamp : candidate.earliest;
+				let latest = stamp > candidate.latest ? stamp : candidate.latest;
+				let span = latest - earliest;
+				if (span <= config.concat_window_seconds) {
+					if (selected) {
+						ambiguous = true;
+						selected = null;
+						break;
+					}
+					selected = candidate;
+				}
+			}
+		}
+		/* Stored SMS-SUBMIT records do not carry SCTS. An 8-bit concat
+		 * reference can be reused, so index proximity cannot safely distinguish
+		 * two outbound messages. Keep such parts separate rather than risk a
+		 * logical delete spanning unrelated physical records. */
+
+		/* Missing timestamps and repeated part numbers are kept in separate groups.
+		 * This prefers an incomplete visible SMS over combining and later deleting
+		 * unrelated messages after an 8-bit concatenation reference is reused. */
+		if (!selected) {
+			selected = { parts: {}, items: [], total: total, earliest: stamp, latest: stamp,
+				last_index: record.index ?? null, storage_status: item.storage_status,
+				collision: ambiguous };
+			push(groups[key], selected);
+		}
+		selected.parts[`${part_number}`] = decoded.text;
+		push(selected.items, item);
+		if (stamp != null && (selected.latest == null || stamp > selected.latest))
+			selected.latest = stamp;
+		if (stamp != null && (selected.earliest == null || stamp < selected.earliest))
+			selected.earliest = stamp;
+		if (record.index != null)
+			selected.last_index = record.index;
+	}
+
+	for (let key in groups) {
+		for (let group in groups[key]) {
+			let first = group.items[0];
+			let text = '';
+			let received = 0;
+			let indexes = [];
+			let locations = [];
+			for (let i = 1; i <= group.total; i++) {
+				if (exists(group.parts, `${i}`)) {
+					text += group.parts[`${i}`];
+					received++;
+				}
+			}
+			for (let segment in group.items)
+				for (let idx in segment.indexes) {
+					push(indexes, idx);
+					push(locations, { storage: segment.storage, index: idx });
+				}
+			sort(indexes, function(a, b) { return a - b; });
+			sort(locations, function(a, b) {
+				let left = `${a.storage}:${sprintf('%010d', a.index)}`;
+				let right = `${b.storage}:${sprintf('%010d', b.index)}`;
+				return left < right ? -1 : (left > right ? 1 : 0);
+			});
+
+			let fp = core.message_fingerprint(first.storage, join(',', indexes), {
+				direction: first.direction,
+				number: first.number,
+				timestamp: first.timestamp,
+				text: text
+			});
+			let storage_status = first.storage_status;
+			for (let segment in group.items)
+				if (segment.storage_status != storage_status)
+					storage_status = 'MIXED';
+			push(singles, {
+				id: core.message_id(first.storage, length(indexes) ? indexes[0] : -1, fp),
+				direction: first.direction,
+				number: first.number,
+				timestamp: first.timestamp,
+				text: text,
+				encoding: first.encoding,
+				status: first.status,
+				storage_status: storage_status,
+				storage: first.storage,
+				indexes: indexes,
+				locations: locations,
+				fingerprint: fp,
+				segments: group.total,
+				parts_received: received,
+				complete: received == group.total
+			});
+		}
+	}
+
+	/* Do not merge identical-looking records across SM and ME. Without a modem
+	 * supplied immutable identity, doing so can turn one UI delete into two
+	 * unrelated physical deletes. */
+	sort(singles, function(a, b) {
+		return `${a.timestamp ?? ''}|${a.id}` < `${b.timestamp ?? ''}|${b.id}` ? 1 : -1;
+	});
+	return singles;
+}
+
+function complete_load(done, records_by_storage, successful_storages, errors, storage_info) {
+	for (let storage in successful_storages)
+		cache.storage_records[storage] = records_by_storage[storage] ?? [];
+
+	if (length(successful_storages)) {
+		let raw = [];
+		for (let storage in config.storage_order)
+			for (let record in cache.storage_records[uc(storage)] ?? [])
+				push(raw, record);
+
+		cache.messages = aggregate(raw);
+		cache.by_id = {};
+		for (let message in cache.messages)
+			cache.by_id[message.id] = message;
+		cache.updated_at = time();
+		cache.loaded = true;
+	}
+	cache.storage = storage_info;
+	cache.errors = errors;
+
+	let waiters = load_waiters;
+	load_waiters = [];
+	load_enqueued = false;
+	for (let waiter in waiters) {
+		try { waiter(cache); }
+		catch (waiter_exception) { audit('load_waiter_exception', { error: waiter_exception }); }
+	}
+	done();
+}
+
+function execute_load(done) {
+	let records_by_storage = {};
+	let successful_storages = {};
+	let errors = [];
+	let storage_info = {};
+	let position = 0;
+
+	function next_storage() {
+		if (position >= length(config.storage_order)) {
+			backend.restore_storage(config.default_storage, function(restore_status) {
+				let restore_failed = type(restore_status) == 'object'
+					? restore_status.ok == false
+					: !!restore_status;
+				if (restore_failed) {
+					push(errors, { storage: config.default_storage, error_code: 'BACKEND_STORAGE_RESTORE_FAILED' });
+					if (exists(storage_info, config.default_storage))
+						storage_info[config.default_storage].restore_ok = false;
+				}
+				else if (exists(storage_info, config.default_storage)) {
+					storage_info[config.default_storage].restore_ok = true;
+				}
+				complete_load(done, records_by_storage, successful_storages, errors, storage_info);
+			});
+			return;
+		}
+
+		let storage = uc(config.storage_order[position++]);
+		backend.list_storage(storage, function(result) {
+			if (!result.ok) {
+				push(errors, { storage: storage, error_code: result.error_code });
+				storage_info[storage] = {
+					available: false,
+					used: null,
+					total: null,
+					preserved_snapshot: exists(cache.storage_records, storage)
+				};
+			}
+			else {
+				records_by_storage[storage] = [];
+				for (let item in result.records)
+					push(records_by_storage[storage], {
+						storage: storage,
+						index: item.index,
+						pdu: item.pdu,
+						storage_status: item.storage_status ?? null
+					});
+				successful_storages[storage] = true;
+				storage_info[storage] = {
+					available: true,
+					used: result.capacity?.used ?? length(result.records),
+					total: result.capacity?.total ?? null
+				};
+			}
+			next_storage();
+		});
+	}
+
+	next_storage();
+}
+
+function request_load(callback) {
+	push(load_waiters, callback);
+	if (load_enqueued)
+		return;
+	load_enqueued = true;
+	enqueue(execute_load, function(exception) {
+		cache.errors = [{ storage: null, error_code: 'INTERNAL_OPERATION_FAILED' }];
+		let waiters = load_waiters;
+		load_waiters = [];
+		load_enqueued = false;
+		for (let waiter in waiters) {
+			try { waiter(cache); }
+			catch (waiter_exception) { audit('load_waiter_exception', { error: waiter_exception }); }
+		}
+	});
+}
+
+function filtered_messages(args, include_text) {
+	let box = args.box ?? 'all';
+	let storage = uc(args.storage ?? 'ALL');
+	let limit = +(args.limit ?? 50);
+	limit = limit < 1 ? 1 : (limit > config.limit_max ? config.limit_max : limit);
+	let out = [];
+
+	for (let message in cache.messages) {
+		if (box == 'inbox' && message.direction != 'inbound')
+			continue;
+		if (box == 'outbox' && message.direction == 'inbound')
+			continue;
+		if (storage != 'ALL' && index(split(message.storage, '+'), storage) < 0)
+			continue;
+		push(out, core.public_message(message, include_text));
+		if (length(out) >= limit)
+			break;
+	}
+	return out;
+}
+
+function send_is_active(request) {
+	return request && (request.state == 'queued' || request.state == 'sending');
+}
+
+function send_is_terminal(request) {
+	return request && index(['sent', 'failed', 'unknown'], request.state) >= 0;
+}
+
+function send_payload_fingerprint(to, body) {
+	return core.message_fingerprint('send-request', 0, {
+		direction: 'outbound',
+		number: to,
+		timestamp: '',
+		text: body
+	});
+}
+
+function remove_send_order_index(remove_index) {
+	let retained = [];
+	for (let i = 0; i < length(send_order); i++)
+		if (i != remove_index)
+			push(retained, send_order[i]);
+	send_order = retained;
+}
+
+function prune_send_history() {
+	/* Never evict an accepted idempotency key automatically. Once the bounded
+	 * journal is full, new sends are rejected instead of making an old request
+	 * ID reusable. Clearing the journal is an explicit administrator action. */
+}
+
+function remember_send(request) {
+	send_requests[request.request_id] = request;
+	push(send_order, request.request_id);
+	prune_send_history();
+}
+
+function forget_send(request_id) {
+	for (let i = 0; i < length(send_order); i++) {
+		if (send_order[i] == request_id) {
+			remove_send_order_index(i);
+			break;
+		}
+	}
+	delete send_requests[request_id];
+}
+
+function persisted_request(request) {
+	let interrupted = send_is_active(request);
+	return {
+		request_id: request.request_id,
+		payload_fingerprint: request.payload_fingerprint,
+		state: interrupted ? 'unknown' : request.state,
+		submitted_at: request.submitted_at,
+		updated_at: request.updated_at,
+		to_masked: request.to_masked ?? core.mask_number(request.to),
+		encoding: request.encoding,
+		segments: request.segments,
+		parts_submitted: request.parts_submitted,
+		message_references: request.message_references ?? [],
+		error_code: interrupted ? 'INTERRUPTED_BY_RESTART' : (request.error_code ?? null),
+		submit_error_code: request.submit_error_code ?? null
+	};
+}
+
+function persist_send_history(durable) {
+	if (!idempotency_journal_ready)
+		return false;
+	prune_send_history();
+	let requests = [];
+	for (let request_id in send_order) {
+		let request = send_requests[request_id];
+		if (request)
+			push(requests, persisted_request(request));
+	}
+
+	let data = sprintf('%.J', { version: 1, requests: requests });
+	let temporary = config.request_state_path + '.new';
+	let handle = null;
+	let ok = false;
+	try {
+		fs.unlink(temporary);
+		handle = fs.open(temporary, 'wxe', 384);
+		if (handle) {
+			let written = handle.write(data);
+			let flushed = handle.flush();
+			let closed = handle.close();
+			handle = null;
+			if (written == length(data) && flushed != null && closed != null &&
+				fs.chmod(temporary, 384) == true &&
+				fs.rename(temporary, config.request_state_path) == true) {
+				ok = fs.chmod(config.request_state_path, 384) == true;
+				if (ok && durable)
+					ok = system(['/bin/sync']) == 0;
+			}
+		}
+	}
+	catch (exception) {
+		ok = false;
+	}
+	if (handle)
+		handle.close();
+	if (!ok)
+		fs.unlink(temporary);
+	return ok;
+}
+
+function load_send_history() {
+	let purge_backup = config.request_state_path + '.purge-backup';
+	let interrupted_purge = fs.access(purge_backup, 'f') == true;
+	let source_path = interrupted_purge ? purge_backup : config.request_state_path;
+	let raw = fs.readfile(source_path, 1048576);
+	if (raw == null) {
+		if (fs.access(source_path, 'f') == true) {
+			idempotency_journal_ready = false;
+			audit('idempotency_load_failed', { error_code: 'STATE_FILE_UNREADABLE' });
+		}
+		return;
+	}
+
+	let document = null;
+	try {
+		document = json(raw);
+	}
+	catch (exception) {
+		idempotency_journal_ready = false;
+		audit('idempotency_load_failed', { error_code: 'INVALID_STATE_FILE' });
+		return;
+	}
+	if (type(document) != 'object' || document.version != 1 || type(document.requests) != 'array') {
+		idempotency_journal_ready = false;
+		audit('idempotency_load_failed', { error_code: 'INVALID_STATE_SCHEMA' });
+		return;
+	}
+
+	let recovered = [];
+	let recovered_ids = {};
+	for (let saved in document.requests) {
+		if (type(saved) != 'object' ||
+			!match(saved.request_id ?? '', /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/) ||
+			!match(saved.payload_fingerprint ?? '', /^[0-9a-f]{16}$/) ||
+			index(['sent', 'failed', 'unknown'], saved.state) < 0 || exists(recovered_ids, saved.request_id)) {
+			idempotency_journal_ready = false;
+			audit('idempotency_load_failed', { error_code: 'INVALID_STATE_RECORD' });
+			return;
+		}
+
+		let references = [];
+		if (type(saved.message_references) == 'array')
+			for (let reference in saved.message_references)
+				if (match(`${reference}`, /^[0-9]+$/))
+					push(references, +reference);
+
+		let request = {
+			request_id: saved.request_id,
+			payload_fingerprint: saved.payload_fingerprint,
+			state: saved.state,
+			submitted_at: +(saved.submitted_at ?? 0),
+			updated_at: +(saved.updated_at ?? 0),
+			to_masked: substr(saved.to_masked ?? '', 0, 32),
+			encoding: saved.encoding ?? null,
+			segments: +(saved.segments ?? 0),
+			parts_submitted: +(saved.parts_submitted ?? 0),
+			message_references: references,
+			error_code: saved.error_code ?? null,
+			submit_error_code: saved.submit_error_code ?? null,
+			idempotency_persisted: true
+		};
+		recovered_ids[saved.request_id] = true;
+		push(recovered, request);
+	}
+	if (length(recovered) > config.history_max || fs.chmod(source_path, 384) != true) {
+		idempotency_journal_ready = false;
+		audit('idempotency_load_failed', { error_code: 'STATE_FILE_POLICY_FAILED' });
+		return;
+	}
+	for (let request in recovered)
+		remember_send(request);
+	if (interrupted_purge) {
+		idempotency_journal_ready = false;
+		audit('idempotency_purge_interrupted', { records_recovered: length(recovered) });
+	}
+}
+
+function public_send(request) {
+	return envelope({
+		request_id: request.request_id,
+		state: request.state,
+		submitted_at: request.submitted_at,
+		updated_at: request.updated_at,
+		to: request.to_masked ?? core.mask_number(request.to),
+		encoding: request.encoding,
+		segments: request.segments,
+		parts_submitted: request.parts_submitted,
+		message_references: request.message_references ?? [],
+		error_code: request.error_code ?? null,
+		submit_error_code: request.submit_error_code ?? null,
+		idempotency_persisted: request.idempotency_persisted ?? false
+	});
+}
+
+function execute_send(request, encoded, done) {
+	request.state = 'sending';
+	request.updated_at = time();
+	let part = 0;
+	let finished = false;
+
+	function finish() {
+		if (finished)
+			return;
+		finished = true;
+		active_sends = active_sends > 0 ? active_sends - 1 : 0;
+		reserved_send_slots = reserved_send_slots >= (request.reserved_slots ?? 0)
+			? reserved_send_slots - (request.reserved_slots ?? 0) : 0;
+		request.reserved_slots = 0;
+		prune_send_history();
+		request.idempotency_persisted = persist_send_history(true);
+		if (!request.idempotency_persisted)
+			audit('idempotency_persist_failed', { request_id: request.request_id, state: request.state });
+		done();
+	}
+
+	function fail_internal(exception) {
+		if (finished)
+			return;
+		request.state = 'unknown';
+		request.error_code = 'INTERNAL_OPERATION_FAILED';
+		request.updated_at = time();
+		cache.updated_at = 0;
+		audit('send_internal_exception', { request_id: request.request_id, error: exception });
+		finish();
+	}
+
+	function submit_next() {
+		if (part >= length(encoded.pdus)) {
+			request.state = 'sent';
+			request.updated_at = time();
+			cache.updated_at = 0;
+			audit('send_complete', { request_id: request.request_id, to: core.mask_number(request.to),
+				segments: request.segments, state: request.state });
+			finish();
+			return;
+		}
+
+		let callback_consumed = false;
+		try {
+			send_backend.send_pdu(encoded.pdus[part], function(result) {
+				try {
+					if (callback_consumed || finished)
+						return;
+					callback_consumed = true;
+					if (!result.ok) {
+				if (index(['SUBMIT_TIMEOUT', 'SUBMIT_UNKNOWN'], result.error_code) >= 0) {
+					let capacity = cache.storage[config.default_storage];
+					if (capacity?.available && capacity.used != null)
+						capacity.used++;
+					cache.updated_at = 0;
+				}
+				if (request.parts_submitted > 0) {
+					request.state = 'unknown';
+					request.error_code = 'PARTIAL_SUBMIT';
+					request.submit_error_code = result.error_code;
+					cache.updated_at = 0;
+				}
+				else {
+					request.state = index(['SUBMIT_TIMEOUT', 'SUBMIT_UNKNOWN'], result.error_code) >= 0
+						? 'unknown' : 'failed';
+					request.error_code = result.error_code;
+				}
+				request.updated_at = time();
+				audit('send_complete', { request_id: request.request_id, to: core.mask_number(request.to),
+					segments: request.segments, state: request.state, error_code: request.error_code });
+				finish();
+						return;
+					}
+					if (match(`${result.message_reference ?? ''}`, /^[0-9]+$/))
+						push(request.message_references, +result.message_reference);
+					else
+						push(request.message_references, null);
+					let capacity = cache.storage[config.default_storage];
+					if (capacity?.available && capacity.used != null)
+						capacity.used++;
+					request.parts_submitted = ++part;
+					request.updated_at = time();
+					submit_next();
+				}
+				catch (exception) {
+					fail_internal(exception);
+				}
+			});
+		}
+		catch (exception) {
+			fail_internal(exception);
+		}
+	}
+
+	submit_next();
+}
+
+function accept_send_request(req, args, payload_fingerprint, encoded) {
+	/* A refresh may have taken tens of seconds. Recheck every mutable admission
+	 * condition, including the idempotency key, before accepting the request. */
+	if (exists(send_requests, args.request_id)) {
+		let existing = send_requests[args.request_id];
+		req.reply(existing.payload_fingerprint == payload_fingerprint
+			? public_send(existing) : error_result('REQUEST_ID_CONFLICT'));
+		return;
+	}
+	if (length(send_order) >= config.history_max) {
+		req.reply(error_result('IDEMPOTENCY_HISTORY_FULL', { limit: config.history_max }));
+		return;
+	}
+	if (active_sends >= config.send_queue_max) {
+		req.reply(error_result('QUEUE_FULL', { limit: config.send_queue_max }));
+		return;
+	}
+	let accepted_at = time();
+	if (config.send_rate_limit_seconds && last_send_accepted_at &&
+		accepted_at - last_send_accepted_at < config.send_rate_limit_seconds) {
+		req.reply(error_result('RATE_LIMITED', {
+			retry_after_seconds: config.send_rate_limit_seconds - (accepted_at - last_send_accepted_at)
+		}));
+		return;
+	}
+
+	let capacity = cache.storage[config.default_storage];
+	if (!cache.loaded || !cache.updated_at || time() - cache.updated_at > config.cache_seconds) {
+		req.reply(error_result('STORAGE_CAPACITY_STALE', { storage: config.default_storage }));
+		return;
+	}
+	if (!capacity?.available || capacity.total == null || capacity.used == null) {
+		req.reply(error_result('STORAGE_CAPACITY_UNKNOWN', { storage: config.default_storage }));
+		return;
+	}
+	if (capacity.total - capacity.used - reserved_send_slots < encoded.analysis.segments + config.minimum_free_slots) {
+		req.reply(error_result('STORAGE_FULL', {
+			storage: config.default_storage,
+			free: capacity.total - capacity.used - reserved_send_slots,
+			required: encoded.analysis.segments + config.minimum_free_slots
+		}));
+		return;
+	}
+
+	let request = {
+		request_id: args.request_id,
+		payload_fingerprint: payload_fingerprint,
+		to: args.to,
+		text: args.text,
+		state: 'queued',
+		submitted_at: accepted_at,
+		updated_at: accepted_at,
+		encoding: encoded.analysis.encoding,
+		segments: encoded.analysis.segments,
+		parts_submitted: 0,
+		message_references: [],
+		reserved_slots: encoded.analysis.segments,
+		error_code: null,
+		submit_error_code: null,
+		idempotency_persisted: false
+	};
+	remember_send(request);
+	active_sends++;
+	reserved_send_slots += request.reserved_slots;
+	request.idempotency_persisted = persist_send_history(true);
+	if (!request.idempotency_persisted) {
+		active_sends--;
+		reserved_send_slots -= request.reserved_slots;
+		forget_send(request.request_id);
+		req.reply(error_result('IDEMPOTENCY_PERSIST_FAILED'));
+		return;
+	}
+	last_send_accepted_at = accepted_at;
+	audit('send_queued', { request_id: request.request_id, to: core.mask_number(request.to),
+		encoding: request.encoding, segments: request.segments });
+	enqueue(function(done) { execute_send(request, encoded, done); }, function(exception) {
+		active_sends = active_sends > 0 ? active_sends - 1 : 0;
+		reserved_send_slots = reserved_send_slots >= request.reserved_slots
+			? reserved_send_slots - request.reserved_slots : 0;
+		request.reserved_slots = 0;
+		request.state = 'unknown';
+		request.error_code = 'INTERNAL_OPERATION_FAILED';
+		request.updated_at = time();
+		request.idempotency_persisted = persist_send_history(true);
+		audit('send_queue_exception', { request_id: request.request_id, error: exception });
+	});
+	req.reply(public_send(request));
+}
+
+function delete_locations(message, position, callback) {
+	if (position >= length(message.locations)) {
+		callback({ ok: true, deleted_count: position });
+		return;
+	}
+	let location = message.locations[position];
+	backend.delete_record(location.storage, location.index, function(result) {
+		if (!result.ok)
+			callback({
+				ok: false,
+				error_code: result.error_code ?? 'BACKEND_DELETE_FAILED',
+				deleted_count: position,
+				confirmed_deleted_count: position,
+				partial: position > 0,
+				failed_location: location,
+				unknown_location: result.outcome_unknown ? location : null,
+				outcome_unknown: result.outcome_unknown ?? false
+			});
+		else
+			delete_locations(message, position + 1, callback);
+	});
+}
+
+function restore_default_storage(callback) {
+	let callback_consumed = false;
+	backend.restore_storage(config.default_storage, function(status) {
+		if (callback_consumed)
+			return;
+		callback_consumed = true;
+		let failed = type(status) == 'object' ? status.ok == false : !!status;
+		callback(failed
+			? { ok: false, error_code: 'BACKEND_STORAGE_RESTORE_FAILED' }
+			: { ok: true });
+	});
+}
+
+load_send_history();
+
+const methods = {
+	capabilities: {
+		call: function(req) {
+			let capabilities = backend.capabilities();
+			capabilities.backend_id = capabilities.backend_id ?? backend.id;
+			capabilities.transport = capabilities.transport ?? backend.transport;
+			capabilities.backend_available = backend.available();
+			capabilities.sms_supported = capabilities.backend_available;
+			capabilities.sms_error_code = capabilities.backend_available ? null : 'SMS_UNSUPPORTED';
+			capabilities.storages = config.storage_order;
+			capabilities.cache_seconds = config.cache_seconds;
+			req.reply(envelope(capabilities));
+		}
+	},
+	analyse: {
+		args: { text: '' },
+		call: function(req) {
+			let args = req.args;
+			req.reply(envelope(core.analyse_text(args.text)));
+		}
+	},
+	list: {
+		args: { box: '', storage: '', limit: 0, refresh: false },
+		call: function(req) {
+			let args = req.args;
+			if (!backend.available() && (!cache.loaded || args.refresh)) {
+				req.reply(error_result('SMS_UNSUPPORTED'));
+				return;
+			}
+			function reply_list() {
+				if (!cache.loaded) {
+					req.reply(error_result('BACKEND_READ_FAILED', {
+						errors: cache.errors,
+						storage: cache.storage
+					}));
+					return;
+				}
+					req.reply(envelope({
+						messages: filtered_messages(args, false),
+						read_may_mark_read: true,
+					updated_at: cache.updated_at,
+					stale: length(cache.errors) > 0,
+					errors: cache.errors,
+					storage: cache.storage
+				}));
+			}
+
+			if (!args.refresh && cache.updated_at && time() - cache.updated_at < config.cache_seconds) {
+				reply_list();
+				return;
+			}
+			req.defer();
+			request_load(reply_list);
+		}
+	},
+	get: {
+		args: { id: '' },
+		call: function(req) {
+			let args = req.args;
+			function reply_get() {
+				if (!cache.loaded) {
+					req.reply(error_result('BACKEND_READ_FAILED', { errors: cache.errors }));
+					return;
+				}
+				let message = cache.by_id[args.id];
+				req.reply(message ? envelope({ message: core.public_message(message, true) })
+					: error_result('MESSAGE_NOT_FOUND'));
+			}
+			if (!cache.loaded) {
+				req.defer();
+				request_load(reply_get);
+				return;
+			}
+			reply_get();
+		}
+	},
+	send: {
+		args: { to: '', text: '', request_id: '' },
+		call: function(req) {
+			let args = req.args;
+			if (!send_backend.available()) {
+				req.reply(error_result('SMS_UNSUPPORTED'));
+				return;
+			}
+			if (!idempotency_journal_ready) {
+				req.reply(error_result('IDEMPOTENCY_JOURNAL_UNHEALTHY'));
+				return;
+			}
+			if (!match(args.request_id, /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/)) {
+				req.reply(error_result('INVALID_REQUEST_ID'));
+				return;
+			}
+			let payload_fingerprint = send_payload_fingerprint(args.to, args.text);
+			if (exists(send_requests, args.request_id)) {
+				let existing = send_requests[args.request_id];
+				req.reply(existing.payload_fingerprint == payload_fingerprint
+					? public_send(existing)
+					: error_result('REQUEST_ID_CONFLICT'));
+				return;
+			}
+			if (length(send_order) >= config.history_max) {
+				req.reply(error_result('IDEMPOTENCY_HISTORY_FULL', { limit: config.history_max }));
+				return;
+			}
+			if (active_sends >= config.send_queue_max) {
+				req.reply(error_result('QUEUE_FULL', { limit: config.send_queue_max }));
+				return;
+			}
+			let accepted_at = time();
+			if (config.send_rate_limit_seconds && last_send_accepted_at &&
+				accepted_at - last_send_accepted_at < config.send_rate_limit_seconds) {
+				req.reply(error_result('RATE_LIMITED', {
+					retry_after_seconds: config.send_rate_limit_seconds - (accepted_at - last_send_accepted_at)
+				}));
+				return;
+			}
+
+			let encoded = core.encode_submit(args.to, args.text);
+			if (!encoded.ok) {
+				req.reply(error_result(encoded.error_code));
+				return;
+			}
+
+			let needs_capacity_refresh = !cache.loaded || !cache.updated_at ||
+				time() - cache.updated_at > config.cache_seconds;
+			if (needs_capacity_refresh) {
+				req.defer();
+				request_load(function() {
+					accept_send_request(req, args, payload_fingerprint, encoded);
+				});
+				return;
+			}
+			accept_send_request(req, args, payload_fingerprint, encoded);
+		}
+	},
+	status: {
+		args: { request_id: '' },
+		call: function(req) {
+			let args = req.args;
+			let request = send_requests[args.request_id];
+			req.reply(request ? public_send(request) : error_result('REQUEST_NOT_FOUND'));
+		}
+	},
+	history_clear: {
+		args: { confirm: '' },
+		call: function(req) {
+			if (req.args.confirm != 'PURGE-IDEMPOTENCY-HISTORY') {
+				req.reply(error_result('CONFIRMATION_REQUIRED'));
+				return;
+			}
+			if (active_sends > 0) {
+				req.reply(error_result('SEND_IN_PROGRESS', { active_sends: active_sends }));
+				return;
+			}
+			let count = length(send_order);
+			let backup = config.request_state_path + '.purge-backup';
+			if (fs.access(backup, 'f') != true) {
+				if (fs.access(config.request_state_path, 'f') == true) {
+					if (fs.rename(config.request_state_path, backup) != true) {
+						req.reply(error_result('IDEMPOTENCY_PURGE_FAILED'));
+						return;
+					}
+				}
+				else {
+					let guard = fs.open(backup, 'wxe', 384);
+					if (!guard || guard.write('PURGE-IN-PROGRESS') != 17 || guard.flush() == null || guard.close() == null) {
+						if (guard) guard.close();
+						idempotency_journal_ready = false;
+						req.reply(error_result('IDEMPOTENCY_PURGE_FAILED'));
+						return;
+					}
+				}
+			}
+			if (system(['/bin/sync']) != 0) {
+				idempotency_journal_ready = false;
+				req.reply(error_result('IDEMPOTENCY_PURGE_FAILED'));
+				return;
+			}
+
+			let saved_requests = send_requests;
+			let saved_order = send_order;
+			send_requests = {};
+			send_order = [];
+			idempotency_journal_ready = true;
+			if (!persist_send_history(true)) {
+				send_requests = saved_requests;
+				send_order = saved_order;
+				idempotency_journal_ready = false;
+				req.reply(error_result('IDEMPOTENCY_PURGE_FAILED'));
+				return;
+			}
+			/* The durable empty main journal is the commit point. Cleanup failure
+			 * cannot be reported as an uncommitted purge; disable new sends until an
+			 * administrator retries, because a backup resurrected after reboot must
+			 * take precedence over any newer IDs. */
+			if (fs.unlink(backup) != true || system(['/bin/sync']) != 0) {
+				idempotency_journal_ready = false;
+				audit('idempotency_purge_cleanup_pending', { records: count });
+				req.reply(envelope({ cleared: count, cleanup_pending: true, sending_enabled: false }));
+				return;
+			}
+			audit('idempotency_history_cleared', { records: count });
+			req.reply(envelope({ cleared: count, cleanup_pending: false, sending_enabled: true }));
+		}
+	},
+	delete: {
+		args: { id: '', fingerprint: '' },
+		call: function(req) {
+			let args = req.args;
+			if (!backend.available()) {
+				req.reply(error_result('SMS_UNSUPPORTED'));
+				return;
+			}
+			if (exists(inflight_deletes, args.id)) {
+				req.reply(error_result('DELETE_IN_PROGRESS'));
+				return;
+			}
+			if (!cache.by_id[args.id]) {
+				req.reply(error_result('MESSAGE_NOT_FOUND'));
+				return;
+			}
+			if (cache.by_id[args.id].fingerprint != args.fingerprint) {
+				req.reply(error_result('MESSAGE_CHANGED'));
+				return;
+			}
+
+			inflight_deletes[args.id] = true;
+			req.defer();
+			function reply_delete(result) {
+				delete inflight_deletes[args.id];
+				req.reply(result);
+			}
+			request_load(function(snapshot) {
+				if (length(snapshot.errors)) {
+					reply_delete(error_result('BACKEND_READ_FAILED'));
+					return;
+				}
+
+				let message = snapshot.by_id[args.id];
+				if (!message) {
+					reply_delete(error_result('MESSAGE_NOT_FOUND'));
+					return;
+				}
+				if (message.fingerprint != args.fingerprint) {
+					reply_delete(error_result('MESSAGE_CHANGED'));
+					return;
+				}
+				if (!length(message.locations)) {
+					reply_delete(error_result('DELETE_UNAVAILABLE'));
+					return;
+				}
+
+				cache.updated_at = 0;
+				enqueue(function(done) {
+					delete_locations(message, 0, function(result) {
+						restore_default_storage(function(restore_result) {
+							try {
+							if (result.ok && restore_result.ok) {
+								audit('delete_complete', { id: message.id, locations: length(message.locations), state: 'deleted' });
+								reply_delete(envelope({ deleted: true, id: message.id }));
+							}
+							else if (result.ok) {
+								audit('delete_complete', { id: message.id, locations: length(message.locations),
+									state: 'restore-failed', error_code: restore_result.error_code });
+								reply_delete(error_result(restore_result.error_code, {
+									deleted: true,
+									id: message.id
+								}));
+							}
+							else {
+								audit('delete_complete', { id: message.id, state: 'failed', error_code: result.error_code,
+									deleted_count: result.deleted_count ?? 0,
+									restore_error_code: restore_result.ok ? '' : restore_result.error_code });
+								reply_delete(error_result(result.error_code, {
+									partial: result.partial ?? false,
+									deleted_count: result.deleted_count ?? 0,
+									confirmed_deleted_count: result.confirmed_deleted_count ?? 0,
+									failed_location: result.failed_location ?? null,
+									unknown_location: result.unknown_location ?? null,
+									outcome_unknown: result.outcome_unknown ?? false,
+									restore_error_code: restore_result.ok ? null : restore_result.error_code
+								}));
+							}
+							}
+							catch (reply_exception) {
+								audit('delete_reply_exception', { id: message.id, error: reply_exception });
+							}
+							done();
+						});
+					});
+				}, function(exception) {
+					reply_delete(error_result('INTERNAL_OPERATION_FAILED'));
+					audit('delete_queue_exception', { id: args.id, error: exception });
+				});
+			});
+		}
+	},
+	summary: {
+		call: function(req) {
+			function reply_summary() {
+				if (!cache.loaded) {
+					req.reply(error_result('BACKEND_READ_FAILED', { errors: cache.errors }));
+					return;
+				}
+				let inbound = 0;
+				let outbound = 0;
+				for (let message in cache.messages) {
+					if (message.direction == 'inbound') inbound++;
+					else outbound++;
+				}
+				req.reply(envelope({
+					backend_id: backend.id,
+					backend_available: backend.available(),
+					cache_updated_at: cache.updated_at,
+					loaded: cache.loaded,
+					stale: length(cache.errors) > 0,
+					counts: { total: length(cache.messages), inbound: inbound, outbound: outbound },
+					storage: cache.storage,
+					queue_depth: length(operations) + (operation_busy ? 1 : 0),
+					send_queue_depth: active_sends,
+					send_queue_limit: config.send_queue_max,
+					reserved_send_slots: reserved_send_slots
+				}));
+			}
+
+			if (!cache.updated_at) {
+				req.defer();
+				request_load(reply_summary);
+				return;
+			}
+			reply_summary();
+		}
+	}
+};
+
+const published = bus.publish('modem.sms', methods);
+if (!published)
+	die(`Unable to publish modem.sms: ${bus.error()}\n`);
+
+uloop.signal('SIGTERM', function() { uloop.end(); });
+uloop.signal('SIGINT', function() { uloop.end(); });
+uloop.run();
