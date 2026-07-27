@@ -47,6 +47,16 @@
   - 前端不再包含旧 RPC `expect` 配置；
   - 简体中文 LMO 存在且非空。
 
+### 对前轮“虚拟化失败”记录的说明
+
+前轮记录的 WHPX/TCG 失败属于当时会话未能复现正确启动和构建编排，不能视为
+虚拟化永久失效。本轮已用同一 qcow2 和 WHPX 完成多次启动、SDK 构建及 ADB v3
+核验。路径映射、QEMU 固件搜索、Alpine loopback、虚拟 FAT 挂载/写入方式以及
+LuCI feed 实际源路径是恢复过程中的关键约束。
+
+完整解释和证据见
+[构建环境恢复与前轮虚拟化失败说明](docs/build-environment-recovery-2026-07-27.md)。
+
 ---
 
 ## 遗留问题状态
@@ -99,6 +109,7 @@
 - r2 构建日志：[BUILD.log](artifacts/0.1.0-r2/BUILD.log)
 - r2 离线核验：[OFFLINE-VERIFY.log](artifacts/0.1.0-r2/OFFLINE-VERIFY.log)
 - r2 部署状态：[DEPLOYMENT-PENDING.txt](artifacts/0.1.0-r2/DEPLOYMENT-PENDING.txt)
+- 构建环境恢复说明：[build-environment-recovery-2026-07-27.md](docs/build-environment-recovery-2026-07-27.md)
 - 设备备份：`.device-backups/sysupgrade-before-20260727.tar.gz`
 - 构建环境 VM：`.build-temp/alpine-build.qcow2`（24 GB 虚拟磁盘，Alpine Linux 3.23）
 - SDK 归档：`.build-temp/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
