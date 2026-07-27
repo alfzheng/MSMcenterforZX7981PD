@@ -858,7 +858,7 @@ return view.extend({
 					E('label', { 'class': 'cbi-value-title', 'for': 'sms-text' }, [ _('Message') ]),
 					E('div', { 'class': 'cbi-value-field' }, [
 						E('textarea', { 'id': 'sms-text', 'rows': 5, 'maxlength': 2048,
-							'input': ui.createHandlerFn(this, 'updateAnalysis') }),
+							'input': L.bind(this.updateAnalysis, this) }),
 						E('div', { 'id': 'sms-analysis', 'class': 'cbi-value-description' }, [
 							_('Enter a message to see encoding and segment count.')
 						])
