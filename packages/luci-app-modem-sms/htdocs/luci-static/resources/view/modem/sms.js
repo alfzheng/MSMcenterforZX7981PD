@@ -7,50 +7,43 @@
 
 const callCapabilities = rpc.declare({
 	object: 'modem.sms',
-	method: 'capabilities',
-	expect: { '': {} }
+	method: 'capabilities'
 });
 
 const callList = rpc.declare({
 	object: 'modem.sms',
 	method: 'list',
-	params: [ 'box', 'storage', 'limit', 'refresh' ],
-	expect: { '': {} }
+	params: [ 'box', 'storage', 'limit', 'refresh' ]
 });
 
 const callGet = rpc.declare({
 	object: 'modem.sms',
 	method: 'get',
-	params: [ 'id' ],
-	expect: { '': {} }
+	params: [ 'id' ]
 });
 
 const callAnalyse = rpc.declare({
 	object: 'modem.sms',
 	method: 'analyse',
-	params: [ 'text' ],
-	expect: { '': {} }
+	params: [ 'text' ]
 });
 
 const callSend = rpc.declare({
 	object: 'modem.sms',
 	method: 'send',
-	params: [ 'to', 'text', 'request_id' ],
-	expect: { '': {} }
+	params: [ 'to', 'text', 'request_id' ]
 });
 
 const callStatus = rpc.declare({
 	object: 'modem.sms',
 	method: 'status',
-	params: [ 'request_id' ],
-	expect: { '': {} }
+	params: [ 'request_id' ]
 });
 
 const callDelete = rpc.declare({
 	object: 'modem.sms',
 	method: 'delete',
-	params: [ 'id', 'fingerprint' ],
-	expect: { '': {} }
+	params: [ 'id', 'fingerprint' ]
 });
 
 const ACTIVE_REQUEST_KEY = 'modem-sms.active-request-id';
@@ -240,10 +233,20 @@ return view.extend({
 		this.recoveredRequestIds = storedRequestIds();
 		this.recoveredRequestId = this.recoveredRequestIds[0] || null;
 		return Promise.all([
-			L.resolveDefault(callCapabilities(), { ok: false, error_code: 'SERVICE_UNAVAILABLE' }),
-			L.resolveDefault(callList('inbox', 'ALL', 100, false), { ok: false, messages: [] }),
-			Promise.all(this.recoveredRequestIds.map(id =>
-				L.resolveDefault(callStatus(id), { ok: false, error_code: 'SERVICE_UNAVAILABLE' })))
+			callCapabilities().catch(function(err) {
+				console.error('modem-sms: capabilities RPC failed', err);
+				return { ok: false, error_code: 'SERVICE_UNAVAILABLE' };
+			}),
+			callList('inbox', 'ALL', 100, false).catch(function(err) {
+				console.error('modem-sms: list RPC failed', err);
+				return { ok: false, messages: [] };
+			}),
+			Promise.all(this.recoveredRequestIds.map(function(id) {
+				return callStatus(id).catch(function(err) {
+					console.error('modem-sms: status RPC failed for', id, err);
+					return { ok: false, error_code: 'SERVICE_UNAVAILABLE' };
+				});
+			}))
 		]);
 	},
 
@@ -746,9 +749,9 @@ return view.extend({
 	},
 
 	render(data) {
-		this.capabilities = data[0];
-		this.data = data[1];
-		const recoveredStatuses = data[2] || [];
+		this.capabilities = (data && data[0]) || {};
+		this.data = (data && data[1]) || { ok: false, messages: [] };
+		const recoveredStatuses = (data && data[2]) || [];
 		this.sendAttempt = null;
 		for (let i = 0; i < this.recoveredRequestIds.length; i++) {
 			const id = this.recoveredRequestIds[i];
@@ -800,12 +803,17 @@ return view.extend({
 		if (!this.sendAttempt)
 			this.recoveredRequestId = this.recoveredRequestIds[0] || null;
 		const unavailable = !this.capabilities.ok || !this.capabilities.backend_available;
+		const unavailableDetail = !this.capabilities.ok
+			? (this.capabilities.error_code || 'SERVICE_UNAVAILABLE')
+			: (!this.capabilities.backend_available ? 'BACKEND_UNAVAILABLE' : null);
 
 		const node = E('div', {}, [
 			E('h2', {}, [ _('SMS Center') ]),
 			E('p', {}, [ _('Read and send standard SMS messages through the modem. Messages and identifiers are masked by default.') ]),
 			unavailable ? E('div', { 'class': 'alert-message warning' }, [
-				_('SMS backend is unavailable. Mobile data service is not affected.')
+				_('SMS backend is unavailable. Mobile data service is not affected.'),
+				unavailableDetail ? E('br') : '',
+				unavailableDetail ? E('code', {}, [ unavailableDetail ]) : ''
 			]) : '',
 			E('div', { 'class': 'cbi-section' }, [
 				E('h3', {}, [ _('Messages') ]),
