@@ -1,6 +1,6 @@
 {
 	"admin/network/5g": {
-		"title": "5G",
+		"title": "SMS Center",
 		"order": 85,
 		"action": {
 			"type": "firstchild"
