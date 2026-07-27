@@ -29,3 +29,29 @@ PassWall2 及其所需组件。不要让两套透明代理同时运行，以避�
 
 本次只完成重启前设置，没有由代理执行整机重启。用户自行重启后仍需完成
 OpenClash 冷启动、联网、DNS 和 Antigravity 分流验收。
+
+## 整机重启验收结果
+
+用户完成整机重启后，[Codex@gpt-5.6-sol] 于 2026-07-27 进行了实时复核：
+
+- LuCI 显示系统运行时间约 3 分钟，确认不是旧会话或服务级重启；
+- `/tmp/codex-mihomo-runtime/clash` 已由持久压缩缓存方案自动恢复并运行；
+- 仅发现 Mihomo 和 OpenClash watchdog，没有 PassWall2、sing-box 或 xray
+  运行进程；
+- 重启后启动项仍保持 `openclash-core-prepare`、`openclash` 启用，其余四个
+  备用代理相关启动项禁用；
+- OpenClash 为 Meta 运行中、Fake-IP 增强模式、规则模式，配置文件仍为
+  `iGG-iGuge.yaml`；
+- 主策略仍使用 `♻️ 自动选择 - JP`，`openAI` 仍选择
+  `SG - 新加坡 01`；
+- 运行时规则表已加载
+  `antigravity-unleash.goog` 的 `Domain :: openAI` 规则；
+- ZX DNS 对 `antigravity-unleash.goog`、`openwrt.org`、`github.com`
+  分别返回 `198.18.0.72`、`198.18.0.73`、`198.18.0.48`，Fake-IP 正常；
+- OpenClash 路由器侧百度、网易云音乐、GitHub、YouTube 访问检查均为
+  “连接正常”；
+- 可用内存约 286.53 MiB，持久磁盘占用 19.69 / 46.48 MiB，临时空间占用
+  43.03 / 242.16 MiB。
+
+启动初期大陆 IP 白名单下载曾因 DNS 尚未就绪失败一次，随后自动重试、下载、
+替换成功并完成 OpenClash 重启。最终运行状态稳定，因此不构成验收阻断。
