@@ -1,0 +1,55 @@
+Status: VERIFIED (PASS)
+Date: 2026-07-27 (Asia/Shanghai)
+Verifier: [Codex@gpt-5.6-sol]
+Tool: apk-tools 3.0.5 from OpenWrt 25.12.5 mediatek/filogic SDK
+
+1. ADB v3 integrity
+
+Command:
+  apk --allow-untrusted verify *.apk
+
+Results:
+  luci-app-modem-sms-0.1.0-r2.apk: OK
+  luci-i18n-modem-sms-zh-cn-0.260721.25342.apk: OK
+  modem-smsd-0.1.0-r2.apk: OK
+
+2. Package metadata
+
+Inspected with:
+  apk adbdump --format json *.apk
+
+Results:
+  luci-app-modem-sms:
+    version: 0.1.0-r2
+    arch: noarch
+    depends: libc, modem-smsd
+  luci-i18n-modem-sms-zh-cn:
+    version: 0.260721.25342
+    arch: noarch
+    depends: libc, luci-app-modem-sms
+  modem-smsd:
+    version: 0.1.0-r2
+    arch: aarch64_cortex-a53
+    depends: libc, ubus, ucode, ucode-mod-fs, ucode-mod-ubus,
+             ucode-mod-uci, ucode-mod-uloop
+
+3. Extracted content
+
+All three packages were extracted with:
+  apk --allow-untrusted extract --destination <path> <package>
+
+Checks:
+  PASS: modem-smsd /usr/sbin/modem-smsd contains ubus_rpc_session
+  PASS: LuCI sms.js contains "modem-sms: capabilities RPC failed"
+  PASS: LuCI sms.js does not contain the legacy rpc expect configuration
+  PASS: modem-sms.zh-cn.lmo exists and is non-empty
+
+4. SHA-256
+
+  e1a64f7ca821c1f28ec7cefcef3e8ebca5ec46d3120aa8e86325b6e207956073  luci-app-modem-sms-0.1.0-r2.apk
+  6f8f5e3fcb83a46abfb25befd12c5a36d8c96a0a70a4b79df3f62a6016dfeb8b  luci-i18n-modem-sms-zh-cn-0.260721.25342.apk
+  8ee3a5aee95b6dc092a0f0771741fb0b1038e8864589bdaf980e1603506c44a6  modem-smsd-0.1.0-r2.apk
+
+Conclusion:
+  The 0.1.0-r2 release candidate passed offline build, integrity, metadata
+  and extracted-content verification. Device deployment remains pending.

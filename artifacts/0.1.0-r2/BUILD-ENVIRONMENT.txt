@@ -1,0 +1,17 @@
+Build date: 2026-07-27 (Asia/Shanghai)
+Source commit before release metadata update: c8eff73
+Source tree: main plus PKG_RELEASE=2 in modem-smsd and luci-app-modem-sms
+SDK: OpenWrt 25.12.5 mediatek/filogic, gcc 14.3.0, musl, Linux x86_64
+SDK archive SHA-256: ff4a38a397caa2cfe1c39e18f84ddede14878221b3593c3f2c4cfe24e3ec4c25
+Target package architecture: aarch64_cortex-a53
+LuCI package architecture: noarch
+Build guest: Alpine Linux 3.23
+Virtualization: QEMU WHPX, isolated qcow2 snapshot
+ADB tool: apk-tools 3.0.5
+
+Build inputs were copied to:
+- SDK package/modem-smsd
+- SDK feeds/luci/applications/luci-app-modem-sms
+
+The LuCI feed path is required. Copying the LuCI source only to SDK package/
+does not replace the feed package selected by this SDK.

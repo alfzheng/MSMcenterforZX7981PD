@@ -1,0 +1,17 @@
+Status: OFFLINE VERIFIED; DEVICE DEPLOYMENT PENDING
+
+The 0.1.0-r2 release candidate was built and verified on 2026-07-27.
+
+Offline verification completed:
+- all three ADB v3 packages passed `apk --allow-untrusted verify`;
+- package metadata and architectures were inspected with `apk adbdump`;
+- all packages were extracted successfully;
+- modem-smsd contains the ubus_rpc_session compatibility declaration;
+- luci-app-modem-sms contains the new RPC error diagnostics;
+- luci-app-modem-sms no longer contains the legacy rpc `expect` configuration;
+- the Simplified Chinese LMO is present and non-empty.
+
+Remaining gate:
+- install 0.1.0-r2 on ZX7981PD;
+- verify LuCI HTTP RPC and page rendering with a real authenticated session;
+- repeat capabilities, summary, list, send/status and delete regression checks.

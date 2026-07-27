@@ -1,15 +1,15 @@
 # ZX7981PD 通用短信中心：工作交接
 
 存档时间：2026-07-27（Asia/Shanghai）<br>
-交接 Agent：[Reasonix@reasoning-default]，前手 [Antigravity@gemini-3.6-flash]
+交接 Agent：[Codex@gpt-5.6-sol]，前手 [Reasonix@reasoning-default]、[Antigravity@gemini-3.6-flash]
 
 ## 当前结论
 
 - **源代码实现与修补**：**GO** (`modem-smsd` 增加 `ubus_rpc_session` 兼容支持，`static.ps1` 100% PASS)
-- **SDK 离线 APK 编译**：**GO** (`artifacts/0.1.0-r1/` 下 3 个 `.apk` 产物及 `SHA256SUMS` 均已就绪并核验)
-- **ZX7981PD 物理设备测试安装**：**GO** (在 ZX7981PD 上通过 `apk add --no-network --allow-untrusted` 成功安装)
-- **真机 CLI / ubus 服务与短信能力**：**GO** (`ubus call modem.sms capabilities/summary/list` 100% 成功，返回 33 条短信且 UCS2 解码与号码脱敏无误)
-- **LuCI Web 前端修复**：**CODE FIXED, APK NOT REBUILT** (前端 `sms.js` 已定位根因并提交修复，但新 APK 未编译、未部署到真机验证)
+- **SDK 离线 APK 编译**：**GO** (`artifacts/0.1.0-r2/` 下 3 个 ADB v3 APK、构建日志及 `SHA256SUMS` 已就绪)
+- **r1 真机安装与读取链路**：**GO** (在 ZX7981PD 上安装成功，`capabilities/summary/list` 返回正常，读取 33 条短信)
+- **r2 离线包内容核验**：**GO** (`apk verify`、`adbdump`、解包和关键修复内容检查全部通过)
+- **r2 真机安装与 LuCI Web 验证**：**PENDING** (尚未部署到 ZX7981PD，真实 LuCI 会话仍待验收)
 
 ---
 
@@ -27,15 +27,25 @@
 - **代码审查**：通过，无回归风险，语义等价
 - **Git 提交**：`2d5113c [Reasonix@reasoning-default] Fix LuCI frontend RPC compatibility and error handling`（已合入 `main` 分支）
 
-### 部署测试 — 未完成
+## 本轮工作 (Codex, 2026-07-27)
 
-**阻断原因**：
-1. **SSH 不可达**：路由器 `192.168.88.1:22` 拒绝现有密钥认证，无可用密码凭据
-2. **QEMU 虚拟化不可用**：`.build-temp/` 中的 Alpine VM (`alpine-build.qcow2`) 无法在当前 Windows 环境启动 —— TCG 崩溃、WHPX 不可用；中文路径导致 QEMU BIOS 文件加载失败；复制到 `/tmp/qemu-temp/` 后仍启动失败
-3. **SDK 无法使用**：SDK 完整路径为 `.build-temp/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`（252 MB），需要一个运行中的 Linux 环境配合 `zstd` + `tar` 解压后使用，当前 Windows + Git Bash 不可行
-4. **APK 手动重打包受阻**：`luci-app-modem-sms-0.1.0-r1.apk` 使用 Alpine ADB v3 二进制格式（`ADBd` 魔数），数据段经 gzip 整体压缩后嵌入 ADB 块中，手动解析重打包需要 `apk-tools`，当前环境未安装
+### 构建环境恢复与 r2 发布候选
 
-**当前 artifacts 目录中的 APK 仍为修复前的旧版本**（含 `expect: { '': {} }` 的 sms.js）。部署新 APK 前必须重新构建。
+- 通过 `Q:` 盘符规避中文宿主路径，使用 QEMU WHPX 成功启动 Alpine Linux 3.23。
+- 以 `snapshot=on` 挂载 `.build-temp/alpine-build.qcow2`，基础构建磁盘未被改写。
+- 启用 Alpine Live 的 loopback，恢复 SDK `fakeroot`/ADB v3 打包所需本地 IPC。
+- 确认 LuCI 必须同步到 SDK 的 `feeds/luci/applications/luci-app-modem-sms`；只复制到 `package/` 不会替换实际选中的 feed 包。
+- 将两个主包修订号提升为 `0.1.0-r2`，避免与真机现有旧 r1 同版本冲突。
+- 生成并归档：
+  - `modem-smsd-0.1.0-r2.apk`
+  - `luci-app-modem-sms-0.1.0-r2.apk`
+  - `luci-i18n-modem-sms-zh-cn-0.260721.25342.apk`
+- 使用 SDK 自带 apk-tools 3.0.5 完成 ADB v3 完整性、元数据、解包与内容验证。
+- 解包确认：
+  - 后端包含 `ubus_rpc_session`；
+  - 前端包含 `modem-sms: capabilities RPC failed` 诊断；
+  - 前端不再包含旧 RPC `expect` 配置；
+  - 简体中文 LMO 存在且非空。
 
 ---
 
@@ -43,39 +53,11 @@
 
 ### LuCI Web 显示异常 — 代码已修复，待真机验证
 
-修复后的 `sms.js` 已提交到仓库，但**尚未编译 APK 或部署到路由器**。
+修复后的 `sms.js` 已包含在 `luci-app-modem-sms-0.1.0-r2.apk` 中并通过离线解包检查，
+但**尚未部署到路由器进行真实 LuCI 会话验证**。
 
-**验证方法（按优先级）**：
-
-1. **最快方案 — 直接覆盖 JS 文件**（推荐首先尝试）：
-   ```sh
-   # 将修复后的 sms.js SCP 到路由器
-   scp packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js \
-     root@192.168.88.1:/www/luci-static/resources/view/modem/sms.js
-   # 清除 LuCI 缓存
-   ssh root@192.168.88.1 'rm -f /tmp/luci-indexcache /tmp/luci-modulecache/*'
-   ```
-   然后在浏览器中：
-   - 打开 `http://192.168.88.1` → 网络 → 5G → 短信中心
-   - 按 F12 打开 Console，观察 `modem-sms:` 前缀的日志
-   - 运行 `localStorage.clear(); sessionStorage.clear(); location.reload()`
-
-2. **完整方案 — SDK 重新编译 APK**：
-   ```sh
-   # 在 Linux 环境中解压 SDK
-   zstd -d openwrt-sdk-*.tar.zst | tar xf -
-   # 复制修改后的源码到 SDK package feed
-   cp -r packages/modem-smsd sdk/package/
-   cp -r packages/luci-app-modem-sms sdk/package/
-   # 编译
-   cd sdk && make package/modem-smsd/compile && make package/luci-app-modem-sms/compile
-   ```
-   产物位于 `bin/packages/aarch64_cortex-a53/` 下，按 `deployment-and-rollback.md` 流程部署。
-
-3. **容器方案**：
-   - 将 `.build-temp/alpine-build.qcow2` 挂载到一台可用的 Linux/Windows (Hyper-V) 宿主
-   - 启动 VM → 登录 root → SDK 已在 `/build/` 下
-   - 参考 `serial-benchmark.js` 中的 chroot 命令进入构建环境
+部署时应使用 `artifacts/0.1.0-r2/` 的完整包组和 `SHA256SUMS`，不要继续使用 r1，
+也不要用直接覆盖单个 JS 文件替代正式升级。
 
 ---
 
@@ -90,17 +72,19 @@
 | 无日志但页面仍报错 | 问题在 `render()` 的数据处理，检查 Network 标签中 `/ubus` 请求的响应内容 |
 | 无日志、页面正常 | 修复生效 |
 
-**重要**：若 console.error 输出 `RPC call to modem.sms/capabilities failed with ubus code 2: Invalid argument`，说明路由器上的 `modem-smsd` 仍是旧版（不含 `ubus_rpc_session` 参数）。需确认已安装 `modem-smsd-0.1.0-r1.apk`（SHA256: `7943965b...` 见 `OFFLINE-VERIFY.log` 第 99 行）。
+**重要**：若 console.error 输出 `RPC call to modem.sms/capabilities failed with ubus code 2: Invalid argument`，
+说明路由器仍在运行旧版后端。应确认已升级到 `modem-smsd-0.1.0-r2.apk` 并重启服务。
 
 ---
 
 ## 建议后续接入步骤
 
-1. **连接路由器**：获取有效的 SSH 凭据或配置密钥
-2. **部署修复后的前端**：按上述"最快方案"直接 SCP 覆盖 `sms.js` 并清除缓存
-3. **浏览器验证**：打开 F12 Console + Network，观察 RPC 调用结果
-4. **若修复生效**：重新构建 APK（完整方案），确保后续版本发布包含修复
-5. **若仍有问题**：根据 Console 日志定位具体错误，参考"排查要点"表格
+1. **连接路由器**：获取有效的 SSH 凭据或配置密钥。
+2. **校验 r2 产物**：在上传前后分别执行 `sha256sum -c SHA256SUMS`。
+3. **完整升级包组**：安装 r2 后端、r2 LuCI 主包和对应简体中文包，重启 `modem-smsd` 与 `rpcd`。
+4. **浏览器验证**：清理 LuCI/浏览器缓存，打开 F12 Console + Network 验证 `/ubus` 响应和页面渲染。
+5. **功能回归**：复测 capabilities、summary、list，并在受控条件下补测 send/status/delete。
+6. **验收归档**：保存真机日志，全部通过后再建立正式发布标签。
 
 ---
 
@@ -111,8 +95,12 @@
 - 上上轮提交：`7a697b4 [Antigravity@gemini-3.6-flash]` — `ubus_rpc_session` 参数声明
 - 验证日志：[VERIFY-ZX7981PD.log](artifacts/0.1.0-r1/VERIFY-ZX7981PD.log)
 - 构建日志：[BUILD.log](artifacts/0.1.0-r1/BUILD.log)
+- r2 发布候选：[artifacts/0.1.0-r2/](artifacts/0.1.0-r2/)
+- r2 构建日志：[BUILD.log](artifacts/0.1.0-r2/BUILD.log)
+- r2 离线核验：[OFFLINE-VERIFY.log](artifacts/0.1.0-r2/OFFLINE-VERIFY.log)
+- r2 部署状态：[DEPLOYMENT-PENDING.txt](artifacts/0.1.0-r2/DEPLOYMENT-PENDING.txt)
 - 设备备份：`.device-backups/sysupgrade-before-20260727.tar.gz`
 - 构建环境 VM：`.build-temp/alpine-build.qcow2`（24 GB 虚拟磁盘，Alpine Linux 3.23）
 - SDK 归档：`.build-temp/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
 
-**所有代码修改已按 AGENTS.md 规范提交。APK 重建和真机验证留待有 SSH/虚拟化能力的环境执行。**
+**r2 已完成构建和离线核验；剩余门禁是真机升级与 LuCI/发送删除回归。**

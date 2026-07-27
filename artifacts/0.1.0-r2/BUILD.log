@@ -1,0 +1,906 @@
++ sdk=/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64
++ src=/tmp/current-source
++ out=/tmp/current-apks
++ tar -xf /tmp/source-packages-current.tar -C /tmp/current-source
++ rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/luci-app-modem-sms /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms
++ cp -a /tmp/current-source/packages/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd
++ cp -a /tmp/current-source/packages/luci-app-modem-sms /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms
++ cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64
++ make defconfig
+
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ar3k-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mwifiex-sdio-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'eip197-mini-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'aeonsemi-as21xxx-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'airoha-en8811h-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8169-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'e100-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2x-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'edgeport-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8152-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'amdgpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'i915-firmware-dmc', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ivpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'radeon-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mt7622bt-firmware', which does not exist
+tmp/.config-package.in:66:warning: ignoring type redefinition of 'PACKAGE_libc' from 'bool' to 'tristate'
+tmp/.config-package.in:93:warning: ignoring type redefinition of 'PACKAGE_libgcc' from 'bool' to 'tristate'
+tmp/.config-package.in:409:warning: ignoring type redefinition of 'PACKAGE_rpcd' from 'bool' to 'tristate'
+tmp/.config-package.in:424:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-file' from 'bool' to 'tristate'
+tmp/.config-package.in:435:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-iwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:447:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-rpcsys' from 'bool' to 'tristate'
+tmp/.config-package.in:458:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:470:warning: ignoring type redefinition of 'PACKAGE_ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:481:warning: ignoring type redefinition of 'PACKAGE_ubusd' from 'bool' to 'tristate'
+tmp/.config-package.in:491:warning: ignoring type redefinition of 'PACKAGE_uci' from 'bool' to 'tristate'
+tmp/.config-package.in:520:warning: ignoring type redefinition of 'PACKAGE_libiwinfo-data' from 'bool' to 'tristate'
+tmp/.config-package.in:650:warning: ignoring type redefinition of 'PACKAGE_ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:680:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-fs' from 'bool' to 'tristate'
+tmp/.config-package.in:698:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-log' from 'bool' to 'tristate'
+tmp/.config-package.in:708:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-math' from 'bool' to 'tristate'
+tmp/.config-package.in:717:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-nl80211' from 'bool' to 'tristate'
+tmp/.config-package.in:737:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-rtnl' from 'bool' to 'tristate'
+tmp/.config-package.in:766:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:777:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uci' from 'bool' to 'tristate'
+tmp/.config-package.in:787:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uloop' from 'bool' to 'tristate'
+tmp/.config-package.in:812:warning: ignoring type redefinition of 'PACKAGE_libblobmsg-json' from 'bool' to 'tristate'
+tmp/.config-package.in:837:warning: ignoring type redefinition of 'PACKAGE_libiwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:850:warning: ignoring type redefinition of 'PACKAGE_libjson-c' from 'bool' to 'tristate'
+tmp/.config-package.in:869:warning: ignoring type redefinition of 'PACKAGE_liblucihttp' from 'bool' to 'tristate'
+tmp/.config-package.in:887:warning: ignoring type redefinition of 'PACKAGE_liblucihttp-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:908:warning: ignoring type redefinition of 'PACKAGE_libnl-tiny' from 'bool' to 'tristate'
+tmp/.config-package.in:916:warning: ignoring type redefinition of 'PACKAGE_libubox' from 'bool' to 'tristate'
+tmp/.config-package.in:934:warning: ignoring type redefinition of 'PACKAGE_libubus' from 'bool' to 'tristate'
+tmp/.config-package.in:953:warning: ignoring type redefinition of 'PACKAGE_libuci' from 'bool' to 'tristate'
+tmp/.config-package.in:972:warning: ignoring type redefinition of 'PACKAGE_libucode' from 'bool' to 'tristate'
+tmp/.config-package.in:981:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-luci' from 'bool' to 'tristate'
+tmp/.config-package.in:993:warning: ignoring type redefinition of 'PACKAGE_zlib' from 'bool' to 'tristate'
+tmp/.config-package.in:1010:warning: ignoring type redefinition of 'PACKAGE_luci-base' from 'bool' to 'tristate'
+tmp/.config-package.in:1046:warning: ignoring type redefinition of 'LUCI_LANG_ar' from 'bool' to 'tristate'
+tmp/.config-package.in:1049:warning: ignoring type redefinition of 'LUCI_LANG_bg' from 'bool' to 'tristate'
+tmp/.config-package.in:1052:warning: ignoring type redefinition of 'LUCI_LANG_bn_BD' from 'bool' to 'tristate'
+tmp/.config-package.in:1055:warning: ignoring type redefinition of 'LUCI_LANG_ca' from 'bool' to 'tristate'
+tmp/.config-package.in:1058:warning: ignoring type redefinition of 'LUCI_LANG_cs' from 'bool' to 'tristate'
+tmp/.config-package.in:1061:warning: ignoring type redefinition of 'LUCI_LANG_da' from 'bool' to 'tristate'
+tmp/.config-package.in:1064:warning: ignoring type redefinition of 'LUCI_LANG_de' from 'bool' to 'tristate'
+tmp/.config-package.in:1067:warning: ignoring type redefinition of 'LUCI_LANG_el' from 'bool' to 'tristate'
+tmp/.config-package.in:1070:warning: ignoring type redefinition of 'LUCI_LANG_es' from 'bool' to 'tristate'
+tmp/.config-package.in:1073:warning: ignoring type redefinition of 'LUCI_LANG_fa' from 'bool' to 'tristate'
+tmp/.config-package.in:1076:warning: ignoring type redefinition of 'LUCI_LANG_fi' from 'bool' to 'tristate'
+tmp/.config-package.in:1079:warning: ignoring type redefinition of 'LUCI_LANG_fil' from 'bool' to 'tristate'
+tmp/.config-package.in:1082:warning: ignoring type redefinition of 'LUCI_LANG_fr' from 'bool' to 'tristate'
+tmp/.config-package.in:1085:warning: ignoring type redefinition of 'LUCI_LANG_ga' from 'bool' to 'tristate'
+tmp/.config-package.in:1088:warning: ignoring type redefinition of 'LUCI_LANG_he' from 'bool' to 'tristate'
+tmp/.config-package.in:1091:warning: ignoring type redefinition of 'LUCI_LANG_hi' from 'bool' to 'tristate'
+tmp/.config-package.in:1094:warning: ignoring type redefinition of 'LUCI_LANG_hu' from 'bool' to 'tristate'
+tmp/.config-package.in:1097:warning: ignoring type redefinition of 'LUCI_LANG_it' from 'bool' to 'tristate'
+tmp/.config-package.in:1100:warning: ignoring type redefinition of 'LUCI_LANG_ja' from 'bool' to 'tristate'
+tmp/.config-package.in:1103:warning: ignoring type redefinition of 'LUCI_LANG_ka' from 'bool' to 'tristate'
+tmp/.config-package.in:1106:warning: ignoring type redefinition of 'LUCI_LANG_ko' from 'bool' to 'tristate'
+tmp/.config-package.in:1109:warning: ignoring type redefinition of 'LUCI_LANG_lo' from 'bool' to 'tristate'
+tmp/.config-package.in:1112:warning: ignoring type redefinition of 'LUCI_LANG_lt' from 'bool' to 'tristate'
+tmp/.config-package.in:1115:warning: ignoring type redefinition of 'LUCI_LANG_lv' from 'bool' to 'tristate'
+tmp/.config-package.in:1118:warning: ignoring type redefinition of 'LUCI_LANG_mr' from 'bool' to 'tristate'
+tmp/.config-package.in:1121:warning: ignoring type redefinition of 'LUCI_LANG_ms' from 'bool' to 'tristate'
+tmp/.config-package.in:1124:warning: ignoring type redefinition of 'LUCI_LANG_nb_NO' from 'bool' to 'tristate'
+tmp/.config-package.in:1127:warning: ignoring type redefinition of 'LUCI_LANG_nl' from 'bool' to 'tristate'
+tmp/.config-package.in:1130:warning: ignoring type redefinition of 'LUCI_LANG_pl' from 'bool' to 'tristate'
+tmp/.config-package.in:1133:warning: ignoring type redefinition of 'LUCI_LANG_pt' from 'bool' to 'tristate'
+tmp/.config-package.in:1136:warning: ignoring type redefinition of 'LUCI_LANG_pt_BR' from 'bool' to 'tristate'
+tmp/.config-package.in:1139:warning: ignoring type redefinition of 'LUCI_LANG_ro' from 'bool' to 'tristate'
+tmp/.config-package.in:1142:warning: ignoring type redefinition of 'LUCI_LANG_ru' from 'bool' to 'tristate'
+tmp/.config-package.in:1145:warning: ignoring type redefinition of 'LUCI_LANG_sk' from 'bool' to 'tristate'
+tmp/.config-package.in:1148:warning: ignoring type redefinition of 'LUCI_LANG_sv' from 'bool' to 'tristate'
+tmp/.config-package.in:1151:warning: ignoring type redefinition of 'LUCI_LANG_ta' from 'bool' to 'tristate'
+tmp/.config-package.in:1154:warning: ignoring type redefinition of 'LUCI_LANG_tr' from 'bool' to 'tristate'
+tmp/.config-package.in:1157:warning: ignoring type redefinition of 'LUCI_LANG_uk' from 'bool' to 'tristate'
+tmp/.config-package.in:1160:warning: ignoring type redefinition of 'LUCI_LANG_vi' from 'bool' to 'tristate'
+tmp/.config-package.in:1163:warning: ignoring type redefinition of 'LUCI_LANG_yua' from 'bool' to 'tristate'
+tmp/.config-package.in:1166:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hans' from 'bool' to 'tristate'
+tmp/.config-package.in:1169:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hant' from 'bool' to 'tristate'
+tmp/.config-package.in:1578:warning: ignoring type redefinition of 'PACKAGE_cgi-io' from 'bool' to 'tristate'
+tmp/.config-package.in:1627:warning: ignoring type redefinition of 'PACKAGE_jshn' from 'bool' to 'tristate'
+tmp/.config-package.in:1692:warning: ignoring type redefinition of 'PACKAGE_libjson-script' from 'bool' to 'tristate'
+tmp/.config-package.in:1701:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-html' from 'bool' to 'tristate'
+Config-build.in:2691:warning: defaults for choice values not supported
+Config-build.in:2695:warning: defaults for choice values not supported
+Config-build.in:2699:warning: defaults for choice values not supported
+#
+# No change to .config
+#
++ make package/modem-smsd/clean
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ar3k-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mwifiex-sdio-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'eip197-mini-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'aeonsemi-as21xxx-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'airoha-en8811h-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8169-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'e100-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2x-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'edgeport-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8152-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'amdgpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'i915-firmware-dmc', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ivpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'radeon-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mt7622bt-firmware', which does not exist
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+tmp/.config-package.in:66:warning: ignoring type redefinition of 'PACKAGE_libc' from 'bool' to 'tristate'
+tmp/.config-package.in:93:warning: ignoring type redefinition of 'PACKAGE_libgcc' from 'bool' to 'tristate'
+tmp/.config-package.in:409:warning: ignoring type redefinition of 'PACKAGE_rpcd' from 'bool' to 'tristate'
+tmp/.config-package.in:424:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-file' from 'bool' to 'tristate'
+tmp/.config-package.in:435:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-iwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:447:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-rpcsys' from 'bool' to 'tristate'
+tmp/.config-package.in:458:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:470:warning: ignoring type redefinition of 'PACKAGE_ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:481:warning: ignoring type redefinition of 'PACKAGE_ubusd' from 'bool' to 'tristate'
+tmp/.config-package.in:491:warning: ignoring type redefinition of 'PACKAGE_uci' from 'bool' to 'tristate'
+tmp/.config-package.in:520:warning: ignoring type redefinition of 'PACKAGE_libiwinfo-data' from 'bool' to 'tristate'
+tmp/.config-package.in:650:warning: ignoring type redefinition of 'PACKAGE_ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:680:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-fs' from 'bool' to 'tristate'
+tmp/.config-package.in:698:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-log' from 'bool' to 'tristate'
+tmp/.config-package.in:708:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-math' from 'bool' to 'tristate'
+tmp/.config-package.in:717:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-nl80211' from 'bool' to 'tristate'
+tmp/.config-package.in:737:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-rtnl' from 'bool' to 'tristate'
+tmp/.config-package.in:766:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:777:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uci' from 'bool' to 'tristate'
+tmp/.config-package.in:787:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uloop' from 'bool' to 'tristate'
+tmp/.config-package.in:812:warning: ignoring type redefinition of 'PACKAGE_libblobmsg-json' from 'bool' to 'tristate'
+tmp/.config-package.in:837:warning: ignoring type redefinition of 'PACKAGE_libiwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:850:warning: ignoring type redefinition of 'PACKAGE_libjson-c' from 'bool' to 'tristate'
+tmp/.config-package.in:869:warning: ignoring type redefinition of 'PACKAGE_liblucihttp' from 'bool' to 'tristate'
+tmp/.config-package.in:887:warning: ignoring type redefinition of 'PACKAGE_liblucihttp-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:908:warning: ignoring type redefinition of 'PACKAGE_libnl-tiny' from 'bool' to 'tristate'
+tmp/.config-package.in:916:warning: ignoring type redefinition of 'PACKAGE_libubox' from 'bool' to 'tristate'
+tmp/.config-package.in:934:warning: ignoring type redefinition of 'PACKAGE_libubus' from 'bool' to 'tristate'
+tmp/.config-package.in:953:warning: ignoring type redefinition of 'PACKAGE_libuci' from 'bool' to 'tristate'
+tmp/.config-package.in:972:warning: ignoring type redefinition of 'PACKAGE_libucode' from 'bool' to 'tristate'
+tmp/.config-package.in:981:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-luci' from 'bool' to 'tristate'
+tmp/.config-package.in:993:warning: ignoring type redefinition of 'PACKAGE_zlib' from 'bool' to 'tristate'
+tmp/.config-package.in:1010:warning: ignoring type redefinition of 'PACKAGE_luci-base' from 'bool' to 'tristate'
+tmp/.config-package.in:1046:warning: ignoring type redefinition of 'LUCI_LANG_ar' from 'bool' to 'tristate'
+tmp/.config-package.in:1049:warning: ignoring type redefinition of 'LUCI_LANG_bg' from 'bool' to 'tristate'
+tmp/.config-package.in:1052:warning: ignoring type redefinition of 'LUCI_LANG_bn_BD' from 'bool' to 'tristate'
+tmp/.config-package.in:1055:warning: ignoring type redefinition of 'LUCI_LANG_ca' from 'bool' to 'tristate'
+tmp/.config-package.in:1058:warning: ignoring type redefinition of 'LUCI_LANG_cs' from 'bool' to 'tristate'
+tmp/.config-package.in:1061:warning: ignoring type redefinition of 'LUCI_LANG_da' from 'bool' to 'tristate'
+tmp/.config-package.in:1064:warning: ignoring type redefinition of 'LUCI_LANG_de' from 'bool' to 'tristate'
+tmp/.config-package.in:1067:warning: ignoring type redefinition of 'LUCI_LANG_el' from 'bool' to 'tristate'
+tmp/.config-package.in:1070:warning: ignoring type redefinition of 'LUCI_LANG_es' from 'bool' to 'tristate'
+tmp/.config-package.in:1073:warning: ignoring type redefinition of 'LUCI_LANG_fa' from 'bool' to 'tristate'
+tmp/.config-package.in:1076:warning: ignoring type redefinition of 'LUCI_LANG_fi' from 'bool' to 'tristate'
+tmp/.config-package.in:1079:warning: ignoring type redefinition of 'LUCI_LANG_fil' from 'bool' to 'tristate'
+tmp/.config-package.in:1082:warning: ignoring type redefinition of 'LUCI_LANG_fr' from 'bool' to 'tristate'
+tmp/.config-package.in:1085:warning: ignoring type redefinition of 'LUCI_LANG_ga' from 'bool' to 'tristate'
+tmp/.config-package.in:1088:warning: ignoring type redefinition of 'LUCI_LANG_he' from 'bool' to 'tristate'
+tmp/.config-package.in:1091:warning: ignoring type redefinition of 'LUCI_LANG_hi' from 'bool' to 'tristate'
+tmp/.config-package.in:1094:warning: ignoring type redefinition of 'LUCI_LANG_hu' from 'bool' to 'tristate'
+tmp/.config-package.in:1097:warning: ignoring type redefinition of 'LUCI_LANG_it' from 'bool' to 'tristate'
+tmp/.config-package.in:1100:warning: ignoring type redefinition of 'LUCI_LANG_ja' from 'bool' to 'tristate'
+tmp/.config-package.in:1103:warning: ignoring type redefinition of 'LUCI_LANG_ka' from 'bool' to 'tristate'
+tmp/.config-package.in:1106:warning: ignoring type redefinition of 'LUCI_LANG_ko' from 'bool' to 'tristate'
+tmp/.config-package.in:1109:warning: ignoring type redefinition of 'LUCI_LANG_lo' from 'bool' to 'tristate'
+tmp/.config-package.in:1112:warning: ignoring type redefinition of 'LUCI_LANG_lt' from 'bool' to 'tristate'
+tmp/.config-package.in:1115:warning: ignoring type redefinition of 'LUCI_LANG_lv' from 'bool' to 'tristate'
+tmp/.config-package.in:1118:warning: ignoring type redefinition of 'LUCI_LANG_mr' from 'bool' to 'tristate'
+tmp/.config-package.in:1121:warning: ignoring type redefinition of 'LUCI_LANG_ms' from 'bool' to 'tristate'
+tmp/.config-package.in:1124:warning: ignoring type redefinition of 'LUCI_LANG_nb_NO' from 'bool' to 'tristate'
+tmp/.config-package.in:1127:warning: ignoring type redefinition of 'LUCI_LANG_nl' from 'bool' to 'tristate'
+tmp/.config-package.in:1130:warning: ignoring type redefinition of 'LUCI_LANG_pl' from 'bool' to 'tristate'
+tmp/.config-package.in:1133:warning: ignoring type redefinition of 'LUCI_LANG_pt' from 'bool' to 'tristate'
+tmp/.config-package.in:1136:warning: ignoring type redefinition of 'LUCI_LANG_pt_BR' from 'bool' to 'tristate'
+tmp/.config-package.in:1139:warning: ignoring type redefinition of 'LUCI_LANG_ro' from 'bool' to 'tristate'
+tmp/.config-package.in:1142:warning: ignoring type redefinition of 'LUCI_LANG_ru' from 'bool' to 'tristate'
+tmp/.config-package.in:1145:warning: ignoring type redefinition of 'LUCI_LANG_sk' from 'bool' to 'tristate'
+tmp/.config-package.in:1148:warning: ignoring type redefinition of 'LUCI_LANG_sv' from 'bool' to 'tristate'
+tmp/.config-package.in:1151:warning: ignoring type redefinition of 'LUCI_LANG_ta' from 'bool' to 'tristate'
+tmp/.config-package.in:1154:warning: ignoring type redefinition of 'LUCI_LANG_tr' from 'bool' to 'tristate'
+tmp/.config-package.in:1157:warning: ignoring type redefinition of 'LUCI_LANG_uk' from 'bool' to 'tristate'
+tmp/.config-package.in:1160:warning: ignoring type redefinition of 'LUCI_LANG_vi' from 'bool' to 'tristate'
+tmp/.config-package.in:1163:warning: ignoring type redefinition of 'LUCI_LANG_yua' from 'bool' to 'tristate'
+tmp/.config-package.in:1166:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hans' from 'bool' to 'tristate'
+tmp/.config-package.in:1169:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hant' from 'bool' to 'tristate'
+tmp/.config-package.in:1578:warning: ignoring type redefinition of 'PACKAGE_cgi-io' from 'bool' to 'tristate'
+tmp/.config-package.in:1627:warning: ignoring type redefinition of 'PACKAGE_jshn' from 'bool' to 'tristate'
+tmp/.config-package.in:1692:warning: ignoring type redefinition of 'PACKAGE_libjson-script' from 'bool' to 'tristate'
+tmp/.config-package.in:1701:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-html' from 'bool' to 'tristate'
+Config-build.in:2691:warning: defaults for choice values not supported
+Config-build.in:2695:warning: defaults for choice values not supported
+Config-build.in:2699:warning: defaults for choice values not supported
+#
+# No change to .config
+#
+ make[1] package/modem-smsd/clean
+ make[2] -C package/modem-smsd clean
++ make package/luci-app-modem-sms/clean
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ar3k-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mwifiex-sdio-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'eip197-mini-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'aeonsemi-as21xxx-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'airoha-en8811h-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8169-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'e100-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2x-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'edgeport-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8152-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'amdgpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'i915-firmware-dmc', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ivpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'radeon-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mt7622bt-firmware', which does not exist
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+tmp/.config-package.in:66:warning: ignoring type redefinition of 'PACKAGE_libc' from 'bool' to 'tristate'
+tmp/.config-package.in:93:warning: ignoring type redefinition of 'PACKAGE_libgcc' from 'bool' to 'tristate'
+tmp/.config-package.in:409:warning: ignoring type redefinition of 'PACKAGE_rpcd' from 'bool' to 'tristate'
+tmp/.config-package.in:424:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-file' from 'bool' to 'tristate'
+tmp/.config-package.in:435:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-iwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:447:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-rpcsys' from 'bool' to 'tristate'
+tmp/.config-package.in:458:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:470:warning: ignoring type redefinition of 'PACKAGE_ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:481:warning: ignoring type redefinition of 'PACKAGE_ubusd' from 'bool' to 'tristate'
+tmp/.config-package.in:491:warning: ignoring type redefinition of 'PACKAGE_uci' from 'bool' to 'tristate'
+tmp/.config-package.in:520:warning: ignoring type redefinition of 'PACKAGE_libiwinfo-data' from 'bool' to 'tristate'
+tmp/.config-package.in:650:warning: ignoring type redefinition of 'PACKAGE_ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:680:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-fs' from 'bool' to 'tristate'
+tmp/.config-package.in:698:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-log' from 'bool' to 'tristate'
+tmp/.config-package.in:708:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-math' from 'bool' to 'tristate'
+tmp/.config-package.in:717:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-nl80211' from 'bool' to 'tristate'
+tmp/.config-package.in:737:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-rtnl' from 'bool' to 'tristate'
+tmp/.config-package.in:766:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:777:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uci' from 'bool' to 'tristate'
+tmp/.config-package.in:787:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uloop' from 'bool' to 'tristate'
+tmp/.config-package.in:812:warning: ignoring type redefinition of 'PACKAGE_libblobmsg-json' from 'bool' to 'tristate'
+tmp/.config-package.in:837:warning: ignoring type redefinition of 'PACKAGE_libiwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:850:warning: ignoring type redefinition of 'PACKAGE_libjson-c' from 'bool' to 'tristate'
+tmp/.config-package.in:869:warning: ignoring type redefinition of 'PACKAGE_liblucihttp' from 'bool' to 'tristate'
+tmp/.config-package.in:887:warning: ignoring type redefinition of 'PACKAGE_liblucihttp-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:908:warning: ignoring type redefinition of 'PACKAGE_libnl-tiny' from 'bool' to 'tristate'
+tmp/.config-package.in:916:warning: ignoring type redefinition of 'PACKAGE_libubox' from 'bool' to 'tristate'
+tmp/.config-package.in:934:warning: ignoring type redefinition of 'PACKAGE_libubus' from 'bool' to 'tristate'
+tmp/.config-package.in:953:warning: ignoring type redefinition of 'PACKAGE_libuci' from 'bool' to 'tristate'
+tmp/.config-package.in:972:warning: ignoring type redefinition of 'PACKAGE_libucode' from 'bool' to 'tristate'
+tmp/.config-package.in:981:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-luci' from 'bool' to 'tristate'
+tmp/.config-package.in:993:warning: ignoring type redefinition of 'PACKAGE_zlib' from 'bool' to 'tristate'
+tmp/.config-package.in:1010:warning: ignoring type redefinition of 'PACKAGE_luci-base' from 'bool' to 'tristate'
+tmp/.config-package.in:1046:warning: ignoring type redefinition of 'LUCI_LANG_ar' from 'bool' to 'tristate'
+tmp/.config-package.in:1049:warning: ignoring type redefinition of 'LUCI_LANG_bg' from 'bool' to 'tristate'
+tmp/.config-package.in:1052:warning: ignoring type redefinition of 'LUCI_LANG_bn_BD' from 'bool' to 'tristate'
+tmp/.config-package.in:1055:warning: ignoring type redefinition of 'LUCI_LANG_ca' from 'bool' to 'tristate'
+tmp/.config-package.in:1058:warning: ignoring type redefinition of 'LUCI_LANG_cs' from 'bool' to 'tristate'
+tmp/.config-package.in:1061:warning: ignoring type redefinition of 'LUCI_LANG_da' from 'bool' to 'tristate'
+tmp/.config-package.in:1064:warning: ignoring type redefinition of 'LUCI_LANG_de' from 'bool' to 'tristate'
+tmp/.config-package.in:1067:warning: ignoring type redefinition of 'LUCI_LANG_el' from 'bool' to 'tristate'
+tmp/.config-package.in:1070:warning: ignoring type redefinition of 'LUCI_LANG_es' from 'bool' to 'tristate'
+tmp/.config-package.in:1073:warning: ignoring type redefinition of 'LUCI_LANG_fa' from 'bool' to 'tristate'
+tmp/.config-package.in:1076:warning: ignoring type redefinition of 'LUCI_LANG_fi' from 'bool' to 'tristate'
+tmp/.config-package.in:1079:warning: ignoring type redefinition of 'LUCI_LANG_fil' from 'bool' to 'tristate'
+tmp/.config-package.in:1082:warning: ignoring type redefinition of 'LUCI_LANG_fr' from 'bool' to 'tristate'
+tmp/.config-package.in:1085:warning: ignoring type redefinition of 'LUCI_LANG_ga' from 'bool' to 'tristate'
+tmp/.config-package.in:1088:warning: ignoring type redefinition of 'LUCI_LANG_he' from 'bool' to 'tristate'
+tmp/.config-package.in:1091:warning: ignoring type redefinition of 'LUCI_LANG_hi' from 'bool' to 'tristate'
+tmp/.config-package.in:1094:warning: ignoring type redefinition of 'LUCI_LANG_hu' from 'bool' to 'tristate'
+tmp/.config-package.in:1097:warning: ignoring type redefinition of 'LUCI_LANG_it' from 'bool' to 'tristate'
+tmp/.config-package.in:1100:warning: ignoring type redefinition of 'LUCI_LANG_ja' from 'bool' to 'tristate'
+tmp/.config-package.in:1103:warning: ignoring type redefinition of 'LUCI_LANG_ka' from 'bool' to 'tristate'
+tmp/.config-package.in:1106:warning: ignoring type redefinition of 'LUCI_LANG_ko' from 'bool' to 'tristate'
+tmp/.config-package.in:1109:warning: ignoring type redefinition of 'LUCI_LANG_lo' from 'bool' to 'tristate'
+tmp/.config-package.in:1112:warning: ignoring type redefinition of 'LUCI_LANG_lt' from 'bool' to 'tristate'
+tmp/.config-package.in:1115:warning: ignoring type redefinition of 'LUCI_LANG_lv' from 'bool' to 'tristate'
+tmp/.config-package.in:1118:warning: ignoring type redefinition of 'LUCI_LANG_mr' from 'bool' to 'tristate'
+tmp/.config-package.in:1121:warning: ignoring type redefinition of 'LUCI_LANG_ms' from 'bool' to 'tristate'
+tmp/.config-package.in:1124:warning: ignoring type redefinition of 'LUCI_LANG_nb_NO' from 'bool' to 'tristate'
+tmp/.config-package.in:1127:warning: ignoring type redefinition of 'LUCI_LANG_nl' from 'bool' to 'tristate'
+tmp/.config-package.in:1130:warning: ignoring type redefinition of 'LUCI_LANG_pl' from 'bool' to 'tristate'
+tmp/.config-package.in:1133:warning: ignoring type redefinition of 'LUCI_LANG_pt' from 'bool' to 'tristate'
+tmp/.config-package.in:1136:warning: ignoring type redefinition of 'LUCI_LANG_pt_BR' from 'bool' to 'tristate'
+tmp/.config-package.in:1139:warning: ignoring type redefinition of 'LUCI_LANG_ro' from 'bool' to 'tristate'
+tmp/.config-package.in:1142:warning: ignoring type redefinition of 'LUCI_LANG_ru' from 'bool' to 'tristate'
+tmp/.config-package.in:1145:warning: ignoring type redefinition of 'LUCI_LANG_sk' from 'bool' to 'tristate'
+tmp/.config-package.in:1148:warning: ignoring type redefinition of 'LUCI_LANG_sv' from 'bool' to 'tristate'
+tmp/.config-package.in:1151:warning: ignoring type redefinition of 'LUCI_LANG_ta' from 'bool' to 'tristate'
+tmp/.config-package.in:1154:warning: ignoring type redefinition of 'LUCI_LANG_tr' from 'bool' to 'tristate'
+tmp/.config-package.in:1157:warning: ignoring type redefinition of 'LUCI_LANG_uk' from 'bool' to 'tristate'
+tmp/.config-package.in:1160:warning: ignoring type redefinition of 'LUCI_LANG_vi' from 'bool' to 'tristate'
+tmp/.config-package.in:1163:warning: ignoring type redefinition of 'LUCI_LANG_yua' from 'bool' to 'tristate'
+tmp/.config-package.in:1166:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hans' from 'bool' to 'tristate'
+tmp/.config-package.in:1169:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hant' from 'bool' to 'tristate'
+tmp/.config-package.in:1578:warning: ignoring type redefinition of 'PACKAGE_cgi-io' from 'bool' to 'tristate'
+tmp/.config-package.in:1627:warning: ignoring type redefinition of 'PACKAGE_jshn' from 'bool' to 'tristate'
+tmp/.config-package.in:1692:warning: ignoring type redefinition of 'PACKAGE_libjson-script' from 'bool' to 'tristate'
+tmp/.config-package.in:1701:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-html' from 'bool' to 'tristate'
+Config-build.in:2691:warning: defaults for choice values not supported
+Config-build.in:2695:warning: defaults for choice values not supported
+Config-build.in:2699:warning: defaults for choice values not supported
+#
+# No change to .config
+#
+ make[1] package/luci-app-modem-sms/clean
+ make[2] -C feeds/luci/applications/luci-app-modem-sms clean
++ find bin/packages -type f '(' -name 'modem-smsd-*.apk' -o -name 'luci-app-modem-sms-*.apk' -o -name 'luci-i18n-modem-sms-zh-cn-*.apk' ')' -delete
++ make -j4 package/modem-smsd/compile V=s
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ar3k-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mwifiex-sdio-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'eip197-mini-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'aeonsemi-as21xxx-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'airoha-en8811h-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8169-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'e100-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2x-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'edgeport-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8152-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'amdgpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'i915-firmware-dmc', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ivpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'radeon-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mt7622bt-firmware', which does not exist
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+tmp/.config-package.in:66:warning: ignoring type redefinition of 'PACKAGE_libc' from 'bool' to 'tristate'
+tmp/.config-package.in:93:warning: ignoring type redefinition of 'PACKAGE_libgcc' from 'bool' to 'tristate'
+tmp/.config-package.in:409:warning: ignoring type redefinition of 'PACKAGE_rpcd' from 'bool' to 'tristate'
+tmp/.config-package.in:424:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-file' from 'bool' to 'tristate'
+tmp/.config-package.in:435:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-iwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:447:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-rpcsys' from 'bool' to 'tristate'
+tmp/.config-package.in:458:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:470:warning: ignoring type redefinition of 'PACKAGE_ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:481:warning: ignoring type redefinition of 'PACKAGE_ubusd' from 'bool' to 'tristate'
+tmp/.config-package.in:491:warning: ignoring type redefinition of 'PACKAGE_uci' from 'bool' to 'tristate'
+tmp/.config-package.in:520:warning: ignoring type redefinition of 'PACKAGE_libiwinfo-data' from 'bool' to 'tristate'
+tmp/.config-package.in:650:warning: ignoring type redefinition of 'PACKAGE_ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:680:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-fs' from 'bool' to 'tristate'
+tmp/.config-package.in:698:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-log' from 'bool' to 'tristate'
+tmp/.config-package.in:708:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-math' from 'bool' to 'tristate'
+tmp/.config-package.in:717:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-nl80211' from 'bool' to 'tristate'
+tmp/.config-package.in:737:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-rtnl' from 'bool' to 'tristate'
+tmp/.config-package.in:766:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:777:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uci' from 'bool' to 'tristate'
+tmp/.config-package.in:787:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uloop' from 'bool' to 'tristate'
+tmp/.config-package.in:812:warning: ignoring type redefinition of 'PACKAGE_libblobmsg-json' from 'bool' to 'tristate'
+tmp/.config-package.in:837:warning: ignoring type redefinition of 'PACKAGE_libiwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:850:warning: ignoring type redefinition of 'PACKAGE_libjson-c' from 'bool' to 'tristate'
+tmp/.config-package.in:869:warning: ignoring type redefinition of 'PACKAGE_liblucihttp' from 'bool' to 'tristate'
+tmp/.config-package.in:887:warning: ignoring type redefinition of 'PACKAGE_liblucihttp-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:908:warning: ignoring type redefinition of 'PACKAGE_libnl-tiny' from 'bool' to 'tristate'
+tmp/.config-package.in:916:warning: ignoring type redefinition of 'PACKAGE_libubox' from 'bool' to 'tristate'
+tmp/.config-package.in:934:warning: ignoring type redefinition of 'PACKAGE_libubus' from 'bool' to 'tristate'
+tmp/.config-package.in:953:warning: ignoring type redefinition of 'PACKAGE_libuci' from 'bool' to 'tristate'
+tmp/.config-package.in:972:warning: ignoring type redefinition of 'PACKAGE_libucode' from 'bool' to 'tristate'
+tmp/.config-package.in:981:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-luci' from 'bool' to 'tristate'
+tmp/.config-package.in:993:warning: ignoring type redefinition of 'PACKAGE_zlib' from 'bool' to 'tristate'
+tmp/.config-package.in:1010:warning: ignoring type redefinition of 'PACKAGE_luci-base' from 'bool' to 'tristate'
+tmp/.config-package.in:1046:warning: ignoring type redefinition of 'LUCI_LANG_ar' from 'bool' to 'tristate'
+tmp/.config-package.in:1049:warning: ignoring type redefinition of 'LUCI_LANG_bg' from 'bool' to 'tristate'
+tmp/.config-package.in:1052:warning: ignoring type redefinition of 'LUCI_LANG_bn_BD' from 'bool' to 'tristate'
+tmp/.config-package.in:1055:warning: ignoring type redefinition of 'LUCI_LANG_ca' from 'bool' to 'tristate'
+tmp/.config-package.in:1058:warning: ignoring type redefinition of 'LUCI_LANG_cs' from 'bool' to 'tristate'
+tmp/.config-package.in:1061:warning: ignoring type redefinition of 'LUCI_LANG_da' from 'bool' to 'tristate'
+tmp/.config-package.in:1064:warning: ignoring type redefinition of 'LUCI_LANG_de' from 'bool' to 'tristate'
+tmp/.config-package.in:1067:warning: ignoring type redefinition of 'LUCI_LANG_el' from 'bool' to 'tristate'
+tmp/.config-package.in:1070:warning: ignoring type redefinition of 'LUCI_LANG_es' from 'bool' to 'tristate'
+tmp/.config-package.in:1073:warning: ignoring type redefinition of 'LUCI_LANG_fa' from 'bool' to 'tristate'
+tmp/.config-package.in:1076:warning: ignoring type redefinition of 'LUCI_LANG_fi' from 'bool' to 'tristate'
+tmp/.config-package.in:1079:warning: ignoring type redefinition of 'LUCI_LANG_fil' from 'bool' to 'tristate'
+tmp/.config-package.in:1082:warning: ignoring type redefinition of 'LUCI_LANG_fr' from 'bool' to 'tristate'
+tmp/.config-package.in:1085:warning: ignoring type redefinition of 'LUCI_LANG_ga' from 'bool' to 'tristate'
+tmp/.config-package.in:1088:warning: ignoring type redefinition of 'LUCI_LANG_he' from 'bool' to 'tristate'
+tmp/.config-package.in:1091:warning: ignoring type redefinition of 'LUCI_LANG_hi' from 'bool' to 'tristate'
+tmp/.config-package.in:1094:warning: ignoring type redefinition of 'LUCI_LANG_hu' from 'bool' to 'tristate'
+tmp/.config-package.in:1097:warning: ignoring type redefinition of 'LUCI_LANG_it' from 'bool' to 'tristate'
+tmp/.config-package.in:1100:warning: ignoring type redefinition of 'LUCI_LANG_ja' from 'bool' to 'tristate'
+tmp/.config-package.in:1103:warning: ignoring type redefinition of 'LUCI_LANG_ka' from 'bool' to 'tristate'
+tmp/.config-package.in:1106:warning: ignoring type redefinition of 'LUCI_LANG_ko' from 'bool' to 'tristate'
+tmp/.config-package.in:1109:warning: ignoring type redefinition of 'LUCI_LANG_lo' from 'bool' to 'tristate'
+tmp/.config-package.in:1112:warning: ignoring type redefinition of 'LUCI_LANG_lt' from 'bool' to 'tristate'
+tmp/.config-package.in:1115:warning: ignoring type redefinition of 'LUCI_LANG_lv' from 'bool' to 'tristate'
+tmp/.config-package.in:1118:warning: ignoring type redefinition of 'LUCI_LANG_mr' from 'bool' to 'tristate'
+tmp/.config-package.in:1121:warning: ignoring type redefinition of 'LUCI_LANG_ms' from 'bool' to 'tristate'
+tmp/.config-package.in:1124:warning: ignoring type redefinition of 'LUCI_LANG_nb_NO' from 'bool' to 'tristate'
+tmp/.config-package.in:1127:warning: ignoring type redefinition of 'LUCI_LANG_nl' from 'bool' to 'tristate'
+tmp/.config-package.in:1130:warning: ignoring type redefinition of 'LUCI_LANG_pl' from 'bool' to 'tristate'
+tmp/.config-package.in:1133:warning: ignoring type redefinition of 'LUCI_LANG_pt' from 'bool' to 'tristate'
+tmp/.config-package.in:1136:warning: ignoring type redefinition of 'LUCI_LANG_pt_BR' from 'bool' to 'tristate'
+tmp/.config-package.in:1139:warning: ignoring type redefinition of 'LUCI_LANG_ro' from 'bool' to 'tristate'
+tmp/.config-package.in:1142:warning: ignoring type redefinition of 'LUCI_LANG_ru' from 'bool' to 'tristate'
+tmp/.config-package.in:1145:warning: ignoring type redefinition of 'LUCI_LANG_sk' from 'bool' to 'tristate'
+tmp/.config-package.in:1148:warning: ignoring type redefinition of 'LUCI_LANG_sv' from 'bool' to 'tristate'
+tmp/.config-package.in:1151:warning: ignoring type redefinition of 'LUCI_LANG_ta' from 'bool' to 'tristate'
+tmp/.config-package.in:1154:warning: ignoring type redefinition of 'LUCI_LANG_tr' from 'bool' to 'tristate'
+tmp/.config-package.in:1157:warning: ignoring type redefinition of 'LUCI_LANG_uk' from 'bool' to 'tristate'
+tmp/.config-package.in:1160:warning: ignoring type redefinition of 'LUCI_LANG_vi' from 'bool' to 'tristate'
+tmp/.config-package.in:1163:warning: ignoring type redefinition of 'LUCI_LANG_yua' from 'bool' to 'tristate'
+tmp/.config-package.in:1166:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hans' from 'bool' to 'tristate'
+tmp/.config-package.in:1169:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hant' from 'bool' to 'tristate'
+tmp/.config-package.in:1578:warning: ignoring type redefinition of 'PACKAGE_cgi-io' from 'bool' to 'tristate'
+tmp/.config-package.in:1627:warning: ignoring type redefinition of 'PACKAGE_jshn' from 'bool' to 'tristate'
+tmp/.config-package.in:1692:warning: ignoring type redefinition of 'PACKAGE_libjson-script' from 'bool' to 'tristate'
+tmp/.config-package.in:1701:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-html' from 'bool' to 'tristate'
+Config-build.in:2691:warning: defaults for choice values not supported
+Config-build.in:2695:warning: defaults for choice values not supported
+Config-build.in:2699:warning: defaults for choice values not supported
+#
+# No change to .config
+#
+make[1]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/toolchain'
+Makefile:798: WARNING: skipping libgomp -- package has no install section
+echo "libgcc" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/toolchain.default.install
+echo "libc" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/toolchain.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/toolchain'
+time: package/toolchain/compile#0.21#0.21#0.33
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libmd'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libnl-tiny'
+Makefile:47: WARNING: skipping libmd -- package has no install section
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libmd'
+time: package/feeds/base/libmd/compile#0.17#0.23#0.45
+echo "libnl-tiny" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libnl-tiny.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libjson-c'
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libnl-tiny'
+time: package/feeds/base/libnl-tiny/compile#0.18#0.24#0.48
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+echo "libjson-c" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libjson-c.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libjson-c'
+time: package/feeds/base/libjson-c/compile#0.26#0.32#0.59
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+time: package/feeds/base/lua/compile#0.25#0.32#0.56
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/zlib'
+echo "zlib" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/zlib.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/zlib'
+time: package/feeds/base/zlib/compile#0.16#0.25#0.34
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libubox'
+echo "libubox" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "libblobmsg-json" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "jshn" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "libjson-script" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libubox'
+time: package/feeds/base/libubox/compile#0.22#0.31#0.40
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/uci'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/ubus'
+echo "libuci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/uci.default.install
+echo "uci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/uci.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/uci'
+time: package/feeds/base/uci/compile#0.18#0.23#0.34
+echo "libubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+echo "ubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+echo "ubusd" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/ubus'
+time: package/feeds/base/ubus/compile#0.18#0.25#0.36
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/ucode'
+echo "libucode" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-fs" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-log" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-math" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-nl80211" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-rtnl" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-ubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-uci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-uloop" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/ucode'
+time: package/feeds/base/ucode/compile#0.33#0.41#0.58
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.prepared_87d818bd005b95bcb0a780bb96934239_18f1e190c5d53547fed41a3eaa76e9e9_check
+true
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0 -mindepth 1 -type f -not -name '.*' -not -name 'version.date' -printf '%T@\n' 2>/dev/null | cut -d. -f1 | sort -n | tail -n1 > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/version.date
+[ ! -d ./src/ ] || cp -fpR ./src/. /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.prepared_87d818bd005b95bcb0a780bb96934239_18f1e190c5d53547fed41a3eaa76e9e9
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.configured_*
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/stamp/.modem-smsd_installed
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/./; if [ -x ./configure ]; then find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ -name config.guess | xargs -r chmod u+w; find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ -name config.guess | xargs -r -n1 cp --remove-destination /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config.guess; find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ -name config.sub | xargs -r chmod u+w; find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ -name config.sub | xargs -r -n1 cp --remove-destination /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config.sub; AR="aarch64-openwrt-linux-musl-gcc-ar" AS="aarch64-openwrt-linux-musl-gcc -c -Os -pipe -mcpu=cortex-a53 -fno-caller-saves -fno-plt -fhonour-copts -ffile-prefix-map=/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0=modem-smsd-0.1.0 -Wl,-z,max-page-size=4096 -Wformat -Werror=format-security -fstack-protector -D_FORTIFY_SOURCE=1 -Wl,-z,now -Wl,-z,relro -Wl,-z,pack-relative-relocs" LD="aarch64-openwrt-linux-musl-ld.bfd" NM="aarch64-openwrt-linux-musl-gcc-nm" CC="aarch64-openwrt-linux-musl-gcc" GCC="aarch64-openwrt-linux-musl-gcc" CXX="aarch64-openwrt-linux-musl-g++" RANLIB="aarch64-openwrt-linux-musl-gcc-ranlib" STRIP=aarch64-openwrt-linux-musl-strip OBJCOPY=aarch64-openwrt-linux-musl-objcopy OBJDUMP=aarch64-openwrt-linux-musl-objdump SIZE=aarch64-openwrt-linux-musl-size CFLAGS="-Os -pipe -mcpu=cortex-a53 -fno-caller-saves -fno-plt -fhonour-copts -ffile-prefix-map=/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0=modem-smsd-0.1.0 -Wl,-z,max-page-size=4096 -Wformat -Werror=format-security -fstack-protector -D_FORTIFY_SOURCE=1 -Wl,-z,now -Wl,-z,relro -Wl,-z,pack-relative-relocs " CXXFLAGS="-Os -pipe -mcpu=cortex-a53 -fno-caller-saves -fno-plt -fhonour-copts -ffile-prefix-map=/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0=modem-smsd-0.1.0 -Wl,-z,max-page-size=4096 -Wformat -Werror=format-security -fstack-protector -D_FORTIFY_SOURCE=1 -Wl,-z,now -Wl,-z,relro -Wl,-z,pack-relative-relocs " CPPFLAGS="-I/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/usr/include -I/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/include -I/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/include/fortify " LDFLAGS="-L/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/usr/lib -L/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_cortex-a53_gcc-14.3.0_musl/lib -fuse-ld=bfd -zmax-page-size=4096 -znow -zrelro -zpack-relative-relocs "   ./configure --target=aarch64-openwrt-linux --host=aarch64-openwrt-linux --build=x86_64-pc-linux-musl --disable-dependency-tracking --program-prefix="" --program-suffix="" --prefix=/usr --exec-prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --libexecdir=/usr/lib --sysconfdir=/etc --datadir=/usr/share --localstatedir=/var --mandir=/usr/man --infodir=/usr/info --disable-nls  ; fi; )
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.configured_68b329da9893e34099c7d8ad5cb9c940
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.built
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.built_check
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.built
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd.installed /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/etc/config
+install -m0600 ./files/etc/config/modem-sms /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/etc/config/modem-sms
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/etc/init.d
+install -m0755 ./files/etc/init.d/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/etc/init.d/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/sbin
+install -m0755 ./files/usr/sbin/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/sbin/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/bin
+install -m0755 ./files/usr/bin/modem-smsctl /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/bin/modem-smsctl
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/share/modem-sms
+install -m0644 ./files/usr/share/modem-sms/core.uc /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/share/modem-sms/core.uc
+install -m0644 ./files/usr/share/modem-sms/backend-lteat.uc /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/usr/share/modem-sms/backend-lteat.uc
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd.installed
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp
+SHELL= flock /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/.root-copy.flock -c 'cp -fpR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.pkgdir/modem-smsd/. /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp/.modem-smsd_installed
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/targets/mediatek/filogic/packages /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/etc/config
+install -m0600 ./files/etc/config/modem-sms /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/etc/config/modem-sms
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/etc/init.d
+install -m0755 ./files/etc/init.d/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/etc/init.d/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/sbin
+install -m0755 ./files/usr/sbin/modem-smsd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/sbin/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/bin
+install -m0755 ./files/usr/bin/modem-smsctl /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/bin/modem-smsctl
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/share/modem-sms
+install -m0644 ./files/usr/share/modem-sms/core.uc /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/share/modem-sms/core.uc
+install -m0644 ./files/usr/share/modem-sms/backend-lteat.uc /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/usr/share/modem-sms/backend-lteat.uc
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd -name 'CVS' -o -name '.svn' -o -name '.#*' -o -name '*~'| xargs -r rm -rf
+export CROSS="aarch64-openwrt-linux-musl-"   ; NM="aarch64-openwrt-linux-musl-nm" STRIP="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/sstrip -z" STRIP_KMOD="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/strip-kmod.sh" PATCHELF="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/patchelf" /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/rstrip.sh /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/base
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd; echo "$V_Package_modem_smsd_conffiles" > conffiles; )
+( echo "#!/bin/sh"; echo "[ \"\${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="modem-smsd"'; echo "add_group_and_user"; echo "default_postinst"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/postinst-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/postinst-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-install;
+( echo "#!/bin/sh"; echo 'export PKG_UPGRADE=1'; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-install ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-install"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-upgrade;
+( echo "#!/bin/sh"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="modem-smsd"'; echo "default_prerm"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/prerm-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/prerm-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/pre-deinstall;
+[ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/postrm ] || sed -zi 's/^\s*#!/#!/' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/postrm";
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.rusers; fi;
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.alternatives; fi;
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd && find . -type f,l -printf "/%P\n" | sort > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/modem-smsd.list && mv /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/modem-smsd.list /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.list)
+# Move conffiles to IDIR and build conffiles_static with csums
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/conffiles ]; then mv -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/conffiles /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.conffiles_static; done; fi
+# Some package (base-files) manually append stuff to conffiles
+# Append stuff from it and delete the CONTROL directory since everything else should be migrated
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL/conffiles ]; then echo $(IDIR_modem-smsd)/CONTROL/conffiles >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL/conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/lib/apk/packages/modem-smsd.conffiles_static; done; rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL/conffiles; fi
+if [ -z "$(ls -A /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL 2>/dev/null)" ]; then rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL; else echo "CONTROL directory /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd/CONTROL is not empty! This is not right and should be checked!" >&2; exit 1; fi
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/fakeroot /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk mkpkg --info "name:modem-smsd" --info "version:0.1.0-r2"  --info "description:A small ubus service that validates, decodes and sends SMS messages through a replaceable modem backend. The initial backend wraps the firmware lteat ubus object and never opens a modem TTY directly." --info "arch:aarch64_cortex-a53" --info "license:MIT" --info "origin:feeds/base/modem-smsd" --info "url:" --info "maintainer:ZX7981PD SMS Project" --info "provides:modem-smsd-any"  --script "post-install:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-install" --script "post-upgrade:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/post-upgrade" --script "pre-deinstall:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/apk-aarch64_cortex-a53/modem-smsd/pre-deinstall" --info "depends:libc ubus ucode ucode-mod-ubus ucode-mod-uloop ucode-mod-uci ucode-mod-fs" --files "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/ipkg-aarch64_cortex-a53/modem-smsd" --output "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/base/modem-smsd-0.1.0-r2.apk"
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd'
+time: package/modem-smsd/compile#0.33#0.58#0.83
+make[1]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64'
++ make -j4 package/luci-app-modem-sms/compile V=s
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ar3k-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mwifiex-sdio-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'eip197-mini-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'aeonsemi-as21xxx-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'airoha-en8811h-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8169-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'e100-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'bnx2x-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb2', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'edgeport-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'r8152-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'kmod-phy-bcm-ns-usb3', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'amdgpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'i915-firmware-dmc', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'ivpu-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'radeon-firmware', which does not exist
+WARNING: Makefile 'package/kernel/linux/Makefile' has a dependency on 'mt7622bt-firmware', which does not exist
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/config'
+tmp/.config-package.in:66:warning: ignoring type redefinition of 'PACKAGE_libc' from 'bool' to 'tristate'
+tmp/.config-package.in:93:warning: ignoring type redefinition of 'PACKAGE_libgcc' from 'bool' to 'tristate'
+tmp/.config-package.in:409:warning: ignoring type redefinition of 'PACKAGE_rpcd' from 'bool' to 'tristate'
+tmp/.config-package.in:424:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-file' from 'bool' to 'tristate'
+tmp/.config-package.in:435:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-iwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:447:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-rpcsys' from 'bool' to 'tristate'
+tmp/.config-package.in:458:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:470:warning: ignoring type redefinition of 'PACKAGE_ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:481:warning: ignoring type redefinition of 'PACKAGE_ubusd' from 'bool' to 'tristate'
+tmp/.config-package.in:491:warning: ignoring type redefinition of 'PACKAGE_uci' from 'bool' to 'tristate'
+tmp/.config-package.in:520:warning: ignoring type redefinition of 'PACKAGE_libiwinfo-data' from 'bool' to 'tristate'
+tmp/.config-package.in:650:warning: ignoring type redefinition of 'PACKAGE_ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:680:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-fs' from 'bool' to 'tristate'
+tmp/.config-package.in:698:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-log' from 'bool' to 'tristate'
+tmp/.config-package.in:708:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-math' from 'bool' to 'tristate'
+tmp/.config-package.in:717:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-nl80211' from 'bool' to 'tristate'
+tmp/.config-package.in:737:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-rtnl' from 'bool' to 'tristate'
+tmp/.config-package.in:766:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-ubus' from 'bool' to 'tristate'
+tmp/.config-package.in:777:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uci' from 'bool' to 'tristate'
+tmp/.config-package.in:787:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-uloop' from 'bool' to 'tristate'
+tmp/.config-package.in:812:warning: ignoring type redefinition of 'PACKAGE_libblobmsg-json' from 'bool' to 'tristate'
+tmp/.config-package.in:837:warning: ignoring type redefinition of 'PACKAGE_libiwinfo' from 'bool' to 'tristate'
+tmp/.config-package.in:850:warning: ignoring type redefinition of 'PACKAGE_libjson-c' from 'bool' to 'tristate'
+tmp/.config-package.in:869:warning: ignoring type redefinition of 'PACKAGE_liblucihttp' from 'bool' to 'tristate'
+tmp/.config-package.in:887:warning: ignoring type redefinition of 'PACKAGE_liblucihttp-ucode' from 'bool' to 'tristate'
+tmp/.config-package.in:908:warning: ignoring type redefinition of 'PACKAGE_libnl-tiny' from 'bool' to 'tristate'
+tmp/.config-package.in:916:warning: ignoring type redefinition of 'PACKAGE_libubox' from 'bool' to 'tristate'
+tmp/.config-package.in:934:warning: ignoring type redefinition of 'PACKAGE_libubus' from 'bool' to 'tristate'
+tmp/.config-package.in:953:warning: ignoring type redefinition of 'PACKAGE_libuci' from 'bool' to 'tristate'
+tmp/.config-package.in:972:warning: ignoring type redefinition of 'PACKAGE_libucode' from 'bool' to 'tristate'
+tmp/.config-package.in:981:warning: ignoring type redefinition of 'PACKAGE_rpcd-mod-luci' from 'bool' to 'tristate'
+tmp/.config-package.in:993:warning: ignoring type redefinition of 'PACKAGE_zlib' from 'bool' to 'tristate'
+tmp/.config-package.in:1010:warning: ignoring type redefinition of 'PACKAGE_luci-base' from 'bool' to 'tristate'
+tmp/.config-package.in:1046:warning: ignoring type redefinition of 'LUCI_LANG_ar' from 'bool' to 'tristate'
+tmp/.config-package.in:1049:warning: ignoring type redefinition of 'LUCI_LANG_bg' from 'bool' to 'tristate'
+tmp/.config-package.in:1052:warning: ignoring type redefinition of 'LUCI_LANG_bn_BD' from 'bool' to 'tristate'
+tmp/.config-package.in:1055:warning: ignoring type redefinition of 'LUCI_LANG_ca' from 'bool' to 'tristate'
+tmp/.config-package.in:1058:warning: ignoring type redefinition of 'LUCI_LANG_cs' from 'bool' to 'tristate'
+tmp/.config-package.in:1061:warning: ignoring type redefinition of 'LUCI_LANG_da' from 'bool' to 'tristate'
+tmp/.config-package.in:1064:warning: ignoring type redefinition of 'LUCI_LANG_de' from 'bool' to 'tristate'
+tmp/.config-package.in:1067:warning: ignoring type redefinition of 'LUCI_LANG_el' from 'bool' to 'tristate'
+tmp/.config-package.in:1070:warning: ignoring type redefinition of 'LUCI_LANG_es' from 'bool' to 'tristate'
+tmp/.config-package.in:1073:warning: ignoring type redefinition of 'LUCI_LANG_fa' from 'bool' to 'tristate'
+tmp/.config-package.in:1076:warning: ignoring type redefinition of 'LUCI_LANG_fi' from 'bool' to 'tristate'
+tmp/.config-package.in:1079:warning: ignoring type redefinition of 'LUCI_LANG_fil' from 'bool' to 'tristate'
+tmp/.config-package.in:1082:warning: ignoring type redefinition of 'LUCI_LANG_fr' from 'bool' to 'tristate'
+tmp/.config-package.in:1085:warning: ignoring type redefinition of 'LUCI_LANG_ga' from 'bool' to 'tristate'
+tmp/.config-package.in:1088:warning: ignoring type redefinition of 'LUCI_LANG_he' from 'bool' to 'tristate'
+tmp/.config-package.in:1091:warning: ignoring type redefinition of 'LUCI_LANG_hi' from 'bool' to 'tristate'
+tmp/.config-package.in:1094:warning: ignoring type redefinition of 'LUCI_LANG_hu' from 'bool' to 'tristate'
+tmp/.config-package.in:1097:warning: ignoring type redefinition of 'LUCI_LANG_it' from 'bool' to 'tristate'
+tmp/.config-package.in:1100:warning: ignoring type redefinition of 'LUCI_LANG_ja' from 'bool' to 'tristate'
+tmp/.config-package.in:1103:warning: ignoring type redefinition of 'LUCI_LANG_ka' from 'bool' to 'tristate'
+tmp/.config-package.in:1106:warning: ignoring type redefinition of 'LUCI_LANG_ko' from 'bool' to 'tristate'
+tmp/.config-package.in:1109:warning: ignoring type redefinition of 'LUCI_LANG_lo' from 'bool' to 'tristate'
+tmp/.config-package.in:1112:warning: ignoring type redefinition of 'LUCI_LANG_lt' from 'bool' to 'tristate'
+tmp/.config-package.in:1115:warning: ignoring type redefinition of 'LUCI_LANG_lv' from 'bool' to 'tristate'
+tmp/.config-package.in:1118:warning: ignoring type redefinition of 'LUCI_LANG_mr' from 'bool' to 'tristate'
+tmp/.config-package.in:1121:warning: ignoring type redefinition of 'LUCI_LANG_ms' from 'bool' to 'tristate'
+tmp/.config-package.in:1124:warning: ignoring type redefinition of 'LUCI_LANG_nb_NO' from 'bool' to 'tristate'
+tmp/.config-package.in:1127:warning: ignoring type redefinition of 'LUCI_LANG_nl' from 'bool' to 'tristate'
+tmp/.config-package.in:1130:warning: ignoring type redefinition of 'LUCI_LANG_pl' from 'bool' to 'tristate'
+tmp/.config-package.in:1133:warning: ignoring type redefinition of 'LUCI_LANG_pt' from 'bool' to 'tristate'
+tmp/.config-package.in:1136:warning: ignoring type redefinition of 'LUCI_LANG_pt_BR' from 'bool' to 'tristate'
+tmp/.config-package.in:1139:warning: ignoring type redefinition of 'LUCI_LANG_ro' from 'bool' to 'tristate'
+tmp/.config-package.in:1142:warning: ignoring type redefinition of 'LUCI_LANG_ru' from 'bool' to 'tristate'
+tmp/.config-package.in:1145:warning: ignoring type redefinition of 'LUCI_LANG_sk' from 'bool' to 'tristate'
+tmp/.config-package.in:1148:warning: ignoring type redefinition of 'LUCI_LANG_sv' from 'bool' to 'tristate'
+tmp/.config-package.in:1151:warning: ignoring type redefinition of 'LUCI_LANG_ta' from 'bool' to 'tristate'
+tmp/.config-package.in:1154:warning: ignoring type redefinition of 'LUCI_LANG_tr' from 'bool' to 'tristate'
+tmp/.config-package.in:1157:warning: ignoring type redefinition of 'LUCI_LANG_uk' from 'bool' to 'tristate'
+tmp/.config-package.in:1160:warning: ignoring type redefinition of 'LUCI_LANG_vi' from 'bool' to 'tristate'
+tmp/.config-package.in:1163:warning: ignoring type redefinition of 'LUCI_LANG_yua' from 'bool' to 'tristate'
+tmp/.config-package.in:1166:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hans' from 'bool' to 'tristate'
+tmp/.config-package.in:1169:warning: ignoring type redefinition of 'LUCI_LANG_zh_Hant' from 'bool' to 'tristate'
+tmp/.config-package.in:1578:warning: ignoring type redefinition of 'PACKAGE_cgi-io' from 'bool' to 'tristate'
+tmp/.config-package.in:1627:warning: ignoring type redefinition of 'PACKAGE_jshn' from 'bool' to 'tristate'
+tmp/.config-package.in:1692:warning: ignoring type redefinition of 'PACKAGE_libjson-script' from 'bool' to 'tristate'
+tmp/.config-package.in:1701:warning: ignoring type redefinition of 'PACKAGE_ucode-mod-html' from 'bool' to 'tristate'
+Config-build.in:2691:warning: defaults for choice values not supported
+Config-build.in:2695:warning: defaults for choice values not supported
+Config-build.in:2699:warning: defaults for choice values not supported
+#
+# No change to .config
+#
+make[1]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/modules/luci-base'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/contrib/package/csstidy'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/lua-5.1.5 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+time: package/feeds/base/lua/host-compile#0.27#0.37#0.72
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/csstidy-2021.06.13~707feaec -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/contrib/package/csstidy'
+time: package/feeds/luci/csstidy/host-compile#0.28#0.38#0.74
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/toolchain'
+Makefile:798: WARNING: skipping libgomp -- package has no install section
+echo "libgcc" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/toolchain.default.install
+echo "libc" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/toolchain.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/toolchain -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/toolchain'
+time: package/toolchain/compile#0.21#0.23#0.38
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libmd'
+Makefile:47: WARNING: skipping libmd -- package has no install section
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libjson-c'
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libmd-1.1.0 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libmd'
+time: package/feeds/base/libmd/compile#0.20#0.24#0.47
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+[ ! -d ./src/ ] || cp -fpR ./src/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base/.preparedd0acf2baebfa702d457b0a8db60bac0e_18f1e190c5d53547fed41a3eaa76e9e9
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base/.configured
+echo "libjson-c" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libjson-c.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/json-c-0.18 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libjson-c'
+time: package/feeds/base/libjson-c/compile#0.29#0.35#0.69
+make -C src/ clean po2lmo jsmin
+make[3]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/modules/luci-base/src'
+rm -f contrib/lemon lib/*.o lib/plural_formula.c lib/plural_formula.h *.o core.so jsmin po2lmo version.uc
+cc    -DNDEBUG -c -o po2lmo.o po2lmo.c
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/lua-5.1.5 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+cc -std=gnu17 -o contrib/lemon contrib/lemon.c
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/lua'
+time: package/feeds/base/lua/compile#0.28#0.39#0.73
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libnl-tiny'
+./contrib/lemon -q lib/plural_formula.y
+cc    -DNDEBUG -c -o lib/lmo.o lib/lmo.c
+cc    -DNDEBUG -c -o lib/plural_formula.o lib/plural_formula.c
+cc  -o po2lmo po2lmo.o lib/lmo.o lib/plural_formula.o
+cc    -DNDEBUG -c -o jsmin.o jsmin.c
+echo "libnl-tiny" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libnl-tiny.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libnl-tiny-2025.12.02~40493a65 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+cc  -o jsmin jsmin.o
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libnl-tiny'
+time: package/feeds/base/libnl-tiny/compile#0.23#0.30#0.58
+make[3]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/modules/luci-base/src'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base/.built
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/hostpkg/bin
+install -m0755 src/po2lmo /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/hostpkg/bin/po2lmo
+install -m0755 src/jsmin /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/hostpkg/bin/jsmin
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/hostpkg/stamp
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base/.built
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/hostpkg/stamp/.luci-base_installed 
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/hostpkg/luci-base -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/modules/luci-base'
+time: package/feeds/luci/luci-base/host-compile#1.97#1.72#4.18
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/zlib'
+echo "zlib" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/zlib.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/zlib-1.3.1 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libubox'
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/zlib'
+time: package/feeds/base/zlib/compile#0.24#0.27#0.44
+echo "libubox" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "libblobmsg-json" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "jshn" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+echo "libjson-script" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/libubox.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/libubox-2026.06.19~7dd12784 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/libs/libubox'
+time: package/feeds/base/libubox/compile#0.27#0.35#0.47
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/uci'
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/ubus'
+echo "libuci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/uci.default.install
+echo "uci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/uci.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/uci-2025.12.02~66127cd7 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/uci'
+time: package/feeds/base/uci/compile#0.18#0.24#0.35
+echo "libubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+echo "ubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+echo "ubusd" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ubus.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ubus-2026.06.28~24864e78 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/system/ubus'
+time: package/feeds/base/ubus/compile#0.20#0.23#0.36
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/ucode'
+echo "libucode" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-fs" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-log" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-math" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-nl80211" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-rtnl" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-ubus" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-uci" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+echo "ucode-mod-uloop" >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo/ucode.default.install
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/ucode-2026.01.16~85922056 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/base_root/package/utils/ucode'
+time: package/feeds/base/ucode/compile#0.26#0.38#0.50
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd'
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/modem-smsd-0.1.0 -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/package/modem-smsd'
+time: package/modem-smsd/compile#0.16#0.17#0.25
+make[2]: Entering directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.prepared_75c38bb762c9b21c16bc5b7cb3bd2f5b_18f1e190c5d53547fed41a3eaa76e9e9_check
+for d in luasrc ucode htdocs root src; do if [ -d ./$d ]; then mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/$d; cp -fpR ./$d/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/$d/; fi; done
+true
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms -mindepth 1 -type f -not -name '.*' -not -name 'version.date' -printf '%T@\n' 2>/dev/null | cut -d. -f1 | sort -n | tail -n1 > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/version.date
+[ ! -d ./src/ ] || cp -fpR ./src/. /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.prepared_75c38bb762c9b21c16bc5b7cb3bd2f5b_18f1e190c5d53547fed41a3eaa76e9e9
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.configured_*
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/stamp/.luci-app-modem-sms_installed
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.configured_811dc2f0ccfbe4b68a068320f8578dbe
+rm -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.built
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.built_check
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.built
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms.installed /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/www
+cp -pR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/htdocs/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/www/
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/www/ -type f -name '*.js' | while read src; do if jsmin < "$src" > "$src.o"; then mv "$src.o" "$src"; fi; done
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/www/ -type f -name '*.css' | while read src; do if csstidy "$src" --template=highest --remove_last_semicolon=true "$src.o"; then mv "$src.o" "$src"; fi; done
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/
+cp -pR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/root/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms.installed
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp
+SHELL= flock /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/.root-copy.flock -c 'cp -fpR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-app-modem-sms/. /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp/.luci-app-modem-sms_installed
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/targets/mediatek/filogic/packages /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/www
+cp -pR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/htdocs/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/www/
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/www/ -type f -name '*.js' | while read src; do if jsmin < "$src" > "$src.o"; then mv "$src.o" "$src"; fi; done
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/www/ -type f -name '*.css' | while read src; do if csstidy "$src" --template=highest --remove_last_semicolon=true "$src.o"; then mv "$src.o" "$src"; fi; done
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/
+cp -pR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/root/* /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms -name 'CVS' -o -name '.svn' -o -name '.#*' -o -name '*~'| xargs -r rm -rf
+export CROSS="aarch64-openwrt-linux-musl-"   ; NM="aarch64-openwrt-linux-musl-nm" STRIP="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/sstrip -z" STRIP_KMOD="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/strip-kmod.sh" PATCHELF="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/patchelf" /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/rstrip.sh /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms; echo "$V_Package_luci_app_modem_sms_postinst" > postinst-pkg; chmod 0755 postinst-pkg;)
+( echo "#!/bin/sh"; echo "[ \"\${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="luci-app-modem-sms"'; echo "add_group_and_user"; echo "default_postinst"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/postinst-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/postinst-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-install;
+( echo "#!/bin/sh"; echo 'export PKG_UPGRADE=1'; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-install ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-install"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-upgrade;
+( echo "#!/bin/sh"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="luci-app-modem-sms"'; echo "default_prerm"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/prerm-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/prerm-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/pre-deinstall;
+[ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/postrm ] || sed -zi 's/^\s*#!/#!/' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/postrm";
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.rusers; fi;
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.alternatives; fi;
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms && find . -type f,l -printf "/%P\n" | sort > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/luci-app-modem-sms.list && mv /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/luci-app-modem-sms.list /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.list)
+# Move conffiles to IDIR and build conffiles_static with csums
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/conffiles ]; then mv -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/conffiles /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.conffiles_static; done; fi
+# Some package (base-files) manually append stuff to conffiles
+# Append stuff from it and delete the CONTROL directory since everything else should be migrated
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL/conffiles ]; then echo $(IDIR_luci-app-modem-sms)/CONTROL/conffiles >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL/conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/lib/apk/packages/luci-app-modem-sms.conffiles_static; done; rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL/conffiles; fi
+if [ -z "$(ls -A /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL 2>/dev/null)" ]; then rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL; else echo "CONTROL directory /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms/CONTROL is not empty! This is not right and should be checked!" >&2; exit 1; fi
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/fakeroot /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk mkpkg --info "name:luci-app-modem-sms" --info "version:0.1.0-r2"  --info "description:LuCI support for the modem SMS service" --info "arch:noarch" --info "license:" --info "origin:feeds/luci/feeds/luci/applications/luci-app-modem-sms" --info "url:https://github.com/openwrt/luci" --info "maintainer:OpenWrt LuCI community" --info "provides:luci-app-modem-sms-any"  --script "post-install:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-install" --script "post-upgrade:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/post-upgrade" --script "pre-deinstall:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-app-modem-sms/pre-deinstall" --info "depends:libc modem-smsd" --files "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-app-modem-sms" --output "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci/luci-app-modem-sms-0.1.0-r2.apk"
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/targets/mediatek/filogic/packages /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/pkginfo
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/etc/uci-defaults
+echo "uci set luci.languages.zh_cn='简体中文 (Simplified Chinese)'; uci commit luci" > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/etc/uci-defaults/luci-i18n-modem-sms-zh-cn
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/usr/lib/lua/luci/i18n
+po2lmo /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms/po/zh_Hans/modem-sms.po /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/usr/lib/lua/luci/i18n/modem-sms.zh-cn.lmo;
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn -name 'CVS' -o -name '.svn' -o -name '.#*' -o -name '*~'| xargs -r rm -rf
+export CROSS="aarch64-openwrt-linux-musl-"   ; NM="aarch64-openwrt-linux-musl-nm" STRIP="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/sstrip -z" STRIP_KMOD="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/strip-kmod.sh" PATCHELF="/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/patchelf" /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/scripts/rstrip.sh /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn; )
+( echo "#!/bin/sh"; echo "[ \"\${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="luci-i18n-modem-sms-zh-cn"'; echo "add_group_and_user"; echo "default_postinst"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/postinst-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/postinst-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-install;
+( echo "#!/bin/sh"; echo 'export PKG_UPGRADE=1'; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-install ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-install"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-upgrade;
+( echo "#!/bin/sh"; echo "[ -s "\${IPKG_INSTROOT}/lib/functions.sh" ] || exit 0"; echo ". \${IPKG_INSTROOT}/lib/functions.sh"; echo 'export root="${IPKG_INSTROOT}"'; echo 'export pkgname="luci-i18n-modem-sms-zh-cn"'; echo "default_prerm"; [ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/prerm-pkg ] || sed '/^\s*#!/d' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/prerm-pkg"; ) > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/pre-deinstall;
+[ ! -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/postrm ] || sed -zi 's/^\s*#!/#!/' "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/postrm";
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.rusers; fi;
+if [ -n "" ]; then echo  > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.alternatives; fi;
+(cd /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn && find . -type f,l -printf "/%P\n" | sort > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/luci-i18n-modem-sms-zh-cn.list && mv /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/luci-i18n-modem-sms-zh-cn.list /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.list)
+# Move conffiles to IDIR and build conffiles_static with csums
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/conffiles ]; then mv -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/conffiles /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.conffiles_static; done; fi
+# Some package (base-files) manually append stuff to conffiles
+# Append stuff from it and delete the CONTROL directory since everything else should be migrated
+if [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL/conffiles ]; then echo $(IDIR_luci-i18n-modem-sms-zh-cn)/CONTROL/conffiles >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.conffiles; for file in $(cat /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL/conffiles); do [ -f /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/$file ] || continue; csum=$(/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/mkhash sha256 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/$file); echo $file $csum >> /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/lib/apk/packages/luci-i18n-modem-sms-zh-cn.conffiles_static; done; rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL/conffiles; fi
+if [ -z "$(ls -A /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL 2>/dev/null)" ]; then rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL; else echo "CONTROL directory /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn/CONTROL is not empty! This is not right and should be checked!" >&2; exit 1; fi
+/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/fakeroot /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk mkpkg --info "name:luci-i18n-modem-sms-zh-cn" --info "version:0.260721.25342"  --info "description:Translation for luci-app-modem-sms - 简体中文 (Simplified Chinese)" --info "arch:noarch" --info "license:" --info "origin:feeds/luci/feeds/luci/applications/luci-app-modem-sms" --info "url:" --info "maintainer:" --info "provides:luci-i18n-modem-sms-zh-cn-any"  --script "post-install:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-install" --script "post-upgrade:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/post-upgrade" --script "pre-deinstall:/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/apk-all/luci-i18n-modem-sms-zh-cn/pre-deinstall" --info "depends:libc luci-app-modem-sms" --files "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/ipkg-all/luci-i18n-modem-sms-zh-cn" --output "/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/bin/packages/aarch64_cortex-a53/luci/luci-i18n-modem-sms-zh-cn-0.260721.25342.apk"
+rm -rf /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn.installed /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn/etc/uci-defaults
+echo "uci set luci.languages.zh_cn='简体中文 (Simplified Chinese)'; uci commit luci" > /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn/etc/uci-defaults/luci-i18n-modem-sms-zh-cn
+install -d -m0755 /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn/usr/lib/lua/luci/i18n
+po2lmo /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms/po/zh_Hans/modem-sms.po /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn/usr/lib/lua/luci/i18n/modem-sms.zh-cn.lmo;
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn.installed
+mkdir -p /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp
+SHELL= flock /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/tmp/.root-copy.flock -c 'cp -fpR /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.pkgdir/luci-i18n-modem-sms-zh-cn/. /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/'
+touch /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/target-aarch64_cortex-a53_musl/root-mediatek/stamp/.luci-i18n-modem-sms-zh-cn_installed
+touch -r /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.built /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms/.autoremove 2>/dev/null >/dev/null
+find /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/build_dir/target-aarch64_cortex-a53_musl/luci-app-modem-sms -mindepth 1 -maxdepth 1 -not '(' -type f -and -name '.*' -and -size 0 ')' -and -not -name '.pkgdir' -and -not -name 'version.date'  -print0 | xargs -r -0 rm -rf
+make[2]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/feeds/luci/applications/luci-app-modem-sms'
+time: package/feeds/luci/luci-app-modem-sms/compile#0.41#0.60#0.87
+make[1]: Leaving directory '/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64'
++ find bin/packages -type f '(' -name 'modem-smsd-*.apk' -o -name 'luci-app-modem-sms-*.apk' -o -name 'luci-i18n-modem-sms-zh-cn-*.apk' ')' -exec cp -f '{}' /tmp/current-apks/ ';'
+++ find /tmp/current-apks -maxdepth 1 -type f -name '*.apk'
+++ wc -l
++ test 3 -eq 3
++ sha256sum /tmp/current-apks/luci-app-modem-sms-0.1.0-r2.apk /tmp/current-apks/luci-i18n-modem-sms-zh-cn-0.260721.25342.apk /tmp/current-apks/modem-smsd-0.1.0-r2.apk
