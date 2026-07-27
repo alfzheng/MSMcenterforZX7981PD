@@ -1,0 +1,58 @@
+Status: VERIFIED (PASS)
+Date: 2026-07-27 (Asia/Shanghai)
+Target Device: ZX7981PD (OpenWrt 25.12.5 r33051-f5dae5ece4, mediatek/filogic, aarch64_cortex-a53)
+
+================================================================================
+1. PRE-DEPLOYMENT BACKUP & VERIFICATION
+================================================================================
+- Created /tmp/modem-sms-release on router
+- Generated packages.before.txt (36,786 bytes)
+- Generated sysupgrade-before.tar.gz (614,591 bytes) and sysupgrade-before.tar.gz.sha256
+- Saved sysupgrade backup to local .device-backups/sysupgrade-before-20260727.tar.gz
+
+================================================================================
+2. PACKAGE INTEGRITY & SHA-256 CHECKSUM
+================================================================================
+Uploaded APKs to /tmp/modem-sms-release/ and executed sha256sum -c SHA256SUMS:
+  luci-app-modem-sms-0.1.0-r1.apk: OK
+  luci-i18n-modem-sms-zh-cn-0.apk: OK
+  modem-smsd-0.1.0-r1.apk: OK
+
+================================================================================
+3. INSTALLATION & SERVICE STARTUP
+================================================================================
+Executed: apk add --no-network --allow-untrusted modem-smsd luci-app-modem-sms luci-i18n-modem-sms-zh-cn
+  (1/3) Installing modem-smsd (0.1.0-r1) - OK
+  (2/3) Installing luci-app-modem-sms (0.1.0-r1) - OK
+  (3/3) Installing luci-i18n-modem-sms-zh-cn (0) - OK
+
+Service Enabled & Restarted:
+  /etc/init.d/modem-smsd enable
+  /etc/init.d/modem-smsd restart
+
+================================================================================
+4. UBUS SERVICE & CLI VERIFICATION
+================================================================================
+`ubus -S list modem.sms`:
+  modem.sms is registered and active.
+
+`ubus call modem.sms capabilities`:
+  backend_id: lteat-v1
+  backend_available: true
+  sms_supported: true
+  storages: ["SM", "ME"]
+
+`ubus call modem.sms summary` / `modem-smsctl summary --json`:
+  ok: true
+  total messages: 33 (inbound: 25, outbound: 8)
+  SM storage: 28/50 used
+  ME storage: 23/50 used
+
+`modem-smsctl list --box inbox --limit 3 --json`:
+  Successfully retrieved, concatenated and decoded multi-part UCS2 SMS messages.
+  Phone number mask verified (10**5955).
+
+================================================================================
+5. VERIFICATION CONCLUSION
+================================================================================
+All deployment gates satisfied. The ZX7981PD device has passed physical installation and live read verification.
