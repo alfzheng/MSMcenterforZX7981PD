@@ -899,6 +899,7 @@ load_send_history();
 
 const methods = {
 	capabilities: {
+		args: { ubus_rpc_session: '' },
 		call: function(req) {
 			let capabilities = backend.capabilities();
 			capabilities.backend_id = capabilities.backend_id ?? backend.id;
@@ -912,14 +913,14 @@ const methods = {
 		}
 	},
 	analyse: {
-		args: { text: '' },
+		args: { text: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			req.reply(envelope(core.analyse_text(args.text)));
 		}
 	},
 	list: {
-		args: { box: '', storage: '', limit: 0, refresh: false },
+		args: { box: '', storage: '', limit: 0, refresh: false, ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			if (!backend.available() && (!cache.loaded || args.refresh)) {
@@ -953,7 +954,7 @@ const methods = {
 		}
 	},
 	get: {
-		args: { id: '' },
+		args: { id: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			function reply_get() {
@@ -974,7 +975,7 @@ const methods = {
 		}
 	},
 	send: {
-		args: { to: '', text: '', request_id: '' },
+		args: { to: '', text: '', request_id: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			if (!send_backend.available()) {
@@ -1033,7 +1034,7 @@ const methods = {
 		}
 	},
 	status: {
-		args: { request_id: '' },
+		args: { request_id: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			let request = send_requests[args.request_id];
@@ -1041,7 +1042,7 @@ const methods = {
 		}
 	},
 	history_clear: {
-		args: { confirm: '' },
+		args: { confirm: '', ubus_rpc_session: '' },
 		call: function(req) {
 			if (req.args.confirm != 'PURGE-IDEMPOTENCY-HISTORY') {
 				req.reply(error_result('CONFIRMATION_REQUIRED'));
@@ -1103,7 +1104,7 @@ const methods = {
 		}
 	},
 	delete: {
-		args: { id: '', fingerprint: '' },
+		args: { id: '', fingerprint: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
 			if (!backend.available()) {
@@ -1195,6 +1196,7 @@ const methods = {
 		}
 	},
 	summary: {
+		args: { ubus_rpc_session: '' },
 		call: function(req) {
 			function reply_summary() {
 				if (!cache.loaded) {
