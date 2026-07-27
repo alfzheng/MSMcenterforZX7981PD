@@ -38,3 +38,4 @@ modem-smsctl history-clear --confirm --json
 ## 设备维护记录
 
 - [ZX OpenClash 配置与 Antigravity 分流记录（2026-07-27）](docs/zx-openclash-configuration-2026-07-27.md)
+- [项目收口与归档记录（2026-07-27）](docs/project-closeout-2026-07-27.md)
