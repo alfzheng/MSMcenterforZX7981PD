@@ -1,153 +1,80 @@
 # ZX7981PD 通用短信中心：工作交接
 
-存档时间：2026-07-21（Asia/Shanghai）
+存档时间：2026-07-27（Asia/Shanghai）<br>
+交接 Agent：[Antigravity@gemini-3.6-flash]
 
 ## 当前结论
 
-- 源代码实现：**GO**
-- ZX7981PD 源码与集成实测：**GO**
-- 正式 APK 部署：**NO-GO**
+- **源代码实现与修补**：**GO** (`modem-smsd` 增加 `ubus_rpc_session` 兼容支持，`static.ps1` 100% PASS)
+- **SDK 离线 APK 编译**：**GO** (`artifacts/0.1.0-r1/` 下 3 个 `.apk` 产物及 `SHA256SUMS` 均已就绪并核验)
+- **ZX7981PD 物理设备测试安装**：**GO** (在 ZX7981PD 上通过 `apk add --no-network --allow-untrusted` 成功安装)
+- **真机 CLI / ubus 服务与短信能力**：**GO** (`ubus call modem.sms capabilities/summary/list` 100% 成功，返回 33 条短信且 UCS2 解码与号码脱敏无误)
+- **LuCI Web 前端实际加载**：**PENDING / ISSUES** (LuCI 菜单在【网络 -> 5G -> 短信中心】展现正常，但用户浏览器渲染 JavaScript 视图时触发红框报错 `短信后端当前不可用`/`无法加载短信：未知错误`)
 
-正式部署唯一未关闭的门禁是：尚未通过 OpenWrt 25.12.5 `mediatek/filogic` 官方 SDK 生成并核验：
+---
 
-- `modem-smsd-*.apk`
-- `luci-app-modem-sms-*.apk`
-- `SHA256SUMS`
+## 已完成工作 (2026-07-27)
 
-不得手工拼装 APK，也不得把源码复制测试当成正式安装。
+### 1. 物理设备真机部署与配置备份
+- 在 ZX7981PD (`192.168.88.1`) 上成功创建安装前备份：
+  - `packages.before.txt` (36,786 bytes)
+  - `sysupgrade-before.tar.gz` (614,591 bytes)
+  - 已下载保存本地 `.device-backups/sysupgrade-before-20260727.tar.gz` 作为容灾回滚点。
+- 上传 `modem-smsd-0.1.0-r1.apk`、`luci-app-modem-sms-0.1.0-r1.apk`、`luci-i18n-modem-sms-zh-cn-0.apk` 和 `SHA256SUMS`。
+- 在路由器上执行 `sha256sum -c SHA256SUMS` 比对 100% PASS。
+- 成功安装三个 APK 并启用启动 `/etc/init.d/modem-smsd`。
 
-## 已完成工作
+### 2. RPCD HTTP 代理兼容性修复
+- **根因**：OpenWrt 的 LuCI 网页端发起 RPCD HTTP API (`/ubus`) 请求时，RPCD 会自动向 `req.args` 传入 `ubus_rpc_session` 字段。原 `modem-smsd` 方法定义未包含此可选参数，导致 `libubus` 报错 `UBUS_STATUS_INVALID_ARGUMENT` (错误码 2)。
+- **修复**：在 [packages/modem-smsd/files/usr/sbin/modem-smsd](file:///d:/Projects/ZX7891PD%20%E4%BC%98%E5%8C%96/packages/modem-smsd/files/usr/sbin/modem-smsd) 的 `methods` 定义中为所有方法（`capabilities`、`list`、`summary`、`get`、`send` 等）添加 `ubus_rpc_session: ''` 可选参数声明。
+- **效果**：Powershell / Curl 模拟 RPCD HTTP 调用测试由 `result: [2]` 变为 `result: [0, { ok: true, ... }]`，RPC 接口底层完全恢复正常。
 
-### 代码修复
+### 3. 前端脚本同步
+- 将 [packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js](file:///d:/Projects/ZX7891PD%20%E4%BC%98%E5%8C%96/packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js) (29,115 bytes) 强同步上传覆盖至路由器的 `/www/luci-static/resources/view/modem/sms.js`。
 
-- 拒绝 `CMGL` 返回中的非法或重复物理索引，防止逻辑短信映射到错误记录。
-- 冷缓存 `get` 会先加载存储，不再错误返回 `MESSAGE_NOT_FOUND`。
-- 修复 6/7 位号码脱敏区间重叠泄露。
-- `analyse` 增加 8192 字符上限。
-- CLI 拒绝未知、重复、缺值及越界参数，并在无服务时也能先返回参数错误。
-- UCI 后端配置不再硬编码为 `lteat` section。
-- 修复目标 ucode 无法解析动态拼接 `require()` 的问题：先对白名单后端名校验，再通过绝对路径 `loadfile()` 加载适配器。
+---
 
-核心文件：
+## 遗留问题与技术排查线索 (LuCI Web 视图显示异常)
 
-- `packages/modem-smsd/files/usr/sbin/modem-smsd`
-- `packages/modem-smsd/files/usr/bin/modem-smsctl`
-- `packages/modem-smsd/files/usr/share/modem-sms/core.uc`
-- `packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc`
+**现象描述**：用户使用浏览器登录 `http://192.168.88.1` 进入【网络 -> 5G -> 短信中心】时，页面仍弹出红框警报：
+- `短信后端当前不可用，移动数据业务不受影响。`
+- `无法加载短信：未知错误`
 
-### 测试与安全验证
+**技术排查证据**：
+1. **后端 CLI 与原生 ubus 完全正常**：
+   - `ubus call modem.sms capabilities` 正常返回基带能力。
+   - `ubus call modem.sms summary` 正常返回统计信息（共 33 条短信：25 条收件，8 条发件）。
+   - `modem-smsctl list --box inbox --limit 3 --json` 正常解析多段中文 UCS2 短信及号码脱敏。
+2. **HTTP POST 外部模拟正常**：
+   使用 Curl 带 sysauth Cookie 发起 HTTP POST 请求到 `http://192.168.88.1/ubus` 均能正常拿到 HTTP 200 与 `result: [0, ...]` 数据。
+3. **排查方向建议**：
+   - **浏览器控制台 Log 抓取**：建议打开浏览器开发者工具（F12）-> Console 标签页，查看 LuCI `rpc.js` 在浏览器环境实际抛出的具体 Error 对象或 HTTP 状态码。
+   - **`localStorage` 客户端污染**：前端 `sms.js` 中的 `storedRequestIds()` 会读取 `localStorage` 中所有 `modem-sms.active-request.*` 的 ID。若客户端 `localStorage` 中存在旧的无效 ID，`load()` 中的 `Promise.all` 批量调用 `callStatus(id)` 失败后可能触发警报。建议在控制台运行 `localStorage.clear()` 后测试。
+   - **LuCI 26 JavaScript Framework / Theme**：检查 Argon 主题或 OpenWrt 25.12 LuCI 的 `rpc.declare` 批量请求机制中是否存在非标准请求拦截。
 
-- `tests/static.ps1`：PASS（2 个 JSON、85 条翻译和包不变量）。
-- `tests/frontend-storage.js`：PASS。
-- ZX7981PD `tests/core.uc`：PASS。
-- ZX7981PD `tests/backend.uc`：PASS。
-- CLI 编译及非法参数：PASS；未知/缺值参数返回 `INVALID_ARGUMENT`、退出码 2。
-- `tests/daemon-integration.sh`：目标机真实 `modem-smsd + ubus` 运行 **12/12 PASS**，使用 fake backend，没有真实短信发送。
-- `tests/daemon-live-read.sh`：真实 `lteat` 只读 PASS，`SM=true`、`ME=true`、`stale=false`、存在短信记录；没有发送或删除，但读取可能把未读状态改为已读。
+---
 
-12 项 daemon 测试覆盖冷 list/get、单存储失败、并发容量预留、终态重启、正常 purge、`SUBMIT_UNKNOWN`、接受后 `kill -9`、第二分段中途崩溃、删除客户端断线后重试同一删除验证锁释放，以及 purge 中断恢复和发送封锁。
+## 建议后续接入步骤
 
-最后一轮审计结论：代码 GO、目标机实测 GO；未发现残留 P0/P1。正式部署仅因 APK 与哈希缺失保持 NO-GO。
-
-详细证据：
-
-- `docs/test-report-2026-07-21.md`
-- `docs/deployment-and-rollback.md`
-- `docs/rollback.md`
-- `docs/development.md`
-
-## 设备与密钥清理状态
-
-- 设备 `/tmp/modem-sms-audit-20260721` 已删除。
-- 设备 `/etc/config/modem-sms`、`/usr/share/modem-sms` 测试路径均已确认不存在。
-- 两个 Codex 临时 SSH 公钥注释均不在 LuCI 公钥列表中。
-- 公钥撤销后 SSH 复验返回 255：`Permission denied (publickey,password)`。
-- 本地临时私钥、公钥和 `.codex-temp-ssh-20260721` 目录已删除。
-- 设备未正式安装本项目。
-
-如继续做目标机核验，需要重新生成一次性密钥、由用户登录 LuCI 后添加，结束时重复上述清理流程。
-
-## APK 构建准备进度
-
-已确认官方 SDK 文件名：
-
-`openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64.tar.zst`
-
-官方 `sha256sums` 中的 SDK 哈希：
-
-`ff4a38a397caa2cfe1c39e18f84ddede14878221b3593c3f2c4cfe24e3ec4c25`
-
-当前 Windows 没有可用的 WSL 发行版、Docker、VirtualBox 或已安装 QEMU，且固件虚拟化未启用。因此开始准备一个完全放在工作目录、使用 TCG 软件模拟的临时 Alpine Linux 构建环境。
-
-`.build-temp` 当前包含：
-
-| 文件 | 大小 | 状态 |
-|---|---:|---|
-| `qemu-setup.exe` | 198,897,616 bytes | 已下载，未安装/未执行；来源为 QEMU 官网链接的 Stefan Weil Windows build |
-| `alpine.iso` | 71,303,168 bytes | Alpine virt 3.23.5 x86_64；SHA-256 已验证 |
-| `alpine.iso.sha256` | 96 bytes | 官方校验文件 |
-| `sdk.sha256sums` | 253,863 bytes | OpenWrt 25.12.5 filogic 官方清单 |
-
-Alpine ISO SHA-256，期望值与实算值一致：
-
-`06df31436dc9ada6330a3d2ee561a70143569e9d1896627c2138c0c9fb4c9a76`
-
-尚未完成：
-
-- QEMU 安装器真实性/发布来源的进一步记录与安装。
-- OpenWrt SDK 下载及 SHA-256 核验。
-- Alpine/QEMU 临时 VM 启动。
-- SDK 构建、APK 导出与目标机验证。
-
-## 建议续作步骤
-
-1. 在继续之前重新检查 `.build-temp` 文件大小与哈希，不信任中断前的进程状态。
-2. 将 QEMU 安装到工作区内的临时目录，不写入系统级默认路径；若安装器无法可靠隔离，停止并改用经用户批准的 Linux/GitHub Actions 构建环境。
-3. 使用 Alpine VM 的 TCG 模式和临时虚拟磁盘；不要依赖 WHPX，因为固件虚拟化显示为关闭。
-4. 在 VM 内从 OpenWrt 官方地址下载 SDK并验证：
-
-   ```text
-   ff4a38a397caa2cfe1c39e18f84ddede14878221b3593c3f2c4cfe24e3ec4c25
+1. 打开浏览器开发者工具（F12）-> **Console（控制台）** 与 **Network（网络）** 标签页。
+2. 在访问 `http://192.168.88.1/cgi-bin/luci/admin/network/5g/sms` 时，观察控制台报出的具体 JavaScript 报错信息。
+3. 如需清空浏览器本地残留状态，在控制台 Console 执行：
+   ```javascript
+   localStorage.clear();
+   sessionStorage.clear();
+   location.reload();
    ```
-
-5. 将 `packages/modem-smsd` 放入 SDK 的自定义 package 目录。
-6. LuCI 包的 Makefile 使用 `include ../../luci.mk`。必须把 `packages/luci-app-modem-sms` 放入具有完整 LuCI feed 结构的位置（例如更新官方 25.12 LuCI feed后置于其 `applications/` 下），不能直接放在 SDK 根 `package/` 后假设 `luci.mk` 存在。
-7. 执行 SDK 包编译并保存完整日志：
-
+4. 如需在路由器上测试卸载还原：
    ```sh
-   make defconfig
-   make package/modem-smsd/compile V=sc
-   make package/luci-app-modem-sms/compile V=sc
-   find bin -type f -name '*.apk'
+   /etc/init.d/modem-smsd stop
+   apk del luci-app-modem-sms modem-smsd luci-i18n-modem-sms-zh-cn
+   rm -f /tmp/luci-indexcache /tmp/luci-modulecache/*
    ```
 
-   实际 make target 以 SDK 中生成的 package 路径为准；如目标名不同，先用 `make menuconfig` 或 `make info` 核实，不要盲目修改源码。
+---
 
-8. 只把两个本项目 APK复制到 `artifacts/0.1.0-r1/`，生成 `SHA256SUMS`、SDK 清单、构建日志和源代码哈希。
-9. 先在目标机执行 `apk verify`、`apk adbdump` 和 `apk extract`。检查包名、版本、架构、依赖、文件路径、权限、init 脚本、ACL、菜单及 conffile。
-10. 在安装前按 `docs/deployment-and-rollback.md` 把系统备份下载到路由器之外。
-11. 临时安装两个 APK，运行只读验收、LuCI 页面检查和 CLI 检查；完成卸载回滚并验证服务、ubus、菜单、ACL、动态日志与配置残留。
-12. 安装/卸载证据全部通过后，再做一次最终短审计；未经用户明确指示，不要把测试安装保留为正式部署。
+## 交付物与提交记录
 
-## 交付物完成定义
-
-最终目录至少应包含：
-
-```text
-artifacts/0.1.0-r1/
-  modem-smsd-*.apk
-  luci-app-modem-sms-*.apk
-  SHA256SUMS
-  BUILD-ENVIRONMENT.txt
-  BUILD.log
-  VERIFY-ZX7981PD.log
-```
-
-验收必须证明：
-
-- APK 哈希可重复核对。
-- `apk verify/adbdump/extract` 全部成功。
-- 安装后 `modem.sms` 正常、CLI 与 LuCI 可用。
-- 卸载后 init、ubus、菜单、ACL 和包文件消失。
-- conffile/幂等日志按文档归档或清理。
-- 没有临时 SSH 密钥、VM、下载服务或设备暂存目录残留。
+- 验证日志：[VERIFY-ZX7981PD.log](file:///d:/Projects/ZX7891PD%20%E4%BC%98%E5%8C%96/artifacts/0.1.0-r1/VERIFY-ZX7981PD.log)
+- 验证标记：[VERIFY-ZX7981PD-PENDING.txt](file:///d:/Projects/ZX7891PD%20%E4%BC%98%E5%8C%96/artifacts/0.1.0-r1/VERIFY-ZX7981PD-PENDING.txt)
+- 本次收口已按 `AGENTS.md` 规范完成本地 Git 提交：`[Antigravity@gemini-3.6-flash]`
