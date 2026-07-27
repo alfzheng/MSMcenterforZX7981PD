@@ -56,29 +56,22 @@ OpenClash 冷启动、联网、DNS 和 Antigravity 分流验收。
 启动初期大陆 IP 白名单下载曾因 DNS 尚未就绪失败一次，随后自动重试、下载、
 替换成功并完成 OpenClash 重启。最终运行状态稳定，因此不构成验收阻断。
 
-## P2 与 ZX 的 AI 分流一致性
+## ZX Antigravity 最终验收
 
-2026-07-27，[Codex@gpt-5.6-sol] 对 P2 与 ZX 的 OpenClash AI 分流进行了
-同步和运行态验收：
+2026-07-27，[Codex@gpt-5.6-sol] 在 P16V 以 ZX 为默认网关的条件下完成
+最终验收：
 
-- 两台路由器的 `openAI` 策略组均固定选择 `SG - 新加坡 01`；
-- 两台路由器均保留
-  `DOMAIN,antigravity-unleash.goog,openAI`，并新增
-  `DOMAIN,daily-cloudcode-pa.googleapis.com,openAI`；
-- 应用配置后，两台路由器的 MetaCubeXD 运行时规则表均显示
-  `daily-cloudcode-pa.googleapis.com` 为 `Domain :: openAI`；
-- OpenAI/ChatGPT 相关既有规则继续指向 `openAI`，包括
-  `openai.com`、`chatgpt.com`、`oaistatic.com` 和
-  `oaiusercontent.com`；
-- P16V 经当前默认线路 P2 实测访问 `chatgpt.com`、
-  `daily-cloudcode-pa.googleapis.com` 和
-  `antigravity-unleash.goog` 均完成 DNS、TCP/TLS 和 HTTP 往返；
-  其中两个服务根路径返回 `404`、ChatGPT 返回 `403`，均说明网络路径可达，
-  不代表相应业务 API 调用失败；
-- 普通流量的主策略保持原样：P2 仍为 `♻️ 自动选择 - US`，ZX 仍为
-  `♻️ 自动选择 - JP`。因此只统一 AI 出口，不牺牲两条网络各自的普通流量
-  选路。
+- `openAI` 固定选择 `SG - 新加坡 01`；
+- `antigravity-unleash.goog` 和
+  `daily-cloudcode-pa.googleapis.com` 的精确规则均已加载；
+- `aida.googleapis.com` 和 `generativelanguage.googleapis.com`
+  继续由订阅规则转入 `openAI`；
+- 四个关键域名均完成 HTTPS 往返，且未发现 IPv6 绕行；
+- 实时连接显示 Antigravity 的功能开关和生成服务流量均使用
+  `openAI -> SG - 新加坡 01`；
+- 实测 AI 出口位于新加坡，Cloudflare 机房代码为 `SIN`；
+- 用户完成 Antigravity 最小生成请求并正常收到回复，日志记录两次
+  `streamGenerateContent` 成功响应，没有地区不支持错误。
 
-由此，P16V 在 P2 与 ZX 之间切换时，OpenAI、Codex 与 Antigravity 的关键
-域名将继续使用同一新加坡出口，降低因混合出口 IP 或地区判断变化造成的登录、
-会话和 API 异常风险。
+ZX 的冷启动、联网、DNS、透明代理、AI 分流和 Antigravity 端到端生成现已
+全部验收通过。

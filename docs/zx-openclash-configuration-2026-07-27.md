@@ -120,19 +120,32 @@ tmpfs 可用：约 169.7 MiB
 系统 available 内存：约 248 MiB
 ```
 
-## 验收边界
+## 最终端到端验收
 
-本次没有执行整机断电重启。冷启动模拟覆盖了最关键的“临时核心丢失后
-能否从持久缓存恢复”路径，但首次计划内重启后仍应复查
-`S98openclash-core-prepare`、`S99openclash`、DNS和实际HTTPS。
+用户完成 ZX 整机重启后，[Codex@gpt-5.6-sol] 于 2026-07-27 完成冷启动
+复核；随后将 P16V 的默认网关切换到 ZX，完成真实客户端验收：
 
-Windows当前默认网络仍是P2 Wi-Fi，电脑没有管理员权限添加临时路由，
-所以没有把Windows全局透明流量切到ZX。客户端侧验证使用ZX的认证混合
-代理完成。将电脑或手机真正以ZX为默认网关后，还应：
+- P16V 的 WLAN 与有线接口均取得 `192.168.88.0/24` 地址，默认网关为
+  `192.168.88.1`，确认测试流量未再经过其他路由器；
+- `daily-cloudcode-pa.googleapis.com`、
+  `antigravity-unleash.goog`、`aida.googleapis.com` 和
+  `generativelanguage.googleapis.com` 均成功完成 HTTPS 往返；
+- 四个域名均只取得 `198.18.0.0/15` Fake-IP IPv4 地址，没有返回 AAAA，
+  未发现 IPv6 绕过透明代理；
+- MetaCubeXD 实时连接确认 `daily-cloudcode-pa.googleapis.com` 和
+  `antigravity-unleash.goog` 均使用
+  `openAI -> SG - 新加坡 01`；
+- AI 公网出口实测为新加坡，Cloudflare 机房代码为 `SIN`，ASN 为
+  `AS138997`；
+- 完整启动 Antigravity 2.4.2 后，用户新建会话执行最小生成请求并正常
+  收到回复；
+- Antigravity 日志在 11:54 记录两次
+  `streamGenerateContent` 成功响应，没有
+  `FAILED_PRECONDITION`、地区不支持或网络错误。
 
-1. 确认没有同时启用其它VPN、系统代理或私人DNS；
-2. 完整退出并重启 Antigravity；
-3. 新建会话发送最小生成请求；
-4. 在MetaCubeXD中确认三个Google AI域名仍命中同一个`openAI`出口。
+至此，ZX 的整机重启、OpenClash 冷启动、透明代理、AI 域名分流和
+Antigravity 实际生成均已验收通过。本项目不再保留“需切换默认网关后测试”
+的未完成项。
 
-不要同时重新启用 PassWall2 和 OpenClash。
+PassWall2 继续作为备用方案保留，但在当前使用 OpenClash 期间维持停止和
+禁用；不要同时运行两套透明代理。
