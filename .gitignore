@@ -1,5 +1,6 @@
 # Local build environments and downloaded toolchains
 /.build-temp/
+/.device-backups/
 
 # Credentials and local environment files
 *.key

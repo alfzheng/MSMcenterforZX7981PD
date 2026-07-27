@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+
+START=98
+STOP=16
+
+cache_dir='/root/codex-openclash-core'
+core_dir='/etc/openclash/core'
+
+start() {
+	mkdir -p "$core_dir"
+	cp "$cache_dir/clash_meta.wrapper" "$core_dir/clash_meta"
+	chmod 0755 "$core_dir/clash_meta"
+}
+
+boot() {
+	start
+}
+
+stop() {
+	:
+}
