@@ -689,14 +689,11 @@ return view.extend({
 			cancelButton.disabled = true;
 
 		this.showSendStatus(attempt);
-		return this.refresh(true).then(refreshed => refreshed
-			? L.resolveDefault(callSend(attempt.to, attempt.text, attempt.requestId), {
-				ok: false,
-				transport_pending: true,
-				error_code: 'SERVICE_UNAVAILABLE'
-			})
-			: { ok: false, transport_pending: false, error_code: 'BACKEND_READ_FAILED' }
-		).then(result => {
+		return L.resolveDefault(callSend(attempt.to, attempt.text, attempt.requestId), {
+			ok: false,
+			transport_pending: true,
+			error_code: 'SERVICE_UNAVAILABLE'
+		}).then(result => {
 			if (!result.ok && !result.transport_pending) {
 				if (result.error_code === 'REQUEST_ID_CONFLICT') {
 					attempt.lastStatus = {
