@@ -8,7 +8,7 @@ All successful and product-level error replies include `schema_version: "1.0"` a
 |---|---|---|
 | `capabilities` | none | `backend_id`, `backend_available`, `transport`, `features`, `encodings`, `storages`, `read_may_mark_read` |
 | `analyse` | `text` | `encoding`, `units`, `segments`, `single_limit`, `concat_limit` |
-| `list` | `box`, `storage`, `limit`, `refresh` | `messages`, `updated_at`, `stale`, `errors`, `storage`, `read_may_mark_read` |
+| `list` | `box`, `storage`, `limit`, `refresh` | `messages`, `loading`, `updated_at`, `stale`, `errors`, `storage`, `read_may_mark_read` |
 | `get` | `id` | `message` including decoded text; number remains masked |
 | `send` | `to`, `text`, `request_id` | `request_id`, `state`, `encoding`, `segments`, `parts_submitted`, `message_references`, `idempotency_persisted` |
 | `status` | `request_id` | current send state and safe error code |
@@ -39,3 +39,9 @@ A backend module is named `backend-<id>.uc` and returns `{ create }`. The create
 Successful `send_pdu()` replies may include `message_reference`. The service preserves one reference per submitted segment so a later backend can associate SMS-STATUS-REPORT records without changing the LuCI API.
 
 The UI and public API never receive TTY paths or backend-native replies. Adding an AT broker, QMI or MBIM implementation therefore does not require frontend changes.
+
+On a cold daemon start, `list` may return `loading: true` with an empty message
+array while the daemon performs its serialized `SM`/`ME` read. This is an
+intentional non-error response: callers should retry without `refresh` until
+`loading` is false. Once a snapshot exists, normal cached reads are immediate;
+an explicit `refresh: true` remains a foreground modem operation.

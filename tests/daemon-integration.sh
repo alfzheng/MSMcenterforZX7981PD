@@ -98,6 +98,23 @@ wait_blocked() {
 	fail "fake backend did not reach $expected"
 }
 
+wait_loaded_list() {
+	box="$1"
+	i=0
+	while [ "$i" -lt 70 ]; do
+		reply="$(ubus call modem.sms list "$(printf '{\"box\":\"%s\",\"storage\":\"ALL\",\"limit\":10,\"refresh\":false}' "$box")")"
+		assert_true "$reply" 'list poll failed'
+		loading="$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)"
+		[ "$loading" != 'true' ] && {
+			printf '%s' "$reply"
+			return 0
+		}
+		i=$((i + 1))
+		sleep 1
+	done
+	fail 'cold list did not finish within 70 seconds'
+}
+
 crash_daemon() {
 	[ -n "$PID" ] || fail 'daemon PID missing at crash point'
 	kill -9 "$PID"
@@ -152,6 +169,9 @@ printf '%s\n' '[1/12] cold list through real ubus daemon'
 start_daemon
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 assert_true "$reply" 'cold list failed'
+[ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
+	fail "cold list did not return loading state: $reply"
+reply="$(wait_loaded_list all)"
 message_id="$(printf '%s' "$reply" | jsonfilter -e '@.messages[0].id' 2>/dev/null || true)"
 [ -n "$message_id" ] || fail "cold list returned no message: $reply"
 

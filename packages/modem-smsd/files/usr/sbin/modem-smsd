@@ -15,7 +15,7 @@ if (!match(selected_backend, /^[a-z0-9][a-z0-9_-]*$/))
 
 const config = {
 	backend: selected_backend,
-	cache_seconds: +(uci.get('modem-sms', 'main', 'cache_seconds') ?? 10),
+	cache_seconds: +(uci.get('modem-sms', 'main', 'cache_seconds') ?? 300),
 	limit_max: +(uci.get('modem-sms', 'main', 'list_limit_max') ?? 200),
 	history_max: +(uci.get('modem-sms', 'main', 'request_history_max') ?? 500),
 	minimum_free_slots: +(uci.get('modem-sms', 'main', 'minimum_free_slots') ?? 4),
@@ -34,7 +34,7 @@ config.send_rate_limit_seconds = config.send_rate_limit_seconds < 0 ? 0 : config
 
 uloop.init();
 const read_timeout = +(uci.get('modem-sms', selected_backend, 'read_call_timeout_seconds') ??
-	uci.get('modem-sms', selected_backend, 'call_timeout_seconds') ?? 30);
+	uci.get('modem-sms', selected_backend, 'call_timeout_seconds') ?? 60);
 const send_timeout = +(uci.get('modem-sms', selected_backend, 'send_call_timeout_seconds') ?? 120);
 const bus = ubus_module.connect(null, read_timeout);
 if (!bus)
@@ -56,7 +56,7 @@ const backend_options = {
 const backend = backend_module.create(bus, backend_options);
 const send_backend = backend_module.create(send_bus, backend_options);
 
-let cache = { messages: [], by_id: {}, updated_at: 0, loaded: false, errors: [], storage: {}, storage_records: {} };
+let cache = { messages: [], by_id: {}, updated_at: 0, loaded: false, loading: false, errors: [], storage: {}, storage_records: {} };
 let operations = [];
 let operation_busy = false;
 let load_waiters = [];
@@ -362,12 +362,13 @@ function complete_load(done, records_by_storage, successful_storages, errors, st
 	}
 	cache.storage = storage_info;
 	cache.errors = errors;
+	cache.loading = false;
 
 	let waiters = load_waiters;
 	load_waiters = [];
 	load_enqueued = false;
 	for (let waiter in waiters) {
-		try { waiter(cache); }
+		try { if (waiter) waiter(cache); }
 		catch (waiter_exception) { audit('load_waiter_exception', { error: waiter_exception }); }
 	}
 	done();
@@ -434,17 +435,20 @@ function execute_load(done) {
 }
 
 function request_load(callback) {
-	push(load_waiters, callback);
+	if (callback)
+		push(load_waiters, callback);
 	if (load_enqueued)
 		return;
 	load_enqueued = true;
+	cache.loading = true;
 	enqueue(execute_load, function(exception) {
 		cache.errors = [{ storage: null, error_code: 'INTERNAL_OPERATION_FAILED' }];
+		cache.loading = false;
 		let waiters = load_waiters;
 		load_waiters = [];
 		load_enqueued = false;
 		for (let waiter in waiters) {
-			try { waiter(cache); }
+			try { if (waiter) waiter(cache); }
 			catch (waiter_exception) { audit('load_waiter_exception', { error: waiter_exception }); }
 		}
 	});
@@ -937,12 +941,30 @@ const methods = {
 				}
 					req.reply(envelope({
 						messages: filtered_messages(args, false),
+						loading: false,
 						read_may_mark_read: true,
 					updated_at: cache.updated_at,
 					stale: length(cache.errors) > 0,
 					errors: cache.errors,
 					storage: cache.storage
 				}));
+			}
+			/* A cold SM/ME scan can take longer than the LuCI HTTP request window.
+			 * Start it once and return a truthful loading response immediately; the
+			 * frontend polls for the completed snapshot instead of showing a false
+			 * SERVICE_UNAVAILABLE error. Explicit refreshes after a snapshot still
+			 * wait for the fresh modem result. */
+			if (!cache.loaded) {
+				request_load(null);
+				req.reply(envelope({
+					messages: [],
+					loading: true,
+					updated_at: cache.updated_at,
+					stale: false,
+					errors: [],
+					storage: cache.storage
+				}));
+				return;
 			}
 
 			if (!args.refresh && cache.updated_at && time() - cache.updated_at < config.cache_seconds) {

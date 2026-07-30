@@ -10,6 +10,7 @@ $requiredFiles = @(
     'packages/modem-smsd/Makefile',
     'packages/modem-smsd/files/etc/init.d/modem-smsd',
     'packages/modem-smsd/files/usr/sbin/modem-smsd',
+    'packages/modem-smsd/files/etc/config/modem-sms',
     'packages/modem-smsd/files/usr/bin/modem-smsctl',
     'packages/modem-smsd/files/usr/share/modem-sms/core.uc',
     'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc',
@@ -66,6 +67,15 @@ if (-not $backendConfig.Contains("option switch_argument 'cmd'")) {
 }
 if (-not $backendConfig.Contains("option minimum_free_slots '4'")) {
     throw 'target storage reserve must leave at least four SMS slots'
+}
+if (-not $backendConfig.Contains("option cache_seconds '300'")) {
+    throw 'default SMS cache must cover the measured cold dual-storage read'
+}
+if (-not $backendConfig.Contains("option read_call_timeout_seconds '60'")) {
+    throw 'read timeout must exceed the measured cold dual-storage read'
+}
+if (-not $frontend.Contains('this.data && this.data.loading') -or -not $frontend.Contains('Loading messages from the modem')) {
+    throw 'frontend must distinguish a cold modem load from service unavailability'
 }
 if (-not $core.Contains('request_status_report ?? false')) {
     throw 'TP-SRR must remain opt-in until durable delivery-report reconciliation exists'

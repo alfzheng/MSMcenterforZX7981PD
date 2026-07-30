@@ -257,3 +257,9 @@ msgstr " 已删除 %d 个物理分段；重试前请刷新。"
 
 msgid "Refreshing messages may change REC UNREAD to REC READ in modem storage."
 msgstr "刷新短信可能会将模块存储中的 REC UNREAD 改为 REC READ。"
+
+msgid "Loading messages from the modem…"
+msgstr "正在从模块读取短信……"
+
+msgid "The modem is being read. This may take up to one minute on a cold start."
+msgstr "正在读取模块。冷启动时可能需要最长一分钟。"

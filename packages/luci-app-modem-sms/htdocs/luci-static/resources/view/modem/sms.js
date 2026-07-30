@@ -308,7 +308,9 @@ return view.extend({
 
 		if (!rows.length)
 			rows.push(E('div', { 'class': 'tr' }, [
-				E('div', { 'class': 'td center', 'style': 'flex:1' }, [ _('No messages') ])
+				E('div', { 'class': 'td center', 'style': 'flex:1' }, [
+					this.data && this.data.loading ? _('Loading messages from the modem…') : _('No messages')
+				])
 			]));
 
 		dom.content(host, [
@@ -333,7 +335,9 @@ return view.extend({
 
 		const warning = document.querySelector('#sms-storage-warning');
 		if (warning) {
-			warning.textContent = !this.data.ok
+			warning.textContent = this.data && this.data.loading
+				? _('The modem is being read. This may take up to one minute on a cold start.')
+				: !this.data.ok
 				? _('SMS messages could not be loaded: %s').format(this.data.error_code || _('Unknown error'))
 				: this.data.stale
 					? _('Some modem storage could not be read. The displayed message list may be incomplete.')
@@ -878,6 +882,8 @@ return view.extend({
 		]);
 
 		window.setTimeout(() => this.renderMessages(), 0);
+		if (this.data && this.data.loading)
+			window.setTimeout(() => this.refresh(false), 1000);
 		if (!unavailable)
 			poll.add(() => this.refresh(false), 30);
 		return node;

@@ -1,7 +1,9 @@
 config service 'main'
 	option enabled '1'
 	option backend 'lteat'
-	option cache_seconds '10'
+	# SM/ME are read serially on the target modem; keep the successful snapshot
+	# long enough that opening LuCI does not start another cold modem scan.
+	option cache_seconds '300'
 	option list_limit_max '200'
 	option request_history_max '500'
 	option minimum_free_slots '4'
@@ -19,5 +21,6 @@ config backend 'lteat'
 	option delete_method 'del_sms'
 	option default_storage 'SM'
 	option storage_order 'SM ME'
-	option read_call_timeout_seconds '30'
+	# A cold dual-storage read has been measured at up to 44 seconds on ZX7981PD.
+	option read_call_timeout_seconds '60'
 	option send_call_timeout_seconds '120'

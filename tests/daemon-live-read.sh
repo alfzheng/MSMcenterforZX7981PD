@@ -87,6 +87,18 @@ capabilities="$(ubus call modem.sms capabilities '{}')"
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 [ "$(printf '%s' "$reply" | jsonfilter -e '@.ok' 2>/dev/null || true)" = 'true' ] || \
 	fail "live read failed: $reply"
+[ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
+	fail "live cold read did not return loading state: $reply"
+i=0
+while [ "$i" -lt 70 ]; do
+	reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":false}')"
+	[ "$(printf '%s' "$reply" | jsonfilter -e '@.ok' 2>/dev/null || true)" = 'true' ] || \
+		fail "live read poll failed: $reply"
+	[ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" != 'true' ] && break
+	i=$((i + 1))
+	sleep 1
+done
+[ "$i" -lt 70 ] || fail 'live cold read did not finish within 70 seconds'
 sm="$(printf '%s' "$reply" | jsonfilter -e '@.storage.SM.available' 2>/dev/null || true)"
 me="$(printf '%s' "$reply" | jsonfilter -e '@.storage.ME.available' 2>/dev/null || true)"
 [ "$sm" = 'true' ] || [ "$me" = 'true' ] || fail "neither SM nor ME was readable: $reply"
