@@ -1,6 +1,6 @@
 # ZX7981PD LuCI 短信中心 PRD
 
-版本：1.5（r5 删除安全热修与阶段边界校准）
+版本：1.6（r6 已验收基线与 r7 Stage A 边界）
 
 日期：2026-07-31
 
@@ -33,7 +33,7 @@
 - 发送队列、唯一请求 ID、明确的 `queued/sending/sent/failed/unknown` 状态。
 - 可通过 SSH 调用的稳定 JSON CLI，供经授权的 AI/自动化读取、发送、等待状态和汇总。
 - SIM 存储使用量和 80%/90% 告警。
-- r5 兼容安全桩：旧 `delete` RPC 返回 `DEVICE_DELETE_DISABLED`，LuCI、ACL 和 CLI
+- r6 兼容安全桩：旧 `delete` RPC 返回 `DEVICE_DELETE_DISABLED`，LuCI、ACL 和 CLI
   不提供设备删除入口，且不得触发模组读取或写入。
 - rpcd/ubus ACL 最小权限；LuCI 页面无任意 AT 命令入口。
 - 简体中文与英文 i18n。
@@ -42,7 +42,9 @@
 
 - 短信转发到 webhook/邮件（默认关闭，需单独安全评审）。
 - 关键词通知、定时归档、多 SIM 视图。
-- 本地持久归档、单条/批量安全移动和设备删除、全选和 cursor 分页；详细需求见
+- r7 Stage A 交付本地持久归档、单条复制和 `LOCAL` cursor 分页；实施门禁见
+  [Stage A（r7）实施级 PRD](docs/prd-sms-stage-a-r7-2026-07-31.md)。
+- 后续单条/批量安全移动和设备删除、全选和跨来源 cursor 分页；总规格见
   [本地归档、批量管理与分页 PRD](docs/prd-sms-local-archive-batch-management-2026-07-31.md)。
 - 脱敏诊断包。
 - 模块型号/固件、SIM/注册状态的通用能力探测；仅在后端能安全提供时启用。
@@ -103,9 +105,10 @@
   所有设备删除均必须禁用；“仅设备删除”不得绕过该门禁。
 - 若不能证明系统中所有 `CPMS/get_sms/del_sms/send_sms` 调用均由单一所有者串行
   代理持续强制管理，或执行期间失去独占租约，必须禁用移动和设备删除。
-- r5 必须在服务能力、兼容 RPC、后端能力、rpcd ACL、LuCI/CLI 五层失败关闭旧删除
+- r6 及 r7 Stage A/B 必须在服务能力、兼容 RPC、后端能力、rpcd ACL、LuCI/CLI
+  五层失败关闭旧删除
   链路；仅 Stage C 全部门禁通过后才能以异步任务重新开放。
-- 默认不自动删除；MVP 和 r5 不提供“一键清空”。
+- 默认不自动删除；MVP、r6 和 r7 不提供“一键清空”。
 
 ### FR-05 运行诊断与隐私
 
@@ -185,7 +188,7 @@ flowchart LR
 | `get` | `id` | 单条逻辑消息及分段元数据 |
 | `send` | `to,text,request_id` | 队列 ID、编码、分段数、状态 |
 | `status` | `request_id` | 发送状态与安全错误码 |
-| `delete` | `id,fingerprint` | r5 兼容失败桩；始终返回 `DEVICE_DELETE_DISABLED`，不得访问模组 |
+| `delete` | `id,fingerprint` | r6+ 兼容失败桩；始终返回 `DEVICE_DELETE_DISABLED`，不得访问模组 |
 | `summary` | 无 | 供 SSH/AI 使用的脱敏消息、存储与健康摘要 |
 
 MVP 稳定错误码至少包括：`SIM_NOT_READY`、`SMS_UNSUPPORTED`、`STORAGE_FULL`、`STORAGE_CAPACITY_STALE`、`INVALID_NUMBER`、`SUBMIT_TIMEOUT`、`SUBMIT_UNKNOWN`、`BACKEND_READ_FAILED`、`BACKEND_SUBMIT_FAILED`、`MESSAGE_CHANGED`、`DEVICE_DELETE_DISABLED` 与幂等相关错误。
@@ -217,7 +220,7 @@ MVP 稳定错误码至少包括：`SIM_NOT_READY`、`SMS_UNSUPPORTED`、`STORAGE
 4. 向外部手机发送 GSM 7-bit 测试短信，模块返回成功且外部手机实际收到；现场基线为索引 20、MR 2、23:03 收到。
 5. 外部手机发送唯一短信后，页面在合理轮询窗口内显示；现场基线为 `ME` 索引 14 的 `0720test`。
 6. 发送/接收期间 `usb0` 不 down、不重新获取地址，现有上网业务不中断。
-7. r5 的旧删除入口在 UI/API/CLI 均不可用或稳定失败关闭；调用兼容 RPC 前后
+7. r6/r7 的旧删除入口在 UI/API/CLI 均不可用或稳定失败关闭；调用兼容 RPC 前后
    `SM/ME` 短信、缓存和存储容量不发生删除型变化，且后端删除调用次数为零。
 8. 普通页面与日志中不出现完整 IMEI、ICCID、IMSI、短信正文或临时密钥。
 9. 通过静态检查、单元测试、设备集成测试、重启/升级回归和 ACL 越权测试。
