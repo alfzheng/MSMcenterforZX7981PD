@@ -7,6 +7,10 @@
 *.po       text eol=lf
 Makefile   text eol=lf
 
+# OpenWrt package payloads include extensionless shell, ucode and UCI files.
+# Keep Git archive exports byte-safe when builds are launched from Windows.
+packages/modem-smsd/files/** text eol=lf
+
 *.ps1      text eol=crlf
 
 *.apk      binary
