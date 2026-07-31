@@ -166,7 +166,7 @@ config backend 'lteat'
 	option send_call_timeout_seconds '120'
 EOF
 
-printf '%s\n' '[1/12] cold list through real ubus daemon'
+printf '%s\n' '[1/13] cold summary returns loading without waiting for the backend'
 start_daemon
 capabilities="$(ubus call modem.sms capabilities '{}')"
 assert_true "$capabilities" 'capabilities failed'
@@ -174,6 +174,16 @@ delete_feature="$(printf '%s' "$capabilities" | jsonfilter -e '@.features.delete
 delete_error="$(printf '%s' "$capabilities" | jsonfilter -e '@.delete_error_code' 2>/dev/null || true)"
 [ "$delete_feature" = 'false' ] && [ "$delete_error" = 'DEVICE_DELETE_DISABLED' ] || \
 	fail "device delete capability did not fail closed: $capabilities"
+reply="$(ubus call modem.sms summary '{}')"
+assert_true "$reply" 'cold summary failed'
+[ "$(printf '%s' "$reply" | jsonfilter -e '@.loaded' 2>/dev/null || true)" = 'false' ] || \
+	fail "cold summary did not report an unloaded cache: $reply"
+[ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
+	fail "cold summary did not return loading state: $reply"
+
+printf '%s\n' '[2/13] cold list through real ubus daemon'
+stop_daemon
+start_daemon
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 assert_true "$reply" 'cold list failed'
 [ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
@@ -182,13 +192,13 @@ reply="$(wait_loaded_list all)"
 message_id="$(printf '%s' "$reply" | jsonfilter -e '@.messages[0].id' 2>/dev/null || true)"
 [ -n "$message_id" ] || fail "cold list returned no message: $reply"
 
-printf '%s\n' '[2/12] direct get after restart with an empty cache'
+printf '%s\n' '[3/13] direct get after restart with an empty cache'
 stop_daemon
 start_daemon
 reply="$(ubus call modem.sms get "$(printf '{"id":"%s"}' "$message_id")")"
 assert_true "$reply" 'cold get failed'
 
-printf '%s\n' '[3/12] one-storage failure preserves the successful snapshot'
+printf '%s\n' '[4/13] one-storage failure preserves the successful snapshot'
 printf '%s\n' 'ME_FAIL' > "$MODE"
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 assert_true "$reply" 'ME fault refresh failed'
@@ -201,14 +211,14 @@ preserved_id="$(printf '%s' "$reply" | jsonfilter -e '@.messages[0].id' 2>/dev/n
 [ "$preserved_id" = "$message_id" ] || fail "SM snapshot was lost after injected failure: $reply"
 rm -f "$MODE"
 
-printf '%s\n' '[4/12] cold send is queued only after capacity is loaded'
+printf '%s\n' '[5/13] cold send is queued only after capacity is loaded'
 stop_daemon
 start_daemon
 reply="$(ubus call modem.sms send '{"to":"10010","text":"daemon cold send","request_id":"daemon-cold-send-0001"}')"
 assert_true "$reply" 'cold send was not accepted'
 wait_sent 'daemon-cold-send-0001'
 
-printf '%s\n' '[5/12] concurrent cold sends reserve capacity independently'
+printf '%s\n' '[6/13] concurrent cold sends reserve capacity independently'
 stop_daemon
 start_daemon
 ubus call modem.sms send '{"to":"10010","text":"parallel one","request_id":"daemon-parallel-send-0001"}' >/tmp/modem-sms-send-1.json &
@@ -222,7 +232,7 @@ assert_true "$(cat /tmp/modem-sms-send-2.json)" 'parallel send 2 was not accepte
 wait_sent 'daemon-parallel-send-0001'
 wait_sent 'daemon-parallel-send-0002'
 
-printf '%s\n' '[6/12] sent state survives daemon restart'
+printf '%s\n' '[7/13] sent state survives daemon restart'
 stop_daemon
 start_daemon
 reply="$(ubus call modem.sms status '{"request_id":"daemon-cold-send-0001"}')"
@@ -232,7 +242,7 @@ state="$(printf '%s' "$reply" | jsonfilter -e '@.state' 2>/dev/null || true)"
 reference="$(printf '%s' "$reply" | jsonfilter -e '@.message_references[0]' 2>/dev/null || true)"
 [ "$reference" = '42' ] || fail "message reference was not persisted: $reply"
 
-printf '%s\n' '[7/12] explicit idempotency-history purge remains usable'
+printf '%s\n' '[8/13] explicit idempotency-history purge remains usable'
 reply="$(ubus call modem.sms history_clear '{"confirm":"PURGE-IDEMPOTENCY-HISTORY"}')"
 assert_true "$reply" 'history clear failed'
 cleanup_pending="$(printf '%s' "$reply" | jsonfilter -e '@.cleanup_pending' 2>/dev/null || true)"
@@ -240,7 +250,7 @@ cleanup_pending="$(printf '%s' "$reply" | jsonfilter -e '@.cleanup_pending' 2>/d
 sending_enabled="$(printf '%s' "$reply" | jsonfilter -e '@.sending_enabled' 2>/dev/null || true)"
 [ "$sending_enabled" = 'true' ] || fail "history clear disabled sending: $reply"
 
-printf '%s\n' '[8/12] outcome-unknown submit is terminal and durable'
+printf '%s\n' '[9/13] outcome-unknown submit is terminal and durable'
 printf '%s\n' 'SUBMIT_UNKNOWN' > "$MODE"
 reply="$(ubus call modem.sms send '{"to":"10010","text":"unknown submit","request_id":"daemon-submit-unknown-0001"}')"
 assert_true "$reply" 'unknown-outcome send was not accepted'
@@ -255,7 +265,7 @@ reply="$(ubus call modem.sms status '{"request_id":"daemon-submit-unknown-0001"}
 state="$(printf '%s' "$reply" | jsonfilter -e '@.state' 2>/dev/null || true)"
 [ "$state" = 'unknown' ] || fail "unknown outcome did not survive restart: $reply"
 
-printf '%s\n' '[9/12] crash after durable acceptance does not auto-resend'
+printf '%s\n' '[10/13] crash after durable acceptance does not auto-resend'
 printf '%s\n' 'BLOCK_SEND' > "$MODE"
 rm -f /tmp/modem-sms-fake-blocked
 ubus call modem.sms send '{"to":"10010","text":"crash after accept","request_id":"daemon-crash-accept-0001"}' \
@@ -272,7 +282,7 @@ error_code="$(printf '%s' "$reply" | jsonfilter -e '@.error_code' 2>/dev/null ||
 [ "$state" = 'unknown' ] && [ "$error_code" = 'INTERRUPTED_BY_RESTART' ] || \
 	fail "accepted crash was not recovered safely: $reply"
 
-printf '%s\n' '[10/12] crash during multipart submit remains unknown and is not resumed'
+printf '%s\n' '[11/13] crash during multipart submit remains unknown and is not resumed'
 printf '%s\n' 'BLOCK_SECOND_SEND' > "$MODE"
 rm -f /tmp/modem-sms-fake-blocked
 long_text='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
@@ -288,7 +298,7 @@ reply="$(ubus call modem.sms status '{"request_id":"daemon-crash-multipart-0001"
 state="$(printf '%s' "$reply" | jsonfilter -e '@.state' 2>/dev/null || true)"
 [ "$state" = 'unknown' ] || fail "multipart crash was not recovered as unknown: $reply"
 
-printf '%s\n' '[11/12] legacy device delete fails closed before backend access'
+printf '%s\n' '[12/13] legacy device delete fails closed before backend access'
 rm -f /tmp/modem-sms-fake-delete-called
 reply="$(ubus call modem.sms delete '{"id":"legacy-client-test","fingerprint":"obsolete"}')"
 ok="$(printf '%s' "$reply" | jsonfilter -e '@.ok' 2>/dev/null || true)"
@@ -299,7 +309,7 @@ error_code="$(printf '%s' "$reply" | jsonfilter -e '@.error_code' 2>/dev/null ||
 	fail "legacy delete reached fake backend: $(cat /tmp/modem-sms-fake-delete-called)"
 kill -0 "$PID" 2>/dev/null || fail 'daemon exited after blocked legacy delete'
 
-printf '%s\n' '[12/12] interrupted purge restores backup and blocks sends until cleanup'
+printf '%s\n' '[13/13] interrupted purge restores backup and blocks sends until cleanup'
 stop_daemon
 cp "$STATE" "$STATE.purge-backup"
 printf '%s' '{"version":1,"requests":[]}' > "$STATE"
@@ -314,4 +324,4 @@ assert_true "$reply" 'interrupted purge cleanup failed'
 cleanup_pending="$(printf '%s' "$reply" | jsonfilter -e '@.cleanup_pending' 2>/dev/null || true)"
 [ "$cleanup_pending" = 'false' ] || fail "interrupted purge cleanup remains pending: $reply"
 
-printf '%s\n' 'PASS: 12 real modem-smsd/ubus integration tests completed with fake backend; no real SMS was sent'
+printf '%s\n' 'PASS: 13 real modem-smsd/ubus integration tests completed with fake backend; no real SMS was sent'

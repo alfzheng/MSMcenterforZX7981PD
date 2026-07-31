@@ -7,12 +7,12 @@
 正式安装前必须同时满足：
 
 1. `tests/static.ps1`、`tests/frontend-storage.js`、`tests/core.uc`、`tests/backend.uc` 全部通过。
-2. 在目标机运行 `tests/daemon-integration.sh`，12 组真实 daemon/ubus 假基带测试全部通过；该测试不得接触真实 `lteat`。
+2. 在目标机运行 `tests/daemon-integration.sh`，13 组真实 daemon/ubus 假基带测试全部通过；该测试不得接触真实 `lteat`。
 3. 在目标机运行 `tests/daemon-live-read.sh`，SM 或 ME 至少一个可读；该测试只读，不发送、不删除。
 4. 使用 OpenWrt 25.12.5 `mediatek/filogic` SDK 构建 `modem-smsd` 和 `luci-app-modem-sms` APK。
 5. 对 APK 执行 `sha256sum`，将输出保存为随包交付的 `SHA256SUMS`；部署者在路由器上再次计算并逐项比对。
 6. 记录安装前包清单、备份文件哈希、安装后版本和验收结果。任何一项缺失均为 NO-GO。
-7. r5 额外要求 APK 中 LuCI/ACL 不含旧删除入口，daemon 兼容 `delete` RPC 只能返回
+7. r5+ 额外要求 APK 中 LuCI/ACL 不含旧删除入口，daemon 兼容 `delete` RPC 只能返回
    `DEVICE_DELETE_DISABLED`，假后端删除调用次数必须为零。
 
 本项目当前 Windows 工作区没有可执行的 Linux OpenWrt SDK，因此源代码测试通过不等于 APK 发布门禁已经满足；不得用手工复制文件冒充正式部署。
@@ -52,20 +52,26 @@ modem-smsctl summary --json
 modem-smsctl list --box all --storage ALL --limit 10 --refresh --json
 ```
 
-r5 在任何真实短信操作前验证删除失败关闭：
+r6 在任何真实短信操作前验证冷摘要与删除失败关闭：
 
 ```sh
+summary="$(ubus call modem.sms summary '{}')"
+[ "$(printf '%s' "$summary" | jsonfilter -e '@.ok')" = true ]
+[ "$(printf '%s' "$summary" | jsonfilter -e '@.loading')" = true ]
+
 capabilities="$(ubus call modem.sms capabilities '{}')"
 [ "$(printf '%s' "$capabilities" | jsonfilter -e '@.features.delete')" = false ]
 [ "$(printf '%s' "$capabilities" | jsonfilter -e '@.delete_error_code')" = DEVICE_DELETE_DISABLED ]
 
 blocked="$(ubus call modem.sms delete \
-  '{"id":"r5-safety-probe-nonexistent","fingerprint":"obsolete"}')"
+  '{"id":"r6-safety-probe-nonexistent","fingerprint":"obsolete"}')"
 [ "$(printf '%s' "$blocked" | jsonfilter -e '@.ok')" = false ]
 [ "$(printf '%s' "$blocked" | jsonfilter -e '@.error_code')" = DEVICE_DELETE_DISABLED ]
 ```
 
-该探针必须使用不存在的固定测试 ID，并在任何缓存刷新或模组调用前返回；不得使用
+冷摘要应立即返回，后台扫描完成后轮询 `summary` 应得到
+`loaded:true,loading:false`。删除探针必须使用不存在的固定测试 ID，并在任何缓存
+刷新或模组调用前返回；不得使用
 真实短信 ID、索引或指纹。调用前后保存 `logread -e modem-smsd`、短信计数和存储容量
 摘要，确认只有 `device_delete_blocked` 审计记录，没有删除完成或后端删除记录。
 

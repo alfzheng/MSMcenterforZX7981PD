@@ -85,24 +85,28 @@ if (-not $core.Contains('request_status_report ?? false')) {
     throw 'TP-SRR must remain opt-in until durable delivery-report reconciliation exists'
 }
 if (-not $backend.Contains('features: { read: true, send: true, delete: false')) {
-    throw 'r5 backend capability must fail closed for device deletion'
+    throw 'r5+ backend capability must fail closed for device deletion'
 }
 if (-not $daemon.Contains("capabilities.features.delete = false") -or
     -not $daemon.Contains("error_result('DEVICE_DELETE_DISABLED')")) {
-    throw 'r5 daemon must advertise and enforce the device-delete safety gate'
+    throw 'r5+ daemon must advertise and enforce the device-delete safety gate'
 }
 if ($daemon.Contains('backend.delete_record(')) {
-    throw 'r5 public daemon must not contain a path to the backend delete operation'
+    throw 'r5+ public daemon must not contain a path to the backend delete operation'
 }
 if ($cli.Contains("command == 'delete'")) {
-    throw 'r5 SSH CLI must not expose a device-delete command'
+    throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=5') -or -not $luciMakefile.Contains('PKG_RELEASE:=5')) {
-    throw 'both r5 package Makefiles must use PKG_RELEASE:=5'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=6') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
+    throw 'both r6 package Makefiles must use PKG_RELEASE:=6'
+}
+if (-not [regex]::IsMatch($daemon,
+        '(?s)summary:\s*\{.*?if\s*\(!cache\.loaded\).*?request_load\(null\).*?loaded:\s*false,\s*loading:\s*true')) {
+    throw 'r6 summary must start a background cold load and return loading immediately'
 }
 foreach ($forbiddenDeleteUi in @("method: 'delete'", 'confirmDelete', 'sms-confirm-delete')) {
     if ($frontend.Contains($forbiddenDeleteUi)) {
-        throw "r5 LuCI must not expose the legacy delete flow: $forbiddenDeleteUi"
+        throw "r5+ LuCI must not expose the legacy delete flow: $forbiddenDeleteUi"
     }
 }
 
@@ -131,7 +135,7 @@ foreach ($method in @('send')) {
     if ($method -notin $writeMethods) { throw "Missing write ACL method: $method" }
 }
 if ('delete' -in $writeMethods) {
-    throw 'r5 LuCI ACL must not grant the legacy device-delete method'
+    throw 'r5+ LuCI ACL must not grant the legacy device-delete method'
 }
 
 Write-Output "static.ps1: $($jsonFiles.Count) JSON files, $($messageIds.Count) translations and package invariants passed"

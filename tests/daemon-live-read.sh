@@ -84,9 +84,17 @@ capabilities="$(ubus call modem.sms capabilities '{}')"
 [ "$(printf '%s' "$capabilities" | jsonfilter -e '@.backend_available' 2>/dev/null || true)" = 'true' ] || \
 	fail "lteat backend unavailable: $capabilities"
 [ "$(printf '%s' "$capabilities" | jsonfilter -e '@.features.delete' 2>/dev/null || true)" = 'false' ] || \
-	fail "device deletion must remain disabled in r5: $capabilities"
+	fail "device deletion must remain disabled in r5+: $capabilities"
 [ "$(printf '%s' "$capabilities" | jsonfilter -e '@.delete_error_code' 2>/dev/null || true)" = 'DEVICE_DELETE_DISABLED' ] || \
 	fail "device-delete safety reason missing: $capabilities"
+
+summary="$(ubus call modem.sms summary '{}')"
+[ "$(printf '%s' "$summary" | jsonfilter -e '@.ok' 2>/dev/null || true)" = 'true' ] || \
+	fail "live cold summary failed: $summary"
+[ "$(printf '%s' "$summary" | jsonfilter -e '@.loaded' 2>/dev/null || true)" = 'false' ] || \
+	fail "live cold summary did not report an unloaded cache: $summary"
+[ "$(printf '%s' "$summary" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
+	fail "live cold summary did not return loading immediately: $summary"
 
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 [ "$(printf '%s' "$reply" | jsonfilter -e '@.ok' 2>/dev/null || true)" = 'true' ] || \

@@ -33,10 +33,11 @@ modem-smsctl history-clear --confirm --json
 
 `sent` 表示全部短信段已被模块后端接受，并不等同于手机最终送达。超时状态为 `unknown`，服务不会自动重发。
 
-r5 安全热修暂时禁用设备短信删除：LuCI 不显示删除入口，公开 ACL 不授权删除，
+r6 安全热修继承 r5 的设备短信删除门禁：LuCI 不显示删除入口，公开 ACL 不授权删除，
 `capabilities.features.delete=false`，旧 `modem.sms.delete` 只返回
 `DEVICE_DELETE_DISABLED`，不会读取或修改模组。读取和发送仍通过现有 `lteat`
-契约工作。
+契约工作。r6 同时让冷启动 `summary` 与 `list` 一样立即返回 `loading:true`，
+避免等待完整 SM/ME 扫描而触发 LuCI/ubus 超时。
 
 当前 `lteat` 契约把 `CPMS` 切换与随后读取/发送拆成独立 ubus 调用。除
 `modem-smsd` 外，不得有其他页面、脚本或守护进程并发调用 `lteat` 的短信/`CPMS`

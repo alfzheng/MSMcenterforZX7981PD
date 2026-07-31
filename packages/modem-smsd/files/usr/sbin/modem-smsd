@@ -1094,7 +1094,7 @@ const methods = {
 	delete: {
 		args: { id: '', fingerprint: '', ubus_rpc_session: '' },
 		call: function(req) {
-			/* r5 compatibility fail-closed stub. It deliberately performs no
+			/* r5+ compatibility fail-closed stub. It deliberately performs no
 			 * cache refresh, queue operation, CPMS switch or backend delete. */
 			audit('device_delete_blocked', { reason: 'safe-workflow-unavailable' });
 			req.reply(error_result('DEVICE_DELETE_DISABLED'));
@@ -1119,6 +1119,7 @@ const methods = {
 					backend_available: backend.available(),
 					cache_updated_at: cache.updated_at,
 					loaded: cache.loaded,
+					loading: false,
 					stale: length(cache.errors) > 0,
 					counts: { total: length(cache.messages), inbound: inbound, outbound: outbound },
 					storage: cache.storage,
@@ -1129,9 +1130,26 @@ const methods = {
 				}));
 			}
 
-			if (!cache.updated_at) {
-				req.defer();
-				request_load(reply_summary);
+			/* r6 aligns summary with the non-blocking cold-list contract. The
+			 * full SM/ME scan can exceed the ubus HTTP/client timeout, so expose
+			 * an explicit loading snapshot while the single background load is
+			 * running. No message content is returned by this endpoint. */
+			if (!cache.loaded) {
+				request_load(null);
+				req.reply(envelope({
+					backend_id: backend.id,
+					backend_available: backend.available(),
+					cache_updated_at: 0,
+					loaded: false,
+					loading: true,
+					stale: false,
+					counts: { total: 0, inbound: 0, outbound: 0 },
+					storage: cache.storage,
+					queue_depth: length(operations) + (operation_busy ? 1 : 0),
+					send_queue_depth: active_sends,
+					send_queue_limit: config.send_queue_max,
+					reserved_send_slots: reserved_send_slots
+				}));
 				return;
 			}
 			reply_summary();
