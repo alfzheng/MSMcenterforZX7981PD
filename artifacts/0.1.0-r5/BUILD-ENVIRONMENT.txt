@@ -1,0 +1,10 @@
+Build date: 2026-07-31 (Asia/Shanghai)
+Source commit: b4bf815d7c5ed57cbce3a009fdc60a52dd9d1711
+SDK: OpenWrt 25.12.5 mediatek/filogic, gcc 14.3.0, musl, Linux x86_64
+Target package architecture: aarch64_cortex-a53
+LuCI package architecture: noarch
+Build guest: Alpine Linux 3.23
+Virtualization: QEMU WHPX, isolated qcow2 snapshot
+Source transfer: Git archive with package payloads forced to LF by .gitattributes
+Validation: apk verify/adbdump/extract, CR-byte guard and delete fail-closed payload guards passed
+Release status: superseded after target cold-summary timeout; do not install as the final release
