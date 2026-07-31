@@ -1,0 +1,627 @@
+[SERIAL_CONNECTED port=4464]
+
+
+Welcome to Alpine Linux 3.23
+Kernel 6.18.36-0-virt on x86_64 (/dev/ttyS0)
+
+localhost login: root
+Welcome to Alpine!
+
+The Alpine Wiki contains a large amount of how-to guides and general
+information about administrating Alpine systems.
+See <https://wiki.alpinelinux.org/>.
+
+You can setup the system with the command: setup-alpine
+
+You may change this message by editing /etc/motd.
+
+localhost:~# [6nmkdir -p /transfer; mount /dev/vdb1 /transfer 2>/dev/null || mount 
+/dev/vdb /transfer; sh /transfer/verify-r6.sh
++ apk_tool=/build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk
++ root=/tmp/r6-verify
++ daemon=/tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ backend=/tmp/r6-verify/extracted/modem/usr/share/modem-sms/backend-lteat.uc
++ acl=/tmp/r6-verify/extracted/luci/usr/share/rpcd/acl.d/luci-app-modem-sms.json
++ view=/tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk --allow-untrusted verify /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk
+/tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk: OK
+/tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk: OK
+/tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk: OK
++ /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk adbdump --format json /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk
++ mkdir -p /tmp/r6-verify/extracted/modem /tmp/r6-verify/extracted/luci /tmp/r6-verify/extracted/i18n
++ /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk --allow-untrusted extract --destination /tmp/r6-verify/extracted/modem /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk
+Extracting /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk...
++ /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk --allow-untrusted extract --destination /tmp/r6-verify/extracted/luci /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk
+Extracting /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk...
++ /build/openwrt-sdk-25.12.5-mediatek-filogic_gcc-14.3.0_musl.Linux-x86_64/staging_dir/host/bin/apk --allow-untrusted extract --destination /tmp/r6-verify/extracted/i18n /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk
+Extracting /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk...
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ + od -An grep -t -q x1 ' 0d'/tmp/r6-verify/extracted/modem/etc/init.d/modem-smsd
+
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ od -An -t x1 /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q ' 0d'
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ + od grep -An -t x1 /tmp/r6-verify/extracted/modem/usr/share/modem-sms/core.uc-q 
+' 0d'
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ od -An + -t x1 grep /tmp/r6-verify/extracted/modem/usr/share/modem-sms/backend-lteat.uc-q 
+' 0d'
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ od + -An grep -t -q x1 ' 0d'/tmp/r6-verify/extracted/modem/usr/bin/modem-smsctl
+
++ for text_file in "$root/extracted/modem/etc/init.d/modem-smsd" "$daemon" "$root/extracted/modem/usr/share/modem-sms/core.uc" "$backend" "$root/extracted/modem/usr/bin/modem-smsctl" "$view"
++ + grep -q od -An ' 0d'-t 
+x1 /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q 'loading: true' /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q 'r6 aligns summary with the non-blocking cold-list contract' /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q 'loaded: false' /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q 'capabilities.features.delete = false' /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q DEVICE_DELETE_DISABLED /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q 'backend.delete_record(' /tmp/r6-verify/extracted/modem/usr/sbin/modem-smsd
++ grep -q 'delete: false' /tmp/r6-verify/extracted/modem/usr/share/modem-sms/backend-lteat.uc
++ grep -q '"send"' /tmp/r6-verify/extracted/luci/usr/share/rpcd/acl.d/luci-app-modem-sms.json
++ grep -q '"delete"' /tmp/r6-verify/extracted/luci/usr/share/rpcd/acl.d/luci-app-modem-sms.json
++ grep -q 'Device message deletion is temporarily disabled' /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q 'method: '\''delete'\''' /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q confirmDelete /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q sms-confirm-delete /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q 'Loading messages from the modem' /tmp/r6-verify/extracted/luci/www/luci-static/resources/view/modem/sms.js
++ grep -q 'read_call_timeout_seconds '\''60'\''' /tmp/r6-verify/extracted/modem/etc/config/modem-sms
++ test -s /tmp/r6-verify/extracted/i18n/usr/lib/lua/luci/i18n/modem-sms.zh-cn.lmo
++ sha256sum /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk
+87682a4ad8975b521d3e369f661735d6290ad2e36f7c2808456cb9387e9e6faa  /tmp/r6-verify/packages/luci-app-modem-sms-0.1.0-r6.apk
+370e6a126d14473f78a224d679d6680784a1cd4920fe21be96cb0e4ba950c87a  /tmp/r6-verify/packages/luci-i18n-modem-sms-zh-cn-0.260731.25120.apk
+b7ad347e4ecefba3390030dd3d0fc937e5d8f40de67f2428f5db919a45f42bf2  /tmp/r6-verify/packages/modem-smsd-0.1.0-r6.apk
++ cat /tmp/r6-verify/ADB-METADATA.json
+{
+  "info": {
+    "name": "luci-app-modem-sms",
+    "version": "0.1.0-r6",
+    "hashes": "e9ac7cb5762def41cc2cfcddb181fcb71ed83929",
+    "description": "LuCI support for the modem SMS service",
+    "arch": "noarch",
+    "origin": "feeds/luci/feeds/luci/applications/luci-app-modem-sms",
+    "maintainer": "OpenWrt LuCI community",
+    "url": "https://github.com/openwrt/luci",
+    "installed-size": 24160,
+    "depends": [
+      "libc",
+      "modem-smsd"
+    ],
+    "provides": [
+      "luci-app-modem-sms-any"
+    ]
+  },
+  "paths": [
+    {
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk/packages",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "luci-app-modem-sms.list",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 138,
+          "mtime": 1785481120,
+          "hash": "60f4fb6ab2c4b5898716f28726809d14dc247bf99aa8cbbadec85aee5c9e7915"
+        }
+      ]
+    }, {
+      "name": "usr",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/share",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/share/luci",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/share/luci/menu.d",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "luci-app-modem-sms.json",
+          "acl": {
+            "mode": 436,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 353,
+          "mtime": 1785481120,
+          "hash": "b3805533d8601843cd8136dd9849d85b61d4e8d0d6f1c196e93b561738e3534a"
+        }
+      ]
+    }, {
+      "name": "usr/share/rpcd",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/share/rpcd/acl.d",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "luci-app-modem-sms.json",
+          "acl": {
+            "mode": 436,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 268,
+          "mtime": 1785481120,
+          "hash": "24432ac8dd4d30ac4cf10ac90ec153609e9a813212e00b38b3dda054c33dacbb"
+        }
+      ]
+    }, {
+      "name": "www",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "www/luci-static",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "www/luci-static/resources",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "www/luci-static/resources/view",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "www/luci-static/resources/view/modem",
+      "acl": {
+        "mode": 509,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "sms.js",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 23401,
+          "mtime": 1785481120,
+          "hash": "c4f939dc12667af420e3e97135fd2a2e74a0dc9279fe7337ced9fa00d0037ef1"
+        }
+      ]
+    }
+  ],
+  "scripts": {
+    "post-install": "#!/bin/sh\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-app-modem-sms\"\nadd_group_and_user\ndefault_postinst\n[ -n \"${IPKG_INSTROOT}\" ] || { rm -f /tmp/luci-indexcache.*\n\trm -rf /tmp/luci-modulecache/\n\t/etc/init.d/rpcd reload 2>/dev/null\n\texit 0\n}\n",
+    "pre-deinstall": "#!/bin/sh\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-app-modem-sms\"\ndefault_prerm\n",
+    "post-upgrade": "#!/bin/sh\nexport PKG_UPGRADE=1\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-app-modem-sms\"\nadd_group_and_user\ndefault_postinst\n[ -n \"${IPKG_INSTROOT}\" ] || { rm -f /tmp/luci-indexcache.*\n\trm -rf /tmp/luci-modulecache/\n\t/etc/init.d/rpcd reload 2>/dev/null\n\texit 0\n}\n"
+  }
+}
+{
+  "info": {
+    "name": "luci-i18n-modem-sms-zh-cn",
+    "version": "0.260731.25120",
+    "hashes": "1a488491c814c09feae4b7199f4eecd997baf076",
+    "description": "Translation for luci-app-modem-sms - 简��中��� (Simplified Chinese)",
+    "arch": "noarch",
+    "origin": "feeds/luci/feeds/luci/applications/luci-app-modem-sms",
+    "installed-size": 4273,
+    "depends": [
+      "libc",
+      "luci-app-modem-sms"
+    ],
+    "provides": [
+      "luci-i18n-modem-sms-zh-cn-any"
+    ]
+  },
+  "paths": [
+    {
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "etc",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "etc/uci-defaults",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "luci-i18n-modem-sms-zh-cn",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 82,
+          "mtime": 1785481120,
+          "hash": "c272c8973a1bc727c9ad0607c3675dc9f8be3844eacee3dbc188248f6332c8f0"
+        }
+      ]
+    }, {
+      "name": "lib",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk/packages",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "luci-i18n-modem-sms-zh-cn.list",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 87,
+          "mtime": 1785481120,
+          "hash": "67170eb6409b8f1e5984004b95ea510f53dfe606ff8448d318b79e6a81ba3eac"
+        }
+      ]
+    }, {
+      "name": "usr",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/lib",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/lib/lua",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/lib/lua/luci",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/lib/lua/luci/i18n",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-sms.zh-cn.lmo",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 4104,
+          "mtime": 1785481120,
+          "hash": "5725a305cbb4c09b5f8c10abd156bcab10ef080dd789b2c765182ec001d842d0"
+        }
+      ]
+    }
+  ],
+  "scripts": {
+    "post-install": "#!/bin/sh\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-i18n-modem-sms-zh-cn\"\nadd_group_and_user\ndefault_postinst\n",
+    "pre-deinstall": "#!/bin/sh\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-i18n-modem-sms-zh-cn\"\ndefault_prerm\n",
+    "post-upgrade": "#!/bin/sh\nexport PKG_UPGRADE=1\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"luci-i18n-modem-sms-zh-cn\"\nadd_group_and_user\ndefault_postinst\n"
+  }
+}
+{
+  "info": {
+    "name": "modem-smsd",
+    "version": "0.1.0-r6",
+    "hashes": "c779015d9c039acb936fc758e6ec66e75277a186",
+    "description": "A small ubus service that validates, decodes and sends SMS messages through a replaceable modem backend. The initial backend wraps the firmware lteat ubus object and never opens a modem TTY directly.",
+    "arch": "aarch64_cortex-a53",
+    "license": "MIT",
+    "origin": "feeds/base/modem-smsd",
+    "maintainer": "ZX7981PD SMS Project",
+    "installed-size": 80669,
+    "depends": [
+      "libc",
+      "ubus",
+      "ucode",
+      "ucode-mod-fs",
+      "ucode-mod-ubus",
+      "ucode-mod-uci",
+      "ucode-mod-uloop"
+    ],
+    "provides": [
+      "modem-smsd-any"
+    ]
+  },
+  "paths": [
+    {
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "etc",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "etc/config",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-sms",
+          "acl": {
+            "mode": 384,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 915,
+          "mtime": 1782737960,
+          "hash": "c6d070380ca97ef3f9694aa0d96ebabc0a24214091672122790ccebe812d75b4"
+        }
+      ]
+    }, {
+      "name": "etc/init.d",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-smsd",
+          "acl": {
+            "mode": 493,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 494,
+          "mtime": 1782737960,
+          "hash": "522db79ac1a39fff81a3688d8637641fe14a21979ad798b87151e6eda820ec79"
+        }
+      ]
+    }, {
+      "name": "lib",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "lib/apk/packages",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-smsd.conffiles",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 22,
+          "mtime": 1782737960,
+          "hash": "6ece56e714cc9b70e60a7331481d85b96ed57c81ecde4f7f4914c865ae302eeb"
+        }, {
+          "name": "modem-smsd.conffiles_static",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 87,
+          "mtime": 1782737960,
+          "hash": "42ee6339666604e973090cb9fbe8758f4514dcdd83387f03c397245afc2a86b3"
+        }, {
+          "name": "modem-smsd.list",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 155,
+          "mtime": 1782737960,
+          "hash": "79103c2749414d6cef9964d61b6f87e4e1a43a9050fb812b9a3a3ca56af3dc2b"
+        }
+      ]
+    }, {
+      "name": "usr",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/bin",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-smsctl",
+          "acl": {
+            "mode": 493,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 4905,
+          "mtime": 1782737960,
+          "hash": "0564e3ad15d02685a929f1bf399cd449491d7940d873c15986547e4c18c2078d"
+        }
+      ]
+    }, {
+      "name": "usr/sbin",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "modem-smsd",
+          "acl": {
+            "mode": 493,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 38285,
+          "mtime": 1782737960,
+          "hash": "a5bebe13c3eff8798b7fe6c8a644573c2203082173dd49176bfc6326fca71f07"
+        }
+      ]
+    }, {
+      "name": "usr/share",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      }
+    }, {
+      "name": "usr/share/modem-sms",
+      "acl": {
+        "mode": 493,
+        "user": "root",
+        "group": "root"
+      },
+      "files": [
+        {
+          "name": "backend-lteat.uc",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 10094,
+          "mtime": 1782737960,
+          "hash": "56171b8eb4c99daf69346a81bdb14c22a7cd1d4af2beb11207b11053bd4f08f6"
+        }, {
+          "name": "core.uc",
+          "acl": {
+            "mode": 420,
+            "user": "root",
+            "group": "root"
+          },
+          "size": 25712,
+          "mtime": 1782737960,
+          "hash": "719efa537f3ee88c6da8a543deb0083a7ab346e44e4087305600bc945029c548"
+        }
+      ]
+    }
+  ],
+  "scripts": {
+    "post-install": "#!/bin/sh\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"modem-smsd\"\nadd_group_and_user\ndefault_postinst\n",
+    "pre-deinstall": "#!/bin/sh\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"modem-smsd\"\ndefault_prerm\n",
+    "post-upgrade": "#!/bin/sh\nexport PKG_UPGRADE=1\n[ \"${IPKG_NO_SCRIPT}\" = \"1\" ] && exit 0\n[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0\n. ${IPKG_INSTROOT}/lib/functions.sh\nexport root=\"${IPKG_INSTROOT}\"\nexport pkgname=\"modem-smsd\"\nadd_group_and_user\ndefault_postinst\n"
+  }
+}
+__R6_VERIFY_OK__
+[SERIAL_CLOSED code=ECONNRESET]

@@ -1,0 +1,10 @@
+Build date: 2026-07-31 (Asia/Shanghai)
+Source commit: 3a8ac33b0a1c9610f95e324c91bad891e22ae8fc
+SDK: OpenWrt 25.12.5 mediatek/filogic, gcc 14.3.0, musl, Linux x86_64
+Target package architecture: aarch64_cortex-a53
+LuCI package architecture: noarch
+Build guest: Alpine Linux 3.23
+Virtualization: QEMU WHPX, isolated qcow2 snapshot
+Source transfer: dedicated fresh virtual FAT directory; Git archive payloads forced to LF
+Validation: local static/syntax tests plus independent apk verify/adbdump/extract,
+  CR-byte, cold-summary payload and delete fail-closed payload guards
