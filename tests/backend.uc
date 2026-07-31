@@ -30,6 +30,7 @@ let connection = {
 
 let backend = backend_module.create(connection, {});
 equal(backend.available(), true, 'backend availability');
+equal(backend.capabilities().features.delete, false, 'r5 delete capability fails closed');
 
 let list_callbacks = 0;
 let list_result = null;

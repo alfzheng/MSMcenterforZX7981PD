@@ -12,6 +12,8 @@
 4. 使用 OpenWrt 25.12.5 `mediatek/filogic` SDK 构建 `modem-smsd` 和 `luci-app-modem-sms` APK。
 5. 对 APK 执行 `sha256sum`，将输出保存为随包交付的 `SHA256SUMS`；部署者在路由器上再次计算并逐项比对。
 6. 记录安装前包清单、备份文件哈希、安装后版本和验收结果。任何一项缺失均为 NO-GO。
+7. r5 额外要求 APK 中 LuCI/ACL 不含旧删除入口，daemon 兼容 `delete` RPC 只能返回
+   `DEVICE_DELETE_DISABLED`，假后端删除调用次数必须为零。
 
 本项目当前 Windows 工作区没有可执行的 Linux OpenWrt SDK，因此源代码测试通过不等于 APK 发布门禁已经满足；不得用手工复制文件冒充正式部署。
 
@@ -39,13 +41,33 @@ sha256sum /tmp/modem-sms-release/sysupgrade-before.tar.gz \
 ```sh
 cd /tmp/modem-sms-release
 sha256sum -c SHA256SUMS
-apk add --allow-untrusted ./modem-smsd-*.apk ./luci-app-modem-sms-*.apk
+apk add --allow-untrusted ./modem-smsd-*.apk ./luci-app-modem-sms-*.apk \
+  ./luci-i18n-modem-sms-zh-cn-*.apk
 /etc/init.d/modem-smsd enable
 /etc/init.d/modem-smsd restart
+/etc/init.d/rpcd restart
+rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null || true
 ubus -S list modem.sms
 modem-smsctl summary --json
 modem-smsctl list --box all --storage ALL --limit 10 --refresh --json
 ```
+
+r5 在任何真实短信操作前验证删除失败关闭：
+
+```sh
+capabilities="$(ubus call modem.sms capabilities '{}')"
+[ "$(printf '%s' "$capabilities" | jsonfilter -e '@.features.delete')" = false ]
+[ "$(printf '%s' "$capabilities" | jsonfilter -e '@.delete_error_code')" = DEVICE_DELETE_DISABLED ]
+
+blocked="$(ubus call modem.sms delete \
+  '{"id":"r5-safety-probe-nonexistent","fingerprint":"obsolete"}')"
+[ "$(printf '%s' "$blocked" | jsonfilter -e '@.ok')" = false ]
+[ "$(printf '%s' "$blocked" | jsonfilter -e '@.error_code')" = DEVICE_DELETE_DISABLED ]
+```
+
+该探针必须使用不存在的固定测试 ID，并在任何缓存刷新或模组调用前返回；不得使用
+真实短信 ID、索引或指纹。调用前后保存 `logread -e modem-smsd`、短信计数和存储容量
+摘要，确认只有 `device_delete_blocked` 审计记录，没有删除完成或后端删除记录。
 
 安装验收阶段先做只读检查。只有在列表、能力、日志和存储容量均正常后，才使用用户明确指定的测试号码发送一条短信；`sent` 仅表示基带接受了所有分段，不等同于手机最终送达。
 

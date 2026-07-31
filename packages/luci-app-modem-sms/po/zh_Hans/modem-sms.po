@@ -160,11 +160,11 @@ msgstr "更新于 %s"
 msgid "%d/%d parts"
 msgstr "%d/%d 段"
 
-msgid "SMS storage is at least 80% full. Consider deleting unneeded messages."
-msgstr "短信存储已使用至少 80%，建议删除不需要的短信。"
+msgid "SMS storage is at least 80% full. Device deletion is temporarily disabled until the safe archive workflow is available."
+msgstr "短信存储已使用至少 80%。安全归档流程就绪前，设备短信删除功能暂时禁用。"
 
-msgid "SMS storage is at least 90% full. Delete unneeded messages before sending or receiving more."
-msgstr "短信存储已使用至少 90%，请先删除不需要的短信再继续收发。"
+msgid "SMS storage is at least 90% full. Device deletion is temporarily disabled until the safe archive workflow is available."
+msgstr "短信存储已使用至少 90%。安全归档流程就绪前，设备短信删除功能暂时禁用。"
 
 msgid "Confirmation pending"
 msgstr "正在确认提交结果"
@@ -263,3 +263,6 @@ msgstr "正在从模块读取短信……"
 
 msgid "The modem is being read. This may take up to one minute on a cold start."
 msgstr "正在读取模块。冷启动时可能需要最长一分钟。"
+
+msgid "Device message deletion is temporarily disabled until the safe local archive workflow is available."
+msgstr "安全的本地归档流程就绪前，设备短信删除功能暂时禁用。"

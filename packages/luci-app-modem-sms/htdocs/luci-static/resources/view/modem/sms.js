@@ -40,12 +40,6 @@ const callStatus = rpc.declare({
 	params: [ 'request_id' ]
 });
 
-const callDelete = rpc.declare({
-	object: 'modem.sms',
-	method: 'delete',
-	params: [ 'id', 'fingerprint' ]
-});
-
 const ACTIVE_REQUEST_KEY = 'modem-sms.active-request-id';
 const ACTIVE_REQUEST_PREFIX = 'modem-sms.active-request.';
 
@@ -213,9 +207,9 @@ function storageWarning(storage) {
 			maximum = Math.max(maximum, item.used * 100 / item.total);
 	});
 	if (maximum >= 90)
-		return _('SMS storage is at least 90% full. Delete unneeded messages before sending or receiving more.');
+		return _('SMS storage is at least 90% full. Device deletion is temporarily disabled until the safe archive workflow is available.');
 	if (maximum >= 80)
-		return _('SMS storage is at least 80% full. Consider deleting unneeded messages.');
+		return _('SMS storage is at least 80% full. Device deletion is temporarily disabled until the safe archive workflow is available.');
 	return '';
 }
 
@@ -227,7 +221,6 @@ return view.extend({
 	recoveredRequestId: null,
 	recoveredRequestIds: [],
 	recoveryReloadPending: false,
-	deletingIds: {},
 
 	load() {
 		this.recoveredRequestIds = storedRequestIds();
@@ -251,11 +244,8 @@ return view.extend({
 	},
 
 	showError(result) {
-		const partial = result && result.detail && result.detail.partial
-			? _(' %d physical part(s) were already deleted; refresh before retrying.').format(
-				result.detail.deleted_count || 0) : '';
 		ui.addNotification(null, E('p', {}, [
-			_('Operation failed: %s').format(result && result.error_code || _('Unknown error')) + partial
+			_('Operation failed: %s').format(result && result.error_code || _('Unknown error'))
 		]));
 	},
 
@@ -354,7 +344,6 @@ return view.extend({
 			}
 
 			const message = result.message;
-			const canDelete = Array.isArray(message.indexes) && message.indexes.length > 0;
 			ui.showModal(_('SMS details'), [
 				E('dl', {}, [
 					E('dt', {}, [ _('Number') ]), E('dd', {}, [ message.number || '—' ]),
@@ -365,51 +354,9 @@ return view.extend({
 				]),
 				E('pre', { 'style': 'white-space:pre-wrap;overflow-wrap:anywhere' }, [ message.text || '' ]),
 				E('div', { 'class': 'right' }, [
-					E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Close') ]),
-					' ',
-					E('button', {
-						'class': 'btn cbi-button-negative',
-						'disabled': canDelete ? null : '',
-						'click': ui.createHandlerFn(this, 'confirmDelete', message)
-					}, [ _('Delete') ])
+					E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Close') ])
 				])
 			]);
-		});
-	},
-
-	confirmDelete(message) {
-		ui.showModal(_('Confirm deletion'), [
-			E('p', {}, [ _('Delete this message from modem storage? This cannot be undone.') ]),
-			E('div', { 'class': 'right' }, [
-				E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Cancel') ]),
-				' ',
-				E('button', {
-					'id': 'sms-confirm-delete',
-					'class': 'btn cbi-button-negative important',
-					'click': ui.createHandlerFn(this, 'deleteConfirmed', message)
-				}, [ _('Delete') ])
-			])
-		]);
-	},
-
-	deleteConfirmed(message) {
-		if (this.deletingIds[message.id])
-			return Promise.resolve();
-		this.deletingIds[message.id] = true;
-		const button = document.querySelector('#sms-confirm-delete');
-		if (button)
-			button.disabled = true;
-		return L.resolveDefault(callDelete(message.id, message.fingerprint),
-			{ ok: false, error_code: 'SERVICE_UNAVAILABLE' }).then(result => {
-			ui.hideModal();
-			if (!result.ok) {
-				this.showError(result);
-				return this.refresh(true);
-			}
-			else
-				return this.refresh(true);
-		}).finally(() => {
-			delete this.deletingIds[message.id];
 		});
 	},
 
@@ -821,6 +768,10 @@ return view.extend({
 				this.capabilities.read_may_mark_read ? E('div', { 'class': 'alert-message warning' }, [
 					_('Refreshing messages may change REC UNREAD to REC READ in modem storage.')
 				]) : '',
+				this.capabilities.features && this.capabilities.features.delete === false
+					? E('div', { 'class': 'alert-message warning' }, [
+						_('Device message deletion is temporarily disabled until the safe local archive workflow is available.')
+					]) : '',
 				E('div', { 'style': 'display:flex;gap:.5rem;align-items:center;flex-wrap:wrap' }, [
 					E('button', { 'class': 'btn', 'click': ui.createHandlerFn(this, function() {
 						this.box = 'inbox'; return this.refresh(false);

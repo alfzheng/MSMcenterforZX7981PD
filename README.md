@@ -33,7 +33,15 @@ modem-smsctl history-clear --confirm --json
 
 `sent` 表示全部短信段已被模块后端接受，并不等同于手机最终送达。超时状态为 `unknown`，服务不会自动重发。
 
-当前 `lteat` 契约把 `CPMS` 切换与随后读取/删除拆成独立 ubus 调用。部署约束是：除 `modem-smsd` 外，不得有其他页面、脚本或守护进程并发调用 `lteat` 的短信/`CPMS` 方法；否则无法保证存储归属和删除目标。本次目标机审计未发现其他调用者，固件升级后必须复查。
+r5 安全热修暂时禁用设备短信删除：LuCI 不显示删除入口，公开 ACL 不授权删除，
+`capabilities.features.delete=false`，旧 `modem.sms.delete` 只返回
+`DEVICE_DELETE_DISABLED`，不会读取或修改模组。读取和发送仍通过现有 `lteat`
+契约工作。
+
+当前 `lteat` 契约把 `CPMS` 切换与随后读取/发送拆成独立 ubus 调用。除
+`modem-smsd` 外，不得有其他页面、脚本或守护进程并发调用 `lteat` 的短信/`CPMS`
+方法。只有未来的唯一传输代理能够持续强制独占租约后，Stage C 才可重新开放设备
+删除。
 
 ## 设备维护记录
 

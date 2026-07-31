@@ -1,14 +1,15 @@
 # 短信中心本地归档、批量管理与分页 PRD
 
-版本：0.2（对抗性审计修订稿）
+版本：0.3（r5 热修边界与二次审计修订稿）
 
 日期：2026-07-31
 
 关联产品：ZX7981PD LuCI 短信中心
 
-关联主 PRD：`PRD.md` 1.4
+关联主 PRD：`PRD.md` 1.5
 
-审计状态：产品约束修订后可进入技术设计；阶段 C 在全部硬门禁通过前保持禁用
+审计状态：r5 先失败关闭旧设备删除；阶段 A/B 可在本 PRD 阻断项修订后开发；
+阶段 C 在全部硬门禁及真机证据通过前保持禁用
 
 目标发布：阶段 A/B/C 分阶段确定，不以同一发布一次性开放全部破坏性能力
 
@@ -128,8 +129,15 @@ RPC 的等待时间：目标机已经观察到后端记录 `delete_complete stat
 - 可选 10、20、50、100 条。
 - 每页数量保存在浏览器本地设置中；非法或过期值回退到 10。
 - 后端使用稳定 cursor 分页，不使用仅依赖可变数组下标的分页。
-- 默认排序键为 `timestamp DESC, archive_id DESC`；无时间短信使用
-  `first_seen_at DESC, archive_id DESC`。
+- 统一列表必须使用适用于 `LOCAL/SM/ME` 的确定全序键：
+  `normalized_sort_time, source_rank, source_record_id`。时间排序方向由用户选择；
+  `source_rank` 使用固定版本化枚举；`source_record_id` 在当前快照中全局唯一。
+- `LOCAL` 的 `source_record_id` 基于 `archive_id`；`SM/ME` 基于扫描 epoch、来源
+  generation、存储区、索引和原始 PDU SHA-256 生成服务端摘要。无有效短信时间时，
+  `normalized_sort_time=first_seen_at`。
+- cursor 必须是绑定认证主体、API 版本、`snapshot_version`、排序方向、完整末项
+  全序键和过期时间的服务端认证不透明令牌；不得向客户端暴露 PDU 摘要或允许篡改
+  排序键。
 - 响应返回 `items`、`next_cursor`、`prev_cursor`、`page_size`、
   `filtered_count` 和 `snapshot_version`。
 - 数据变化导致 cursor 失效时返回 `CURSOR_STALE`，前端回到第一页并保留筛选条件。
@@ -330,6 +338,9 @@ RPC 的等待时间：目标机已经观察到后端记录 `delete_complete stat
 - 查询在本地执行，不触发 `SM/ME` 刷新。
 - 搜索词不得写入系统日志、审计日志或 URL query string。
 - 搜索结果仍适用 cursor、`snapshot_version` 与全选规则。
+- 正文关键词和号码条件都要求正文读取权限；只有元数据读取权限的主体仅可按时间、
+  方向、来源和状态筛选，不得通过命中数量、排序变化、错误差异或耗时形成正文/
+  号码探测 oracle。
 
 ### FR-108 配置与容量
 
@@ -395,7 +406,7 @@ RPC 的等待时间：目标机已经观察到后端记录 `delete_complete stat
 
 | 方法 | 输入 | 关键输出 |
 |---|---|---|
-| `messages_page` | `box,source,query,cursor,limit,sort` | `items,next_cursor,prev_cursor,page_size,filtered_count,snapshot_version` |
+| `messages_page` | `box,source,query,query_fields,cursor,limit,sort` | `items,next_cursor,prev_cursor,page_size,filtered_count,snapshot_version` |
 | `selection_prepare` | `operation,scope,ids` 或当前筛选、排除项与 `snapshot_version` | `selection_token,count,source_counts,selection_digest,expires_at` |
 | `batch_create` | `operation,selection_token,scope,request_namespace,request_id,confirm` | `job_id,state,count,selection_digest,request_digest` |
 | `batch_status` | `job_id` | 阶段、计数、警告和安全错误码 |
@@ -425,6 +436,8 @@ API 约束：
   自动生成新 `request_id` 重试。
 - `query` 必须为有效 UTF-8，最长 256 字节；服务端使用参数绑定，单次查询执行
   上限 2 秒，超限返回 `QUERY_LIMIT_EXCEEDED`。
+- `query_fields` 必须由服务端按当前主体 ACL 取交集；请求 `body/number` 而缺少正文
+  读取权限时返回统一 `PERMISSION_DENIED`，不得退化成可观察的部分搜索。
 - `capabilities` 增加 API/schema 版本以及 archive、batch、cursor、backup、
   `exclusive_storage_owner` 能力，并返回当前 `request_namespace`。新旧前后端混用
   时按能力隐藏功能并安全降级。
@@ -446,6 +459,7 @@ API 约束：
   - `REQUEST_ID_CONFLICT`
   - `REQUEST_NAMESPACE_STALE`
   - `QUERY_LIMIT_EXCEEDED`
+  - `PERMISSION_DENIED`
   - `EXCLUSIVE_STORAGE_OWNER_UNVERIFIED`
   - `STORAGE_LEASE_LOST`
   - `STATE_STORE_UNAVAILABLE`
@@ -736,3 +750,7 @@ API 约束：
 11. 消除快照新增与不可变选择的冲突，移除 `batch_create` 裸 ID 路径并补齐全部
     终态计数。
 12. 把 CPMS 所有权从时点审计升级为唯一传输代理持续强制和逐次删除租约复核。
+13. r5 在安全归档工作流完成前从服务能力、兼容 RPC、后端能力、ACL 和 LuCI/CLI
+    五层失败关闭旧设备删除。
+14. 统一 cursor 改用跨 `LOCAL/SM/ME` 的确定全序键和服务端认证不透明令牌。
+15. 正文与号码搜索绑定正文读取 ACL，元数据权限不得形成内容探测 oracle。

@@ -46,10 +46,7 @@ function create(connection, options) {
 			callback({ ok: true, backend_status: 0, message_reference: 42 });
 		},
 		delete_record: function(storage, index, callback) {
-			if (fault_mode() == 'BLOCK_DELETE') {
-				fs.writefile('/tmp/modem-sms-fake-blocked', 'BLOCK_DELETE');
-				sleep(5000);
-			}
+			fs.writefile('/tmp/modem-sms-fake-delete-called', `${storage}:${index}`);
 			callback({ ok: true });
 		},
 		restore_storage: function(storage, callback) { callback(0); },
@@ -57,7 +54,7 @@ function create(connection, options) {
 			return {
 				backend_id: 'fake-v1',
 				transport: 'memory',
-				features: { read: true, send: true, delete: true, concat: true,
+				features: { read: true, send: true, delete: false, concat: true,
 					read_may_mark_read: false },
 				read_may_mark_read: false,
 				encodings: ['GSM-7', 'UCS2']

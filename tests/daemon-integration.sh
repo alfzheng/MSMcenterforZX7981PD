@@ -34,7 +34,8 @@ cleanup() {
 	stop_daemon || true
 	rm -f "$STATE" "$STATE.new" "$STATE.purge-backup" "$LOG" "$MODE" \
 		/tmp/modem-sms-send-1.json /tmp/modem-sms-send-2.json \
-		/tmp/modem-sms-fake-blocked /tmp/modem-sms-blocked-client.json
+		/tmp/modem-sms-fake-blocked /tmp/modem-sms-blocked-client.json \
+		/tmp/modem-sms-fake-delete-called
 	rm -f /etc/config/modem-sms
 	rm -f /usr/share/modem-sms/core.uc /usr/share/modem-sms/backend-lteat.uc
 	rmdir /usr/share/modem-sms 2>/dev/null || true
@@ -167,6 +168,12 @@ EOF
 
 printf '%s\n' '[1/12] cold list through real ubus daemon'
 start_daemon
+capabilities="$(ubus call modem.sms capabilities '{}')"
+assert_true "$capabilities" 'capabilities failed'
+delete_feature="$(printf '%s' "$capabilities" | jsonfilter -e '@.features.delete' 2>/dev/null || true)"
+delete_error="$(printf '%s' "$capabilities" | jsonfilter -e '@.delete_error_code' 2>/dev/null || true)"
+[ "$delete_feature" = 'false' ] && [ "$delete_error" = 'DEVICE_DELETE_DISABLED' ] || \
+	fail "device delete capability did not fail closed: $capabilities"
 reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
 assert_true "$reply" 'cold list failed'
 [ "$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)" = 'true' ] || \
@@ -281,26 +288,16 @@ reply="$(ubus call modem.sms status '{"request_id":"daemon-crash-multipart-0001"
 state="$(printf '%s' "$reply" | jsonfilter -e '@.state' 2>/dev/null || true)"
 [ "$state" = 'unknown' ] || fail "multipart crash was not recovered as unknown: $reply"
 
-printf '%s\n' '[11/12] disconnected delete client does not leak lock or kill daemon'
-reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
-message_id="$(printf '%s' "$reply" | jsonfilter -e '@.messages[0].id' 2>/dev/null || true)"
-fingerprint="$(printf '%s' "$reply" | jsonfilter -e '@.messages[0].fingerprint' 2>/dev/null || true)"
-[ -n "$message_id" ] && [ -n "$fingerprint" ] || fail "delete fixture missing: $reply"
-printf '%s\n' 'BLOCK_DELETE' > "$MODE"
-rm -f /tmp/modem-sms-fake-blocked
-delete_payload="$(printf '{"id":"%s","fingerprint":"%s"}' "$message_id" "$fingerprint")"
-ubus call modem.sms delete "$delete_payload" >/tmp/modem-sms-blocked-client.json 2>&1 &
-blocked_client=$!
-wait_blocked 'BLOCK_DELETE'
-kill "$blocked_client" 2>/dev/null || true
-wait "$blocked_client" 2>/dev/null || true
-rm -f "$MODE"
-sleep 6
-kill -0 "$PID" 2>/dev/null || fail 'daemon crashed after delete client disconnected'
-reply="$(ubus call modem.sms list '{"box":"all","storage":"ALL","limit":10,"refresh":true}')"
-assert_true "$reply" 'daemon was unusable after delete client disconnected'
-reply="$(ubus call modem.sms delete "$delete_payload")"
-assert_true "$reply" 'delete lock remained held after client disconnected'
+printf '%s\n' '[11/12] legacy device delete fails closed before backend access'
+rm -f /tmp/modem-sms-fake-delete-called
+reply="$(ubus call modem.sms delete '{"id":"legacy-client-test","fingerprint":"obsolete"}')"
+ok="$(printf '%s' "$reply" | jsonfilter -e '@.ok' 2>/dev/null || true)"
+error_code="$(printf '%s' "$reply" | jsonfilter -e '@.error_code' 2>/dev/null || true)"
+[ "$ok" = 'false' ] && [ "$error_code" = 'DEVICE_DELETE_DISABLED' ] || \
+	fail "legacy delete did not fail closed: $reply"
+[ ! -e /tmp/modem-sms-fake-delete-called ] || \
+	fail "legacy delete reached fake backend: $(cat /tmp/modem-sms-fake-delete-called)"
+kill -0 "$PID" 2>/dev/null || fail 'daemon exited after blocked legacy delete'
 
 printf '%s\n' '[12/12] interrupted purge restores backup and blocks sends until cleanup'
 stop_daemon

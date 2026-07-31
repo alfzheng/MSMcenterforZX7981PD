@@ -309,7 +309,7 @@ function factory(connection, options) {
 				transport: 'ubus',
 				vendor: null,
 				model: null,
-				features: { read: true, send: true, delete: true, concat: true,
+				features: { read: true, send: true, delete: false, concat: true,
 					read_may_mark_read: true },
 				read_may_mark_read: true,
 				encodings: ['GSM-7', 'UCS2']

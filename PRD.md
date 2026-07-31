@@ -1,6 +1,6 @@
 # ZX7981PD LuCI 短信中心 PRD
 
-版本：1.4（对抗性审计修订）
+版本：1.5（r5 删除安全热修与阶段边界校准）
 
 日期：2026-07-31
 
@@ -8,7 +8,7 @@
 
 在 ZX7981PD 的 OpenWrt 25.12/LuCI 26 上提供安全、可靠的通用短信收发能力，同时不破坏现有 5G 数据连接，不让 LuCI 直接接触串口或执行任意 AT 命令。
 
-成功标准：管理员可在 LuCI 中读取、拼接显示、发送和按确认删除短信；普通点对点 MO/MT 必须端到端成功，准确区分排队、模块提交、失败和结果未知。MVP 的 `sent` 只表示模块接受，不承诺手机最终送达；测试期间 `usb0` 数据连接无中断、无地址重获、无异常流量下降。
+成功标准：管理员可在 LuCI 中读取、拼接显示和发送短信；普通点对点 MO/MT 必须端到端成功，准确区分排队、模块提交、失败和结果未知。设备删除在 Stage C 安全归档流程完成前保持失败关闭。MVP 的 `sent` 只表示模块接受，不承诺手机最终送达；测试期间 `usb0` 数据连接无中断、无地址重获、无异常流量下降。
 
 ## 2. 用户与场景
 
@@ -33,7 +33,8 @@
 - 发送队列、唯一请求 ID、明确的 `queued/sending/sent/failed/unknown` 状态。
 - 可通过 SSH 调用的稳定 JSON CLI，供经授权的 AI/自动化读取、发送、等待状态和汇总。
 - SIM 存储使用量和 80%/90% 告警。
-- 单条逻辑短信删除；仅对已安全拼接的长短信删除其全部物理分段。无可靠关联的发件分段按物理记录分别确认和删除，二次确认，操作审计。
+- r5 兼容安全桩：旧 `delete` RPC 返回 `DEVICE_DELETE_DISABLED`，LuCI、ACL 和 CLI
+  不提供设备删除入口，且不得触发模组读取或写入。
 - rpcd/ubus ACL 最小权限；LuCI 页面无任意 AT 命令入口。
 - 简体中文与英文 i18n。
 
@@ -41,7 +42,7 @@
 
 - 短信转发到 webhook/邮件（默认关闭，需单独安全评审）。
 - 关键词通知、定时归档、多 SIM 视图。
-- 本地持久归档、批量复制/安全移动/删除、全选和 cursor 分页；详细需求见
+- 本地持久归档、单条/批量安全移动和设备删除、全选和 cursor 分页；详细需求见
   [本地归档、批量管理与分页 PRD](docs/prd-sms-local-archive-batch-management-2026-07-31.md)。
 - 脱敏诊断包。
 - 模块型号/固件、SIM/注册状态的通用能力探测；仅在后端能安全提供时启用。
@@ -86,7 +87,7 @@
 - `CMGS/CMSS` 最长等待 120 秒。超时状态记为 `unknown`，禁止自动重发。
 - 每个请求带 UUID/idempotency key；重复提交只返回原请求状态。
 
-### FR-04 删除与容量
+### FR-04 设备删除安全门禁与容量
 
 - 展示当前 `SM used/total`。
 - 达 80% 警告、90% 严重告警。
@@ -102,7 +103,9 @@
   所有设备删除均必须禁用；“仅设备删除”不得绕过该门禁。
 - 若不能证明系统中所有 `CPMS/get_sms/del_sms/send_sms` 调用均由单一所有者串行
   代理持续强制管理，或执行期间失去独占租约，必须禁用移动和设备删除。
-- 默认不自动删除；MVP 不提供“一键清空”。
+- r5 必须在服务能力、兼容 RPC、后端能力、rpcd ACL、LuCI/CLI 五层失败关闭旧删除
+  链路；仅 Stage C 全部门禁通过后才能以异步任务重新开放。
+- 默认不自动删除；MVP 和 r5 不提供“一键清空”。
 
 ### FR-05 运行诊断与隐私
 
@@ -182,10 +185,10 @@ flowchart LR
 | `get` | `id` | 单条逻辑消息及分段元数据 |
 | `send` | `to,text,request_id` | 队列 ID、编码、分段数、状态 |
 | `status` | `request_id` | 发送状态与安全错误码 |
-| `delete` | `id,fingerprint` | 删除结果；必须管理员权限 |
+| `delete` | `id,fingerprint` | r5 兼容失败桩；始终返回 `DEVICE_DELETE_DISABLED`，不得访问模组 |
 | `summary` | 无 | 供 SSH/AI 使用的脱敏消息、存储与健康摘要 |
 
-MVP 稳定错误码至少包括：`SIM_NOT_READY`、`SMS_UNSUPPORTED`、`STORAGE_FULL`、`STORAGE_CAPACITY_STALE`、`INVALID_NUMBER`、`SUBMIT_TIMEOUT`、`SUBMIT_UNKNOWN`、`BACKEND_READ_FAILED`、`BACKEND_SUBMIT_FAILED`、`MESSAGE_CHANGED` 与幂等相关错误。
+MVP 稳定错误码至少包括：`SIM_NOT_READY`、`SMS_UNSUPPORTED`、`STORAGE_FULL`、`STORAGE_CAPACITY_STALE`、`INVALID_NUMBER`、`SUBMIT_TIMEOUT`、`SUBMIT_UNKNOWN`、`BACKEND_READ_FAILED`、`BACKEND_SUBMIT_FAILED`、`MESSAGE_CHANGED`、`DEVICE_DELETE_DISABLED` 与幂等相关错误。
 
 ## 7. 安全要求
 
@@ -214,7 +217,8 @@ MVP 稳定错误码至少包括：`SIM_NOT_READY`、`SMS_UNSUPPORTED`、`STORAGE
 4. 向外部手机发送 GSM 7-bit 测试短信，模块返回成功且外部手机实际收到；现场基线为索引 20、MR 2、23:03 收到。
 5. 外部手机发送唯一短信后，页面在合理轮询窗口内显示；现场基线为 `ME` 索引 14 的 `0720test`。
 6. 发送/接收期间 `usb0` 不 down、不重新获取地址，现有上网业务不中断。
-7. 删除只影响确认的存储区和索引；未确认、指纹不匹配或权限不足时不得删除。
+7. r5 的旧删除入口在 UI/API/CLI 均不可用或稳定失败关闭；调用兼容 RPC 前后
+   `SM/ME` 短信、缓存和存储容量不发生删除型变化，且后端删除调用次数为零。
 8. 普通页面与日志中不出现完整 IMEI、ICCID、IMSI、短信正文或临时密钥。
 9. 通过静态检查、单元测试、设备集成测试、重启/升级回归和 ACL 越权测试。
 10. 产品界面、RPC 和 SSH CLI 中均不存在一键流量查询、运营商指令模板或流量结果解析入口。

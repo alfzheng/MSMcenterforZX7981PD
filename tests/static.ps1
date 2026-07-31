@@ -58,7 +58,11 @@ foreach ($source in $ucodeSources) {
 }
 
 $backend = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc') -Raw -Encoding UTF8
+$daemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/sbin/modem-smsd') -Raw -Encoding UTF8
+$cli = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/bin/modem-smsctl') -Raw -Encoding UTF8
 $backendConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/etc/config/modem-sms') -Raw -Encoding UTF8
+$daemonMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/Makefile') -Raw -Encoding UTF8
+$luciMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/luci-app-modem-sms/Makefile') -Raw -Encoding UTF8
 if (-not $backend.Contains("options.switch_argument ?? 'cmd'")) {
     throw 'lteat adapter must default to the target contract argument cmd'
 }
@@ -79,6 +83,27 @@ if (-not $frontend.Contains('this.data && this.data.loading') -or -not $frontend
 }
 if (-not $core.Contains('request_status_report ?? false')) {
     throw 'TP-SRR must remain opt-in until durable delivery-report reconciliation exists'
+}
+if (-not $backend.Contains('features: { read: true, send: true, delete: false')) {
+    throw 'r5 backend capability must fail closed for device deletion'
+}
+if (-not $daemon.Contains("capabilities.features.delete = false") -or
+    -not $daemon.Contains("error_result('DEVICE_DELETE_DISABLED')")) {
+    throw 'r5 daemon must advertise and enforce the device-delete safety gate'
+}
+if ($daemon.Contains('backend.delete_record(')) {
+    throw 'r5 public daemon must not contain a path to the backend delete operation'
+}
+if ($cli.Contains("command == 'delete'")) {
+    throw 'r5 SSH CLI must not expose a device-delete command'
+}
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=5') -or -not $luciMakefile.Contains('PKG_RELEASE:=5')) {
+    throw 'both r5 package Makefiles must use PKG_RELEASE:=5'
+}
+foreach ($forbiddenDeleteUi in @("method: 'delete'", 'confirmDelete', 'sms-confirm-delete')) {
+    if ($frontend.Contains($forbiddenDeleteUi)) {
+        throw "r5 LuCI must not expose the legacy delete flow: $forbiddenDeleteUi"
+    }
 }
 
 $po = Get-Content -LiteralPath (Join-Path $workspace 'packages/luci-app-modem-sms/po/zh_Hans/modem-sms.po') -Raw -Encoding UTF8
@@ -102,8 +127,11 @@ $writeMethods = $acl.'luci-app-modem-sms'.write.ubus.'modem.sms'
 foreach ($method in @('capabilities', 'analyse', 'list', 'get', 'status', 'summary')) {
     if ($method -notin $readMethods) { throw "Missing read ACL method: $method" }
 }
-foreach ($method in @('send', 'delete')) {
+foreach ($method in @('send')) {
     if ($method -notin $writeMethods) { throw "Missing write ACL method: $method" }
+}
+if ('delete' -in $writeMethods) {
+    throw 'r5 LuCI ACL must not grant the legacy device-delete method'
 }
 
 Write-Output "static.ps1: $($jsonFiles.Count) JSON files, $($messageIds.Count) translations and package invariants passed"

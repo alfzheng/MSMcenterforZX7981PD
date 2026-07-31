@@ -66,7 +66,6 @@ let send_order = [];
 let active_sends = 0;
 let reserved_send_slots = 0;
 let last_send_accepted_at = 0;
-let inflight_deletes = {};
 let idempotency_journal_ready = true;
 
 function envelope(fields) {
@@ -863,42 +862,6 @@ function accept_send_request(req, args, payload_fingerprint, encoded) {
 	req.reply(public_send(request));
 }
 
-function delete_locations(message, position, callback) {
-	if (position >= length(message.locations)) {
-		callback({ ok: true, deleted_count: position });
-		return;
-	}
-	let location = message.locations[position];
-	backend.delete_record(location.storage, location.index, function(result) {
-		if (!result.ok)
-			callback({
-				ok: false,
-				error_code: result.error_code ?? 'BACKEND_DELETE_FAILED',
-				deleted_count: position,
-				confirmed_deleted_count: position,
-				partial: position > 0,
-				failed_location: location,
-				unknown_location: result.outcome_unknown ? location : null,
-				outcome_unknown: result.outcome_unknown ?? false
-			});
-		else
-			delete_locations(message, position + 1, callback);
-	});
-}
-
-function restore_default_storage(callback) {
-	let callback_consumed = false;
-	backend.restore_storage(config.default_storage, function(status) {
-		if (callback_consumed)
-			return;
-		callback_consumed = true;
-		let failed = type(status) == 'object' ? status.ok == false : !!status;
-		callback(failed
-			? { ok: false, error_code: 'BACKEND_STORAGE_RESTORE_FAILED' }
-			: { ok: true });
-	});
-}
-
 load_send_history();
 
 const methods = {
@@ -913,6 +876,9 @@ const methods = {
 			capabilities.sms_error_code = capabilities.backend_available ? null : 'SMS_UNSUPPORTED';
 			capabilities.storages = config.storage_order;
 			capabilities.cache_seconds = config.cache_seconds;
+			capabilities.features = capabilities.features ?? {};
+			capabilities.features.delete = false;
+			capabilities.delete_error_code = 'DEVICE_DELETE_DISABLED';
 			req.reply(envelope(capabilities));
 		}
 	},
@@ -1128,93 +1094,10 @@ const methods = {
 	delete: {
 		args: { id: '', fingerprint: '', ubus_rpc_session: '' },
 		call: function(req) {
-			let args = req.args;
-			if (!backend.available()) {
-				req.reply(error_result('SMS_UNSUPPORTED'));
-				return;
-			}
-			if (exists(inflight_deletes, args.id)) {
-				req.reply(error_result('DELETE_IN_PROGRESS'));
-				return;
-			}
-			if (!cache.by_id[args.id]) {
-				req.reply(error_result('MESSAGE_NOT_FOUND'));
-				return;
-			}
-			if (cache.by_id[args.id].fingerprint != args.fingerprint) {
-				req.reply(error_result('MESSAGE_CHANGED'));
-				return;
-			}
-
-			inflight_deletes[args.id] = true;
-			req.defer();
-			function reply_delete(result) {
-				delete inflight_deletes[args.id];
-				req.reply(result);
-			}
-			request_load(function(snapshot) {
-				if (length(snapshot.errors)) {
-					reply_delete(error_result('BACKEND_READ_FAILED'));
-					return;
-				}
-
-				let message = snapshot.by_id[args.id];
-				if (!message) {
-					reply_delete(error_result('MESSAGE_NOT_FOUND'));
-					return;
-				}
-				if (message.fingerprint != args.fingerprint) {
-					reply_delete(error_result('MESSAGE_CHANGED'));
-					return;
-				}
-				if (!length(message.locations)) {
-					reply_delete(error_result('DELETE_UNAVAILABLE'));
-					return;
-				}
-
-				cache.updated_at = 0;
-				enqueue(function(done) {
-					delete_locations(message, 0, function(result) {
-						restore_default_storage(function(restore_result) {
-							try {
-							if (result.ok && restore_result.ok) {
-								audit('delete_complete', { id: message.id, locations: length(message.locations), state: 'deleted' });
-								reply_delete(envelope({ deleted: true, id: message.id }));
-							}
-							else if (result.ok) {
-								audit('delete_complete', { id: message.id, locations: length(message.locations),
-									state: 'restore-failed', error_code: restore_result.error_code });
-								reply_delete(error_result(restore_result.error_code, {
-									deleted: true,
-									id: message.id
-								}));
-							}
-							else {
-								audit('delete_complete', { id: message.id, state: 'failed', error_code: result.error_code,
-									deleted_count: result.deleted_count ?? 0,
-									restore_error_code: restore_result.ok ? '' : restore_result.error_code });
-								reply_delete(error_result(result.error_code, {
-									partial: result.partial ?? false,
-									deleted_count: result.deleted_count ?? 0,
-									confirmed_deleted_count: result.confirmed_deleted_count ?? 0,
-									failed_location: result.failed_location ?? null,
-									unknown_location: result.unknown_location ?? null,
-									outcome_unknown: result.outcome_unknown ?? false,
-									restore_error_code: restore_result.ok ? null : restore_result.error_code
-								}));
-							}
-							}
-							catch (reply_exception) {
-								audit('delete_reply_exception', { id: message.id, error: reply_exception });
-							}
-							done();
-						});
-					});
-				}, function(exception) {
-					reply_delete(error_result('INTERNAL_OPERATION_FAILED'));
-					audit('delete_queue_exception', { id: args.id, error: exception });
-				});
-			});
+			/* r5 compatibility fail-closed stub. It deliberately performs no
+			 * cache refresh, queue operation, CPMS switch or backend delete. */
+			audit('device_delete_blocked', { reason: 'safe-workflow-unavailable' });
+			req.reply(error_result('DEVICE_DELETE_DISABLED'));
 		}
 	},
 	summary: {

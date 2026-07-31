@@ -13,7 +13,7 @@ All successful and product-level error replies include `schema_version: "1.0"` a
 | `send` | `to`, `text`, `request_id` | `request_id`, `state`, `encoding`, `segments`, `parts_submitted`, `message_references`, `idempotency_persisted` |
 | `status` | `request_id` | current send state and safe error code |
 | `history_clear` | `confirm: "PURGE-IDEMPOTENCY-HISTORY"` | number of idempotency records cleared |
-| `delete` | `id`, `fingerprint` | `deleted`, `id` |
+| `delete` | `id`, `fingerprint` | r5 兼容失败桩：始终返回 `ok:false,error_code:DEVICE_DELETE_DISABLED` |
 | `summary` | none | masked counts, storage health and queue depth |
 
 Send states are `queued`, `sending`, `sent`, `failed`, or `unknown`. `sent` means the modem backend accepted every segment; it is not a handset delivery receipt. A timeout becomes `unknown` and is never retried automatically. If one or more multipart segments were accepted before a later segment failed, the state is `unknown` with `error_code: "PARTIAL_SUBMIT"`, `submit_error_code` containing the backend failure, and the confirmed `parts_submitted` count.
@@ -22,7 +22,12 @@ Idempotency history is written atomically to the configured `request_state_path`
 
 Reusing an existing request ID with a different recipient or body returns `REQUEST_ID_CONFLICT`. If the latest known capacity for the configured send storage cannot preserve enough slots for every segment plus the configured reserve, `send` returns `STORAGE_FULL`. The backend also maps modem memory-full and SIM-readiness errors to stable product codes.
 
-`delete` always performs a fresh dual-storage read before touching the modem. It refuses the operation if either storage cannot be read, if the logical message ID disappeared, or if the refreshed fingerprint differs. This prevents a stale UI row from deleting a newly received message after the modem reuses an index.
+In r5, `capabilities.features.delete` is always `false` and
+`delete_error_code` is `DEVICE_DELETE_DISABLED`. The compatibility `delete`
+method returns that product error before any cache refresh, queue operation,
+CPMS switch, or backend call. The method name remains registered only so stale
+LuCI assets and old clients fail closed with a stable result. Device deletion
+may be reintroduced only by the Stage C asynchronous archive workflow.
 
 ## Backend contract
 
@@ -35,6 +40,10 @@ A backend module is named `backend-<id>.uc` and returns `{ create }`. The create
 - `send_pdu(pdu_item, callback)`
 - `delete_record(storage, index, callback)`
 - `restore_storage(storage, callback)`
+
+The r5 `lteat` adapter retains `delete_record()` only as a dormant private
+backend contract for future Stage C work and reports `features.delete=false`.
+The public daemon contains no path from `modem.sms.delete` to this function.
 
 Successful `send_pdu()` replies may include `message_reference`. The service preserves one reference per submitted segment so a later backend can associate SMS-STATUS-REPORT records without changing the LuCI API.
 
