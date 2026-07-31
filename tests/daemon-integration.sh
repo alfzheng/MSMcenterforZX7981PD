@@ -103,7 +103,7 @@ wait_loaded_list() {
 	box="$1"
 	i=0
 	while [ "$i" -lt 70 ]; do
-		reply="$(ubus call modem.sms list "$(printf '{\"box\":\"%s\",\"storage\":\"ALL\",\"limit\":10,\"refresh\":false}' "$box")")"
+		reply="$(ubus call modem.sms list "$(printf '{"box":"%s","storage":"ALL","limit":10,"refresh":false}' "$box")")"
 		assert_true "$reply" 'list poll failed'
 		loading="$(printf '%s' "$reply" | jsonfilter -e '@.loading' 2>/dev/null || true)"
 		[ "$loading" != 'true' ] && {
