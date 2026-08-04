@@ -41,9 +41,23 @@ build log; no package binary is committed to this repository.
 
 ## Target boundary
 
-The earlier target read-only baseline confirmed the archive service was installed,
-`archive_enabled=0`, `ARCHIVE_DISABLED` was returned by archive capabilities and
-verification, the archive database was absent, and no SMS list/get/send/delete/body
-operation was invoked. The target has not been redeployed with this hardening
-change in this record; after commit, repeat package SHA checks and read-only target
-acceptance before considering A0 activation.
+The target read-only baseline was captured before installation, including the
+installed package list, UCI files and a `sysupgrade-before.tar.gz` backup. The
+three application packages below were then transferred with matching SHA-256 and
+reinstalled with `apk --force-reinstall`; the newer target i18n package was kept
+without downgrade:
+
+| Package | SHA-256 |
+|---|---|
+| `luci-app-modem-sms-0.1.0-r6.apk` | `8991267c20e5fba8192ef4276857e07379d5f3d1d576c3b1500d891178c08151` |
+| `modem-sms-archived-0.1.0-r1.apk` | `0ca15aab5715adee04a0449c580abd2350229bef9fb7c90cc05bda8319d92776` |
+| `modem-smsd-0.1.0-r6.apk` | `29c1fd9d9c0af697df6966d0bedf035f75f8407cd5fec0f84a70b170a669e026` |
+
+Post-install read-only acceptance passed: both services are running, Lua and
+ucode syntax checks passed, `archive_enabled=0`, capabilities and verification
+return `ARCHIVE_DISABLED`, the archive database is absent, and direct underlying
+`archive_get` returns `PERMISSION_DENIED`. The public LuCI ACL contains neither
+`archive_verify` nor `archive_get`. No SMS list/get/send/delete/body operation was
+invoked. Third-party repository index warnings occurred during the package tool's
+post-transaction refresh, but the local APK transaction completed `OK` and all
+target checks passed. A0 remains closed and is not approved for activation.
