@@ -83,6 +83,12 @@ CREATE TABLE IF NOT EXISTS stage_jobs (
         AND token_digest NOT GLOB '*[^0-9A-Fa-f]*'),
     snapshot_version INTEGER NOT NULL,
     worker_generation TEXT NOT NULL,
+    lease_generation INTEGER NOT NULL DEFAULT 0,
+    lease_owner_id TEXT NOT NULL DEFAULT '',
+    lease_nonce_digest TEXT NOT NULL DEFAULT '' CHECK (lease_nonce_digest = ''
+        OR (length(lease_nonce_digest) = 64
+            AND lease_nonce_digest NOT GLOB '*[^0-9A-Fa-f]*')),
+    lease_storage TEXT CHECK (lease_storage IS NULL OR lease_storage IN ('SM', 'ME')),
     state TEXT NOT NULL CHECK (state IN (
         'accepted', 'validating', 'archiving', 'ready', 'deleting',
         'completed', 'failed', 'unknown', 'blocked'
@@ -256,6 +262,21 @@ END;
 CREATE TRIGGER IF NOT EXISTS stage_jobs_insert_gate
 BEFORE INSERT ON stage_jobs
 WHEN NEW.state <> 'accepted'
+    OR (NEW.operation = 'delete_device' AND (
+        COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') <> '1'
+        OR NEW.lease_generation < 1
+        OR NEW.lease_owner_id = ''
+        OR length(NEW.lease_nonce_digest) <> 64
+        OR NEW.lease_nonce_digest GLOB '*[^0-9A-Fa-f]*'
+        OR NEW.lease_storage IS NULL
+        OR NOT EXISTS (
+            SELECT 1 FROM stage_cpms_leases AS l
+            WHERE l.lease_scope = 'global'
+                AND l.owner_id = NEW.lease_owner_id
+                AND l.owner_nonce_digest = NEW.lease_nonce_digest
+                AND l.storage = NEW.lease_storage
+                AND l.lease_generation = NEW.lease_generation
+                AND l.state = 'active')))
 BEGIN
     SELECT RAISE(ABORT, 'STAGE_JOB_MUST_START_ACCEPTED');
 END;
@@ -281,6 +302,19 @@ WHEN NEW.state <> 'proposed'
         SELECT 1 FROM stage_jobs
         WHERE job_id = NEW.job_id
             AND state IN ('accepted', 'validating', 'archiving', 'ready', 'deleting'))
+    OR (SELECT operation FROM stage_jobs WHERE job_id = NEW.job_id) = 'delete_device'
+        AND NOT EXISTS (
+            SELECT 1
+            FROM stage_jobs AS j
+            JOIN stage_cpms_leases AS l ON l.lease_scope = 'global'
+                AND l.owner_id = j.lease_owner_id
+                AND l.owner_nonce_digest = j.lease_nonce_digest
+                AND l.storage = j.lease_storage
+                AND l.lease_generation = j.lease_generation
+                AND l.state = 'active'
+            WHERE j.job_id = NEW.job_id
+                AND NEW.storage = j.lease_storage
+                AND COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') = '1')
 BEGIN
     SELECT RAISE(ABORT, 'STAGE_ITEM_INITIAL_STATE_INVALID');
 END;
@@ -311,7 +345,8 @@ END;
 CREATE TRIGGER IF NOT EXISTS stage_jobs_identity_immutable
 BEFORE UPDATE OF request_namespace, request_id, principal_id, operation,
     request_digest, selection_digest, token_digest, snapshot_version,
-    worker_generation, created_at, expires_at ON stage_jobs
+    worker_generation, lease_generation, lease_owner_id, lease_nonce_digest,
+    lease_storage, created_at, expires_at ON stage_jobs
 WHEN NEW.request_namespace <> OLD.request_namespace
     OR NEW.request_id <> OLD.request_id
     OR NEW.principal_id <> OLD.principal_id
@@ -321,6 +356,10 @@ WHEN NEW.request_namespace <> OLD.request_namespace
     OR NEW.token_digest <> OLD.token_digest
     OR NEW.snapshot_version <> OLD.snapshot_version
     OR NEW.worker_generation <> OLD.worker_generation
+    OR NEW.lease_generation <> OLD.lease_generation
+    OR NEW.lease_owner_id <> OLD.lease_owner_id
+    OR NEW.lease_nonce_digest <> OLD.lease_nonce_digest
+    OR NEW.lease_storage IS NOT OLD.lease_storage
     OR NEW.created_at <> OLD.created_at
     OR NEW.expires_at <> OLD.expires_at
 BEGIN
@@ -376,6 +415,30 @@ WHEN OLD.state IN ('completed', 'failed', 'unknown', 'blocked')
     AND NEW.state <> OLD.state
 BEGIN
     SELECT RAISE(ABORT, 'STAGE_JOB_TERMINAL');
+END;
+
+CREATE TRIGGER IF NOT EXISTS stage_jobs_operation_state
+BEFORE UPDATE OF state ON stage_jobs
+WHEN NEW.operation = 'move_local' AND NEW.state = 'deleting'
+BEGIN
+    SELECT RAISE(ABORT, 'MOVE_LOCAL_DELETE_STATE_FORBIDDEN');
+END;
+
+CREATE TRIGGER IF NOT EXISTS stage_jobs_destructive_gate
+BEFORE UPDATE OF state ON stage_jobs
+WHEN NEW.operation = 'delete_device'
+    AND NEW.state IN ('validating', 'archiving', 'ready', 'deleting', 'completed')
+    AND NOT EXISTS (
+        SELECT 1 FROM stage_cpms_leases AS l
+        WHERE l.lease_scope = 'global'
+            AND l.owner_id = NEW.lease_owner_id
+            AND l.owner_nonce_digest = NEW.lease_nonce_digest
+            AND l.storage = NEW.lease_storage
+            AND l.lease_generation = NEW.lease_generation
+            AND l.state = 'active'
+            AND COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') = '1')
+BEGIN
+    SELECT RAISE(ABORT, 'DELETE_LEASE_REQUIRED');
 END;
 
 CREATE TRIGGER IF NOT EXISTS stage_jobs_valid_transition
@@ -436,6 +499,35 @@ WHEN NOT (
 )
 BEGIN
     SELECT RAISE(ABORT, 'STAGE_ITEM_INVALID_TRANSITION');
+END;
+
+CREATE TRIGGER IF NOT EXISTS stage_job_items_operation_state
+BEFORE UPDATE OF state ON stage_job_items
+WHEN NEW.state = 'deleting'
+    AND (SELECT operation FROM stage_jobs WHERE job_id = NEW.job_id) = 'move_local'
+BEGIN
+    SELECT RAISE(ABORT, 'MOVE_LOCAL_DELETE_STATE_FORBIDDEN');
+END;
+
+CREATE TRIGGER IF NOT EXISTS stage_job_items_destructive_gate
+BEFORE UPDATE OF state, delete_call_count ON stage_job_items
+WHEN (SELECT operation FROM stage_jobs WHERE job_id = NEW.job_id) = 'delete_device'
+	AND (NEW.state IN ('archived', 'ready', 'deleting', 'completed')
+		OR (NEW.delete_call_count = 1 AND NEW.state NOT IN ('unknown', 'blocked')))
+    AND NOT EXISTS (
+        SELECT 1
+        FROM stage_jobs AS j
+        JOIN stage_cpms_leases AS l ON l.lease_scope = 'global'
+            AND l.owner_id = j.lease_owner_id
+            AND l.owner_nonce_digest = j.lease_nonce_digest
+            AND l.storage = j.lease_storage
+            AND l.lease_generation = j.lease_generation
+            AND l.state = 'active'
+        WHERE j.job_id = NEW.job_id
+            AND NEW.storage = j.lease_storage
+            AND COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') = '1')
+BEGIN
+    SELECT RAISE(ABORT, 'DELETE_LEASE_REQUIRED');
 END;
 
 CREATE TRIGGER IF NOT EXISTS stage_job_items_delete_completion_claim
@@ -502,12 +594,15 @@ WHEN NEW.lease_scope <> OLD.lease_scope
     OR (OLD.state = 'active' AND NEW.state = 'active'
         AND (NEW.owner_id <> OLD.owner_id
             OR NEW.owner_nonce_digest <> OLD.owner_nonce_digest
-            OR NEW.lease_generation <> OLD.lease_generation))
+            OR NEW.storage IS NOT OLD.storage
+            OR NEW.lease_generation <> OLD.lease_generation
+            OR NEW.acquired_at <> OLD.acquired_at))
     OR (OLD.state = 'active' AND NEW.state IN ('released', 'lost')
         AND (NEW.owner_id <> OLD.owner_id
             OR NEW.owner_nonce_digest <> OLD.owner_nonce_digest
             OR NEW.storage IS NOT OLD.storage
-            OR NEW.lease_generation <> OLD.lease_generation))
+            OR NEW.lease_generation <> OLD.lease_generation
+            OR NEW.acquired_at <> OLD.acquired_at))
     OR (OLD.state IN ('released', 'lost') AND NEW.state IN ('released', 'lost')
         AND (NEW.state <> OLD.state
             OR NEW.owner_id <> OLD.owner_id

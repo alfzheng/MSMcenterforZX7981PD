@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=modem-sms-archived
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=2
+PKG_RELEASE:=5
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=ZX7981PD SMS Project
 
@@ -40,6 +40,7 @@ define Package/modem-sms-archived/install
 	$(INSTALL_DIR) $(1)/usr/share/modem-sms
 	$(INSTALL_DATA) ./files/usr/share/modem-sms/archive_schema.sql $(1)/usr/share/modem-sms/archive_schema.sql
 	$(INSTALL_DATA) ./files/usr/share/modem-sms/archive_store.lua $(1)/usr/share/modem-sms/archive_store.lua
+	$(INSTALL_DATA) ./files/usr/share/modem-sms/stagec_worker.lua $(1)/usr/share/modem-sms/stagec_worker.lua
 endef
 
 $(eval $(call BuildPackage,modem-sms-archived))

@@ -23,7 +23,9 @@ $requiredFiles = @(
     'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived',
     'packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql',
     'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua',
+    'packages/modem-sms-archived/files/usr/share/modem-sms/stagec_worker.lua',
     'tests/stagec-sql.js',
+    'tests/stagec-worker.lua',
     'tests/archive-migration.lua'
 )
 
@@ -115,6 +117,7 @@ $archiveInit = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sm
 $archiveDaemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived') -Raw -Encoding UTF8
 $archiveStore = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua') -Raw -Encoding UTF8
 $archiveSchema = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql') -Raw -Encoding UTF8
+$stagecWorker = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/stagec_worker.lua') -Raw -Encoding UTF8
 $archiveMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/Makefile') -Raw -Encoding UTF8
 if (-not $archiveConfig.Contains("option archive_enabled '0'") -or
     -not $archiveConfig.Contains("option archive_copy_enabled '0'") ) {
@@ -151,6 +154,20 @@ if (-not $archiveStore.Contains('PRAGMA journal_mode') -or
     -not $archiveStore.Contains('source_integrity_ok')) {
     throw 'r7 archive storage gates are incomplete'
 }
+foreach ($stagecFunction in @('function M.recover', 'function M.acquire',
+		'function M.renew', 'function M.release', 'MAX_RECOVERY_ITEMS',
+		'MAX_RECOVERY_JOBS', 'RECOVERY_LIMIT', 'RECOVERY_INCOMPLETE')) {
+    if (-not $stagecWorker.Contains($stagecFunction)) {
+        throw "Stage C worker function or recovery gate missing: $stagecFunction"
+    }
+}
+if ($stagecWorker.Contains('ubus') -or $stagecWorker.Contains('lteat') -or
+    $stagecWorker.Contains('delete_record') -or $stagecWorker.Contains('os.execute')) {
+    throw 'Stage C worker must remain database-only and modem-independent'
+}
+if (-not $archiveDaemon.Contains('stagec_worker.recover')) {
+    throw 'archive daemon must run Stage C startup recovery before verification'
+}
 foreach ($stageTable in @('stage_jobs', 'stage_job_items', 'stage_tombstones', 'stage_cpms_leases',
         'stage_cpms_lease_history', 'stage_events')) {
     if (-not $archiveSchema.Contains("CREATE TABLE IF NOT EXISTS $stageTable")) {
@@ -160,6 +177,8 @@ foreach ($stageTable in @('stage_jobs', 'stage_job_items', 'stage_tombstones', '
 foreach ($stageTrigger in @('stage_jobs_insert_gate', 'stage_job_items_insert_gate',
         'stage_tombstones_insert_gate', 'stage_jobs_identity_immutable',
         'stage_job_items_identity_immutable', 'stage_tombstones_identity_immutable',
+        'stage_jobs_operation_state', 'stage_jobs_destructive_gate',
+        'stage_job_items_operation_state', 'stage_job_items_destructive_gate',
         'stage_jobs_no_delete', 'stage_job_items_no_delete',
         'stage_jobs_valid_transition', 'stage_job_items_valid_transition',
         'stage_job_items_delete_call_once', 'stage_job_items_delete_completion_claim',
@@ -189,10 +208,10 @@ if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
 if (-not $daemonMakefile.Contains('PKG_RELEASE:=7') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
-    throw 'modem-smsd must use PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
+    throw 'modem-smsd must remain at PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
 }
-if (-not $archiveMakefile.Contains('PKG_RELEASE:=2')) {
-    throw 'modem-sms-archived must use PKG_RELEASE:=2'
+if (-not $archiveMakefile.Contains('PKG_RELEASE:=5')) {
+    throw 'modem-sms-archived must use PKG_RELEASE:=5'
 }
 if (-not [regex]::IsMatch($daemon,
         '(?s)summary:\s*\{.*?if\s*\(!cache\.loaded\).*?request_load\(null\).*?loaded:\s*false,\s*loading:\s*true')) {

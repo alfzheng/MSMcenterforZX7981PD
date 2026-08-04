@@ -53,6 +53,16 @@ try {
 if (!directDeletingJobRejected)
 	throw new Error('job could be inserted directly in deleting state');
 
+let deleteWithoutLeaseRejected = false;
+try {
+	job.run('job-delete-closed', 'sms-stage-c-v1', 'request-delete-closed', 'principal-1', 'delete_device',
+		digest, digestB, digestC, 7, 'worker-1', 'accepted', now, now, 200);
+} catch {
+	deleteWithoutLeaseRejected = true;
+}
+if (!deleteWithoutLeaseRejected)
+	throw new Error('device-delete job bypassed the closed gate or lease binding');
+
 const item = db.prepare(`
 	INSERT INTO stage_job_items (
 		job_id, item_no, archive_id, source_identity_digest, content_digest,
@@ -108,6 +118,22 @@ try {
 }
 if (!activeLeaseOwnerSwapRejected)
 	throw new Error('active CPMS lease owner was mutable');
+let activeLeaseStorageSwapRejected = false;
+try {
+	db.prepare("UPDATE stage_cpms_leases SET storage = 'ME' WHERE lease_scope = 'global'").run();
+} catch {
+	activeLeaseStorageSwapRejected = true;
+}
+if (!activeLeaseStorageSwapRejected)
+	throw new Error('active CPMS lease storage was mutable');
+let activeLeaseAcquiredAtRewriteRejected = false;
+try {
+	db.prepare('UPDATE stage_cpms_leases SET acquired_at = 999 WHERE lease_scope = \'global\'').run();
+} catch {
+	activeLeaseAcquiredAtRewriteRejected = true;
+}
+if (!activeLeaseAcquiredAtRewriteRejected)
+	throw new Error('active CPMS lease acquired_at was mutable');
 db.prepare("UPDATE stage_cpms_leases SET state = 'released' WHERE lease_scope = 'global'").run();
 let releasedLeaseRewriteRejected = false;
 try {
@@ -170,7 +196,14 @@ if (!auditDeleteRejected)
 	throw new Error('audit event deletion was allowed');
 
 const setJobState = db.prepare('UPDATE stage_jobs SET state = ?, updated_at = ? WHERE job_id = ?');
-setJobState.run('deleting', now + 1, 'job-1');
+let moveLocalDeleteStateRejected = false;
+try {
+	setJobState.run('deleting', now + 1, 'job-1');
+} catch {
+	moveLocalDeleteStateRejected = true;
+}
+if (!moveLocalDeleteStateRejected)
+	throw new Error('move_local job was allowed to enter deleting state');
 
 job.run('job-unknown', 'sms-stage-c-v1', 'request-unknown', 'principal-1', 'move_local',
 	digest, digestB, digestC, 7, 'worker-1', 'accepted', now, now, 200);
@@ -186,10 +219,26 @@ if (!unknownResumeRejected)
 	throw new Error('unknown job was allowed to resume');
 
 const setItemState = db.prepare('UPDATE stage_job_items SET state = ?, updated_at = ? WHERE job_id = ? AND item_no = ?');
-setItemState.run('deleting', now + 1, 'job-1', 0);
+let moveLocalDeleteItemStateRejected = false;
+try {
+	setItemState.run('deleting', now + 1, 'job-1', 0);
+} catch {
+	moveLocalDeleteItemStateRejected = true;
+}
+if (!moveLocalDeleteItemStateRejected)
+	throw new Error('move_local item was allowed to enter deleting state');
 
-job.run('job-delete', 'sms-stage-c-v1', 'request-delete', 'principal-1', 'delete_device',
-	digest, digestB, digestC, 7, 'worker-1', 'accepted', now, now, 200);
+db.prepare("UPDATE metadata SET value = '1' WHERE key = 'stage_c_delete_enabled'").run();
+const deleteJob = db.prepare(`
+	INSERT INTO stage_jobs (
+		job_id, request_namespace, request_id, principal_id, operation,
+		request_digest, selection_digest, token_digest, snapshot_version,
+		worker_generation, lease_generation, lease_owner_id, lease_nonce_digest,
+		lease_storage, state, created_at, updated_at, expires_at
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+deleteJob.run('job-delete', 'sms-stage-c-v1', 'request-delete', 'principal-1', 'delete_device',
+	digest, digestB, digestC, 7, 'worker-1', 2, 'owner-2', digestB, 'SM',
+	'accepted', now, now, 200);
 item.run('job-delete', 0, 'archive-2', digest, digestB, 'SM', 8, 'epoch-1', 3,
 	digestC, 1, 1, digest, digestB, 'proposed', now, now);
 for (const state of ['validating', 'archiving', 'ready', 'deleting'])
@@ -213,14 +262,6 @@ const claimDelete = db.prepare(`
 	UPDATE stage_job_items
 	SET delete_call_count = 1, updated_at = ?
 	WHERE job_id = ? AND item_no = ? AND state = 'deleting' AND delete_call_count = 0`);
-	let moveClaimRejected = false;
-	try {
-		claimDelete.run(now + 2, 'job-1', 0);
-	} catch {
-		moveClaimRejected = true;
-	}
-	if (!moveClaimRejected)
-		throw new Error('move_local item was allowed to claim a device delete');
 	claimDelete.run(now + 2, 'job-delete', 0);
 	if (db.prepare('SELECT changes() AS count').get().count !== 1)
 	throw new Error('first delete claim was not recorded');

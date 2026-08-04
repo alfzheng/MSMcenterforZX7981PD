@@ -6,6 +6,7 @@ local uci = require('uci').cursor()
 
 package.path = '/usr/share/modem-sms/?.lua;' .. package.path
 local archive_store = require('archive_store')
+local stagec_worker = require('stagec_worker')
 
 local function number(name, fallback)
 	local value = tonumber(uci:get('modem-sms-archive', 'main', name) or '')
@@ -50,6 +51,11 @@ local function get_store()
 	if not store then
 		local opened, open_error = archive_store.open(config.archive_path, config)
 		if not opened then return nil, open_error end
+		local recovery, recovery_error = stagec_worker.recover(opened.db)
+		if not recovery then
+			opened:close()
+			return nil, recovery_error or 'STAGE_RECOVERY_FAILED'
+		end
 		store = opened
 	end
 	local verification, verify_error = store:verify()
@@ -247,6 +253,13 @@ local methods = {
 		{}
 	}
 }
+
+if config.enabled and config.archive_enabled then
+	local opened, startup_error = get_store()
+	if not opened then
+		error('stagec startup recovery failed: ' .. tostring(startup_error or 'STAGE_RECOVERY_FAILED'))
+	end
+end
 
 connection:add({ ['modem.sms.archive'] = methods })
 uloop.run()

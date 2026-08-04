@@ -8,8 +8,9 @@ local function expect_ok(code, message)
 	assert(code == nil or code == 0 or code == sqlite3.OK, message)
 end
 
-local function has_column(db, column)
-	local statement = assert(db:prepare('PRAGMA table_info("message_sources")'))
+local function has_column(db, column, table_name)
+	table_name = table_name or 'message_sources'
+	local statement = assert(db:prepare('PRAGMA table_info("' .. table_name .. '")'))
 	for row in statement:nrows() do
 		if row.name == column then
 			statement:finalize()
@@ -28,24 +29,39 @@ CREATE TABLE message_sources (
     scan_epoch TEXT NOT NULL, source_generation INTEGER NOT NULL,
     raw_pdu BLOB NOT NULL, raw_pdu_sha256 TEXT NOT NULL,
     first_seen_at INTEGER NOT NULL, last_seen_at INTEGER NOT NULL,
-    PRIMARY KEY (archive_id, storage, storage_index, source_generation));]]),
+    PRIMARY KEY (archive_id, storage, storage_index, source_generation));
+CREATE TABLE stage_jobs (
+    job_id TEXT PRIMARY KEY, request_namespace TEXT NOT NULL,
+    request_id TEXT NOT NULL, principal_id TEXT NOT NULL,
+    operation TEXT NOT NULL, request_digest TEXT NOT NULL,
+    selection_digest TEXT NOT NULL, token_digest TEXT NOT NULL,
+    snapshot_version INTEGER NOT NULL, worker_generation TEXT NOT NULL,
+    state TEXT NOT NULL, error_code TEXT, created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL, expires_at INTEGER NOT NULL);]]),
 	'legacy fixture creation failed')
 assert(not has_column(legacy, 'source_token_digest'), 'legacy fixture unexpectedly has v2 column')
 assert(archive_store.migrate_schema(legacy), 'v1 migration failed')
 assert(has_column(legacy, 'source_token_digest'), 'source token migration missing')
 assert(has_column(legacy, 'segment_no'), 'segment number migration missing')
 assert(has_column(legacy, 'segment_total'), 'segment total migration missing')
+assert(has_column(legacy, 'lease_generation', 'stage_jobs'), 'stage job lease generation migration missing')
+assert(has_column(legacy, 'lease_owner_id', 'stage_jobs'), 'stage job lease owner migration missing')
+assert(has_column(legacy, 'lease_nonce_digest', 'stage_jobs'), 'stage job lease nonce migration missing')
+assert(has_column(legacy, 'lease_storage', 'stage_jobs'), 'stage job lease storage migration missing')
 local version_statement = assert(legacy:prepare("SELECT value FROM metadata WHERE key = 'schema_version'"))
 local version
 for row in version_statement:nrows() do version = row.value break end
 version_statement:finalize()
 assert(version == '2', 'schema version was not advanced')
 assert(archive_store.migrate_schema(legacy), 'repeat migration failed')
-legacy:close()
-
 local schema_file = assert(io.open('packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql', 'rb'))
 local full_schema = schema_file:read('*a')
 schema_file:close()
+local legacy_schema_code = legacy:exec(full_schema)
+assert(legacy_schema_code == nil or legacy_schema_code == 0 or legacy_schema_code == sqlite3.OK,
+	'full schema could not be applied after legacy Stage C migration: ' .. tostring(legacy:errmsg()))
+legacy:close()
+
 local full = assert(sqlite3.open(':memory:'))
 expect_ok(full:exec('PRAGMA foreign_keys = ON'), 'foreign key pragma failed')
 expect_ok(full:exec(full_schema), 'full schema fixture failed')

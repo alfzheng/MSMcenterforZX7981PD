@@ -128,6 +128,40 @@ local function ensure_column(db, table_name, column_name, definition)
 	return true
 end
 
+local function table_exists(db, table_name)
+	local statement = db:prepare(
+		"SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?")
+	if not statement then return nil, 'ARCHIVE_SCHEMA_MIGRATION_FAILED' end
+	if not is_ok(statement:bind_values(table_name)) then
+		statement:finalize()
+		return nil, 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+	end
+	local present = false
+	for _ in statement:nrows() do
+		present = true
+		break
+	end
+	statement:finalize()
+	return present
+end
+
+local function ensure_stage_job_columns(db)
+	local present, err = table_exists(db, 'stage_jobs')
+	if present == nil then return nil, err end
+	if not present then return true end
+	local columns = {
+		{ 'lease_generation', 'INTEGER NOT NULL DEFAULT 0' },
+		{ 'lease_owner_id', "TEXT NOT NULL DEFAULT ''" },
+		{ 'lease_nonce_digest', "TEXT NOT NULL DEFAULT ''" },
+		{ 'lease_storage', 'TEXT' }
+	}
+	for _, column in ipairs(columns) do
+		local ok, column_error = ensure_column(db, 'stage_jobs', column[1], column[2])
+		if not ok then return nil, column_error end
+	end
+	return true
+end
+
 local function migrate_schema(db, transaction_active)
 	local owns_transaction = not transaction_active
 	if owns_transaction then
@@ -145,6 +179,11 @@ local function migrate_schema(db, transaction_active)
 			if owns_transaction then db:exec('ROLLBACK') end
 			return nil, err
 		end
+	end
+	local stage_ok, stage_error = ensure_stage_job_columns(db)
+	if not stage_ok then
+		if owns_transaction then db:exec('ROLLBACK') end
+		return nil, stage_error
 	end
 	local code = db:exec("UPDATE metadata SET value = '2' WHERE key = 'schema_version' "
 		.. "AND CAST(value AS INTEGER) < 2")
@@ -449,6 +488,12 @@ function M.open(path, options)
 		local error_code = db:errmsg()
 		store:close()
 		return nil, error_code or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+	end
+	local stage_columns_ok, stage_columns_error = ensure_stage_job_columns(db)
+	if not stage_columns_ok then
+		db:exec('ROLLBACK')
+		store:close()
+		return nil, stage_columns_error or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
 	end
 	if not is_ok(db:exec(schema)) then
 		local error_code = db:errmsg()

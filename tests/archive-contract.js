@@ -42,6 +42,8 @@ for (const table of ['stage_jobs', 'stage_job_items', 'stage_tombstones', 'stage
 for (const trigger of ['stage_jobs_insert_gate', 'stage_job_items_insert_gate',
 	'stage_tombstones_insert_gate', 'stage_jobs_identity_immutable',
 	'stage_job_items_identity_immutable', 'stage_tombstones_identity_immutable',
+	'stage_jobs_operation_state', 'stage_jobs_destructive_gate',
+	'stage_job_items_operation_state', 'stage_job_items_destructive_gate',
 	'stage_jobs_no_delete', 'stage_job_items_no_delete',
 	'stage_jobs_valid_transition', 'stage_job_items_valid_transition',
 	'stage_job_items_delete_call_once', 'stage_job_items_delete_completion_claim',
