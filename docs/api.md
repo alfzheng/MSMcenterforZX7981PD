@@ -15,6 +15,10 @@ All successful and product-level error replies include `schema_version: "1.0"` a
 | `history_clear` | `confirm: "PURGE-IDEMPOTENCY-HISTORY"` | number of idempotency records cleared |
 | `delete` | `id`, `fingerprint` | r5+ 兼容失败桩：始终返回 `ok:false,error_code:DEVICE_DELETE_DISABLED` |
 | `summary` | none | masked counts, `loaded`, `loading`, storage health and queue depth |
+| `archive_capabilities` | none | A0 availability, schema, capacity budget and safe error code |
+| `messages_page` | `source=LOCAL`, `box`, `query`, `query_fields`, `cursor`, `limit` | local archive metadata page and opaque `next_cursor` |
+| `archive_get` | `archive_id` | A0 content access remains permission-closed |
+| `archive_verify` | none | SQLite integrity, capacity and recovery metadata |
 
 Send states are `queued`, `sending`, `sent`, `failed`, or `unknown`. `sent` means the modem backend accepted every segment; it is not a handset delivery receipt. A timeout becomes `unknown` and is never retried automatically. If one or more multipart segments were accepted before a later segment failed, the state is `unknown` with `error_code: "PARTIAL_SUBMIT"`, `submit_error_code` containing the backend failure, and the confirmed `parts_submitted` count.
 
@@ -59,3 +63,10 @@ Starting with r6, `summary` uses the same non-blocking cold-load contract. Its
 first cold reply contains `loaded:false`, `loading:true`, zero provisional
 counts and no message content. Callers should poll until
 `loaded:true,loading:false` before treating counts as the completed snapshot.
+
+The r7 A0 archive package is separate from the modem service and is disabled by
+default. It does not access `lteat`, does not expose copy, move or device-delete
+operations, and does not create `/root/modem-sms/` until the deployment gate
+explicitly enables `archive_enabled`. The `modem-smsd` methods above fail closed
+with `ARCHIVE_DISABLED` or `ARCHIVE_UNAVAILABLE` when the A0 worker is absent or
+not ready.

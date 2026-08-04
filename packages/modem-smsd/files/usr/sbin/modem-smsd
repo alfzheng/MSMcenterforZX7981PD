@@ -79,6 +79,11 @@ function error_result(code, detail) {
 	return envelope({ ok: false, error_code: code, detail: detail ?? null });
 }
 
+function archive_call(method, args) {
+	let reply = bus.call('modem.sms.archive', method, args ?? {});
+	return reply ?? error_result('ARCHIVE_UNAVAILABLE');
+}
+
 function audit(event, fields) {
 	let details = [];
 	for (let key in fields ?? {})
@@ -880,6 +885,48 @@ const methods = {
 			capabilities.features.delete = false;
 			capabilities.delete_error_code = 'DEVICE_DELETE_DISABLED';
 			req.reply(envelope(capabilities));
+		}
+	},
+	archive_capabilities: {
+		args: { ubus_rpc_session: '' },
+		call: function(req) {
+			req.reply(archive_call('capabilities', {
+				ubus_rpc_session: req.args.ubus_rpc_session ?? 'local-root'
+			}));
+		}
+	},
+	messages_page: {
+		args: { source: '', box: '', query: '', query_fields: [], cursor: '', limit: 0, ubus_rpc_session: '' },
+		call: function(req) {
+			let args = req.args;
+			req.reply(archive_call('messages_page', {
+				source: args.source,
+				box: args.box,
+				query: args.query,
+				query_fields: args.query_fields,
+				cursor: args.cursor,
+				limit: args.limit,
+				ubus_rpc_session: args.ubus_rpc_session ?? 'local-root'
+			}));
+		}
+	},
+	archive_get: {
+		args: { archive_id: '', ubus_rpc_session: '' },
+		call: function(req) {
+			/* A0 keeps content access closed; a later ACL review may delegate it. */
+			req.reply(archive_call('archive_get', {
+				archive_id: req.args.archive_id,
+				allow_content: false,
+				ubus_rpc_session: req.args.ubus_rpc_session ?? 'local-root'
+			}));
+		}
+	},
+	archive_verify: {
+		args: { ubus_rpc_session: '' },
+		call: function(req) {
+			req.reply(archive_call('archive_verify', {
+				ubus_rpc_session: req.args.ubus_rpc_session ?? 'local-root'
+			}));
 		}
 	},
 	analyse: {

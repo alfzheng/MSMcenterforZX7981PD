@@ -16,7 +16,13 @@ $requiredFiles = @(
     'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc',
     'tests/backend.uc',
     'packages/luci-app-modem-sms/Makefile',
-    'packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js'
+    'packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js',
+    'packages/modem-sms-archived/Makefile',
+    'packages/modem-sms-archived/files/etc/config/modem-sms-archive',
+    'packages/modem-sms-archived/files/etc/init.d/modem-sms-archived',
+    'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived',
+    'packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql',
+    'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua'
 )
 
 foreach ($relative in $requiredFiles) {
@@ -26,7 +32,7 @@ foreach ($relative in $requiredFiles) {
 }
 
 $productCode = Get-ChildItem -Path (Join-Path $workspace 'packages') -Recurse -File |
-    Where-Object { $_.Extension -in @('.uc', '.js', '.json', '.po') -or $_.Name -in @('modem-smsd', 'modem-smsctl') } |
+    Where-Object { $_.Extension -in @('.uc', '.js', '.json', '.po', '.lua', '.sql') -or $_.Name -in @('modem-smsd', 'modem-smsctl', 'modem-sms-archived') } |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 }
 $joined = $productCode -join "`n"
 
@@ -90,6 +96,28 @@ if (-not $backend.Contains('features: { read: true, send: true, delete: false'))
 if (-not $daemon.Contains("capabilities.features.delete = false") -or
     -not $daemon.Contains("error_result('DEVICE_DELETE_DISABLED')")) {
     throw 'r5+ daemon must advertise and enforce the device-delete safety gate'
+}
+if (-not $daemon.Contains('archive_capabilities:') -or
+    -not $daemon.Contains('messages_page:') -or
+    -not $daemon.Contains('archive_verify:')) {
+    throw 'r7 A0 daemon archive proxy methods are missing'
+}
+$archiveConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/config/modem-sms-archive') -Raw -Encoding UTF8
+$archiveStore = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua') -Raw -Encoding UTF8
+$archiveMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/Makefile') -Raw -Encoding UTF8
+if (-not $archiveConfig.Contains("option archive_enabled '0'") -or
+    -not $archiveConfig.Contains("option archive_copy_enabled '0'") ) {
+    throw 'r7 A0/A1 archive gates must default closed'
+}
+if (-not $archiveMakefile.Contains('+lsqlite3') -or
+    -not $archiveMakefile.Contains('+libsqlite3-0') -or
+    -not $archiveMakefile.Contains('+libubox-lua') -or
+    -not $archiveMakefile.Contains('+libubus-lua')) {
+    throw 'r7 archive package dependencies are incomplete'
+}
+if ($archiveStore.Contains('os.execute') -or $archiveStore.Contains('os.remove') -or
+    $archiveStore.Contains('os.rename')) {
+    throw 'archive store must not mutate files through generic Lua helpers'
 }
 if ($daemon.Contains('backend.delete_record(')) {
     throw 'r5+ public daemon must not contain a path to the backend delete operation'

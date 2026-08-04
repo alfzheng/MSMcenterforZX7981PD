@@ -3,12 +3,15 @@
 ## Source layout
 
 - `packages/modem-smsd`: OpenWrt service package, core codec, backend adapter and SSH CLI.
+- `packages/modem-sms-archived`: disabled-by-default A0 SQLite storage worker and schema.
 - `packages/luci-app-modem-sms`: LuCI JavaScript view, menu, ACL and Simplified Chinese translations.
 - `tests/core.uc`: target-runtime codec and segmentation tests.
 - `tests/backend.uc`: lteat adapter parser and callback tests.
 - `tests/daemon-integration.sh`: real daemon/ubus tests with a fake modem backend; never sends a real SMS.
 - `tests/daemon-live-read.sh`: read-only live lteat smoke test; never sends or deletes.
 - `tests/static.ps1`: package, JSON, ACL and product-decoupling checks.
+- `tests/archive-contract.js`: A0 package and safety contract checks.
+- `tests/archive-sql.js`: SQLite schema, ordering, idempotency and integrity checks.
 
 ## Local static check
 
@@ -41,6 +44,12 @@ Both scripts refuse to run if `/etc/config/modem-sms`, `/usr/share/modem-sms`, o
 ## Build
 
 Copy or link both directories below `packages/` into matching OpenWrt 25.12 package feeds. Build `modem-smsd` first and then `luci-app-modem-sms`. The target device uses `apk`, so final artifacts are APK packages even though package recipes retain the standard OpenWrt Makefile format.
+
+For the r7 A0 candidate, build `modem-sms-archived` as a separate package after
+`modem-smsd`. Its runtime dependencies are `lua`, `libubox-lua`,
+`libubus-lua`, `libuci-lua`, `lsqlite3` and `libsqlite3-0`; the target SDK
+must resolve and compile these packages before any target installation is
+considered.
 
 Do not install the service until the target syntax checks pass. The first device integration run should call `capabilities`, `analyse`, and a refreshed read before any write operation. Sending and deletion remain explicit, separately confirmed tests.
 

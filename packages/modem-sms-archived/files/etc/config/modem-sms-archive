@@ -1,0 +1,12 @@
+config main 'main'
+	option enabled '1'
+	# A0 is intentionally disabled until the target storage gates pass.
+	option archive_enabled '0'
+	# A1 remains a separate, later activation gate.
+	option archive_copy_enabled '0'
+	option archive_path '/root/modem-sms/archive.sqlite3'
+	option archive_max_bytes '5242880'
+	option archive_min_free_bytes '12582912'
+	option page_limit_max '100'
+	option cursor_ttl_seconds '600'
+	option journal_mode 'DELETE'

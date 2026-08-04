@@ -17,6 +17,8 @@ function usage() {
 	print('  modem-smsctl status <request_id> [--wait seconds] --json\n');
 	print('  modem-smsctl history-clear --confirm --json\n');
 	print('  modem-smsctl summary --json\n');
+	print('  modem-smsctl archive-capabilities --json\n');
+	print('  modem-smsctl archive-verify --json\n');
 }
 
 function option(args, name, fallback) {
@@ -138,6 +140,14 @@ else if (command == 'history-clear') {
 else if (command == 'summary') {
 	validate(args, [], ['--json'], 0);
 	result = call('summary', {});
+}
+else if (command == 'archive-capabilities') {
+	validate(args, [], ['--json'], 0);
+	result = call('archive_capabilities', {});
+}
+else if (command == 'archive-verify') {
+	validate(args, [], ['--json'], 0);
+	result = call('archive_verify', {});
 }
 else {
 	fail('INVALID_COMMAND', `Unknown command '${command}'`);

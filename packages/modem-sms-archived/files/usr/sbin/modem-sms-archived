@@ -1,0 +1,219 @@
+#!/usr/bin/lua
+
+local ubus = require('ubus')
+local uloop = require('uloop')
+local uci = require('uci').cursor()
+
+package.path = '/usr/share/modem-sms/?.lua;' .. package.path
+local archive_store = require('archive_store')
+
+local function number(name, fallback)
+	local value = tonumber(uci:get('modem-sms-archive', 'main', name) or '')
+	return value or fallback
+end
+
+local config = {
+	enabled = uci:get('modem-sms-archive', 'main', 'enabled') ~= '0',
+	archive_enabled = uci:get('modem-sms-archive', 'main', 'archive_enabled') == '1',
+	archive_copy_enabled = uci:get('modem-sms-archive', 'main', 'archive_copy_enabled') == '1',
+	archive_path = uci:get('modem-sms-archive', 'main', 'archive_path') or '/root/modem-sms/archive.sqlite3',
+	archive_max_bytes = number('archive_max_bytes', 5242880),
+	archive_min_free_bytes = number('archive_min_free_bytes', 12582912),
+	page_limit_max = number('page_limit_max', 100),
+	cursor_ttl_seconds = number('cursor_ttl_seconds', 600)
+}
+
+local connection = ubus.connect()
+if not connection then error('unable to connect to ubus') end
+uloop.init()
+
+local store
+local store_error
+local cursors = {}
+
+local function envelope(fields)
+	fields.schema_version = '1.0'
+	if fields.ok == nil then fields.ok = true end
+	return fields
+end
+
+local function error_reply(code, detail)
+	return envelope({ ok = false, error_code = code, detail = detail })
+end
+
+local function get_store()
+	if not config.enabled or not config.archive_enabled then
+		return nil, 'ARCHIVE_DISABLED'
+	end
+	if store then return store end
+	if store_error then return nil, store_error end
+	store, store_error = archive_store.open(config.archive_path, config)
+	if not store then return nil, store_error end
+	return store
+end
+
+local function capabilities()
+	local result = {
+		available = false,
+		archive_enabled = config.archive_enabled,
+		archive_copy_enabled = config.archive_copy_enabled,
+		schema_version = '1.0',
+		database_path = '/root/modem-sms/archive.sqlite3',
+		archive_max_bytes = config.archive_max_bytes,
+		archive_min_free_bytes = config.archive_min_free_bytes,
+		features = { page = false, get = false, copy = false, backup = false, restore = false },
+		error_code = config.archive_enabled and store_error or 'ARCHIVE_DISABLED'
+	}
+	local current, err = get_store()
+	if current then
+		local verify = current:verify()
+		result.available = verify.ok
+		result.features.page = verify.ok
+		result.features.get = verify.ok
+		result.error_code = verify.ok and nil or verify.error_code
+		result.snapshot_version = verify.snapshot_version
+		result.capacity = verify.capacity
+	else
+		result.error_code = err
+	end
+	return envelope(result)
+end
+
+local function principal(message)
+	return tostring(message.ubus_rpc_session or 'local-root')
+end
+
+local function cursor_key(message, token)
+	return principal(message) .. '\0' .. token
+end
+
+local function new_cursor(message, state)
+	local token = archive_store.random_token()
+	if not token then return nil end
+	cursors[cursor_key(message, token)] = state
+	return token
+end
+
+local function lookup_cursor(message, token)
+	if type(token) ~= 'string' or #token ~= 64 then return nil, 'CURSOR_INVALID' end
+	local state = cursors[cursor_key(message, token)]
+	if not state then return nil, 'CURSOR_STALE' end
+	if state.expires_at < os.time() then
+		cursors[cursor_key(message, token)] = nil
+		return nil, 'CURSOR_STALE'
+	end
+	return state
+end
+
+local function page(req, message)
+	if message.source ~= nil and message.source ~= 'LOCAL' then
+		connection:reply(req, error_reply('INVALID_SOURCE'))
+		return
+	end
+	local query = message.query
+	if query ~= nil and (#tostring(query) > 256) then
+		connection:reply(req, error_reply('QUERY_LIMIT_EXCEEDED'))
+		return
+	end
+	local query_fields = message.query_fields
+	if query_fields then
+		for _, field in ipairs(query_fields) do
+			if field == 'body' or field == 'number' then
+				connection:reply(req, error_reply('PERMISSION_DENIED'))
+				return
+			end
+		end
+	end
+	local current, err = get_store()
+	if not current then
+		connection:reply(req, error_reply(err))
+		return
+	end
+	local box = message.box or 'all'
+	if box ~= 'all' and box ~= 'inbox' and box ~= 'outbox' then
+		connection:reply(req, error_reply('INVALID_ARGUMENT'))
+		return
+	end
+	local pattern
+	if query and query ~= '' then pattern = '%' .. archive_store.escape_like(tostring(query)) .. '%' end
+	local after
+	local cursor_token = message.cursor
+	if cursor_token then
+		local state, cursor_error = lookup_cursor(message, cursor_token)
+		if not state then
+			connection:reply(req, error_reply(cursor_error))
+			return
+		end
+		if state.snapshot_version ~= current:snapshot_version() then
+			connection:reply(req, error_reply('CURSOR_STALE'))
+			return
+		end
+		after = state.after
+	end
+	local result, page_error = current:page({
+		box = box,
+		limit = message.limit,
+		pattern = pattern,
+		query_fields = query_fields
+	}, after)
+	if not result then
+		connection:reply(req, error_reply(page_error))
+		return
+	end
+	local next_cursor
+	if result.has_more and #result.items > 0 then
+		local last = result.items[#result.items]
+		next_cursor = new_cursor(message, {
+			after = { message_time = last.message_time or 0, archive_id = last.archive_id },
+			snapshot_version = result.snapshot_version,
+			expires_at = os.time() + config.cursor_ttl_seconds
+		})
+		if not next_cursor then
+			connection:reply(req, error_reply('CURSOR_UNAVAILABLE'))
+			return
+		end
+	end
+	connection:reply(req, envelope({
+		items = result.items,
+		next_cursor = next_cursor,
+		page_size = result.page_size,
+		filtered_count = result.filtered_count,
+		snapshot_version = result.snapshot_version
+	}))
+end
+
+local methods = {
+	capabilities = {
+		function(req, message) connection:reply(req, capabilities()) end,
+		{}
+	},
+	messages_page = {
+		page,
+		{}
+	},
+	archive_get = {
+		function(req, message)
+			local current, err = get_store()
+			if not current then connection:reply(req, error_reply(err)); return end
+			if message.allow_content ~= true then
+				connection:reply(req, error_reply('PERMISSION_DENIED'))
+				return
+			end
+			local result, get_error = current:get(message.archive_id, true)
+			connection:reply(req, result and envelope({ message = result }) or error_reply(get_error))
+		end,
+		{}
+	},
+	archive_verify = {
+		function(req, message)
+			local current, err = get_store()
+			if not current then connection:reply(req, error_reply(err)); return end
+			local result, verify_error = current:verify()
+			connection:reply(req, result and envelope(result) or error_reply(verify_error))
+		end,
+		{}
+	}
+}
+
+connection:add({ ['modem.sms.archive'] = methods })
+uloop.run()
