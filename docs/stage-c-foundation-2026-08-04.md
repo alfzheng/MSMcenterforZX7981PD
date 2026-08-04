@@ -45,3 +45,12 @@ RPC, add a CLI or LuCI action, or call the modem delete backend.
   terminal-state blocking, one-time delete claims and immutable tombstones.
 - Existing A0 SQLite and archive contract tests remain required.
 - No test in this milestone sends, reads, or deletes a real SMS.
+
+## Target runtime verification
+
+On 2026-08-04, the target runtime executed `archive-migration.lua`,
+`ucode tests/backend.uc`, and a `ucode -c` compile check for
+`backend-lteat.uc`; all passed. A read-only capability check still returned
+`features.delete=false`, `DEVICE_DELETE_DISABLED`, and A0
+`ARCHIVE_DISABLED`. The target packages were not replaced, no service was
+restarted, and no SMS interface was called.
