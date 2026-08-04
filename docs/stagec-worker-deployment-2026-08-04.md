@@ -44,6 +44,7 @@ The installed package and runtime checks passed:
 
 ```text
 lua tests/stagec-worker.lua
+lua tests/stagec-fault-injection.lua
 lua tests/archive-migration.lua
 ```
 

@@ -26,6 +26,7 @@ $requiredFiles = @(
     'packages/modem-sms-archived/files/usr/share/modem-sms/stagec_worker.lua',
     'tests/stagec-sql.js',
     'tests/stagec-worker.lua',
+    'tests/stagec-fault-injection.lua',
     'tests/archive-migration.lua'
 )
 

@@ -67,6 +67,7 @@ Target OpenWrt 25.12.5 / aarch64 checks passed with the installed r6 files:
 
 ```text
 lua tests/stagec-worker.lua
+lua tests/stagec-fault-injection.lua
 lua tests/archive-migration.lua
 ```
 
@@ -104,6 +105,15 @@ tests. The agent made no edits, commits, target connections or SMS calls.
 An earlier attempted re-audit by Halley
 (`019fcbfb-8058-7eb3-ad25-28f9dac7e403`) timed out and is retained as an
 incomplete, non-gating attempt; it is not counted as a passing audit.
+
+The follow-up fault-injection review by subagent Dewey
+(`019fcc59-0533-7672-8c49-42a9b10628f0`) found one P1 in the test harness:
+the fixed temporary SQLite path could delete an unrelated file. It also found
+two P2 coverage gaps: lock-failure state preservation and exact/idempotent
+recovery-event assertions. The harness now uses `os.tmpname()`, verifies the
+separate `LEASE_LOST`/`RECOVERY_BLOCKED` counts, and calls recovery twice to
+verify no duplicate events. The target fault-injection test passed after
+these changes; no runtime package change was needed.
 
 ## Audit conclusion
 

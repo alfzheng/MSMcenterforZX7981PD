@@ -14,6 +14,8 @@
 - `tests/archive-sql.js`: SQLite schema, ordering, idempotency and integrity checks.
 - `tests/stagec-sql.js`: Stage C durable state, identity binding and fail-closed transition checks.
 - `tests/archive-migration.lua`: target-runtime v1-to-v2 migration, repeatability and rollback checks.
+- `tests/stagec-worker.lua`: target-runtime lease ownership, bounded recovery and safe terminal-state checks.
+- `tests/stagec-fault-injection.lua`: target-runtime SQLite lock, rollback and restart-recovery checks.
 
 ## Local static check
 
