@@ -12,6 +12,8 @@
 - `tests/static.ps1`: package, JSON, ACL and product-decoupling checks.
 - `tests/archive-contract.js`: A0 package and safety contract checks.
 - `tests/archive-sql.js`: SQLite schema, ordering, idempotency and integrity checks.
+- `tests/stagec-sql.js`: Stage C durable state, identity binding and fail-closed transition checks.
+- `tests/archive-migration.lua`: target-runtime v1-to-v2 migration, repeatability and rollback checks.
 
 ## Local static check
 
@@ -54,6 +56,10 @@ considered.
 Do not install the service until the target syntax checks pass. The first device integration run should call `capabilities`, `analyse`, and a refreshed read before any write operation. Sending and deletion remain explicit, separately confirmed tests.
 
 Before release, repeat the target checks with the exact firmware ucode version and run an independent read-only adversarial review. A passing local static check does not replace target compilation. Do not perform a real send or delete during the syntax/contract gate.
+
+The Stage C foundation test is still non-destructive. `archive-migration.lua`
+must run with the target Lua/SQLite runtime before any package installation is
+considered; it does not authorize Stage C activation.
 
 The current private `lteat` API does not offer one atomic “select storage and operate” call. Before every deployment or firmware upgrade, search the target filesystem and process list for other `AT+CPMS`, `lteat.get_sms`, `lteat.del_sms` or `lteat.send_sms` callers. Release is blocked if another caller can switch SMS storage concurrently; all SMS/CPMS access must be routed through `modem-smsd`.
 

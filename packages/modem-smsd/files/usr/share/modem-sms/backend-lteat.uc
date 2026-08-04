@@ -273,7 +273,7 @@ function factory(connection, options) {
 		});
 	}
 
-	function available() {
+	function contract_available(required_methods, require_signature) {
 		let objects = connection.list(object_name);
 		if (objects == null || !length(objects))
 			return false;
@@ -285,14 +285,27 @@ function factory(connection, options) {
 			descriptor = exists(objects, object_name) ? objects[object_name] : objects;
 		else if (type(objects) == 'array' && length(objects) == 1 && type(objects[0]) == 'object')
 			descriptor = objects[0];
+		if (descriptor == null)
+			return !require_signature;
 		if (descriptor != null) {
 			if (type(descriptor) == 'object') {
-				for (let method in [switch_method, list_method, send_method, delete_method])
+				for (let method in required_methods)
 					if (!exists(descriptor, method))
 						return false;
 			}
 		}
 		return true;
+	}
+
+	function available() {
+		/* Read/send support must not depend on the presence of an unused delete
+		 * method. Stage C will perform its own stronger delete/owner checks. */
+		return contract_available([switch_method, list_method, send_method], false);
+	}
+
+	function delete_available() {
+		/* A name-only list() result cannot prove the destructive method contract. */
+		return contract_available([switch_method, list_method, send_method, delete_method], true);
 	}
 
 	return {
@@ -302,6 +315,7 @@ function factory(connection, options) {
 		list_storage: list_storage,
 		send_pdu: send_pdu,
 		delete_record: delete_record,
+		delete_available: delete_available,
 		restore_storage: function(storage, callback) { switch_storage(storage, callback); },
 		capabilities: function() {
 			return {

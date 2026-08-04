@@ -160,14 +160,25 @@ equal(cms_result.error_code, 'STORAGE_FULL', 'definite CMS error precedes transp
 let incomplete_connection = {
 	list: function() { return { lteat: { send: {}, get_sms: {}, send_sms: {} } }; }
 };
-equal(backend_module.create(incomplete_connection, {}).available(), false,
-	'missing backend method reported unsupported');
+let read_send_backend = backend_module.create(incomplete_connection, {});
+equal(read_send_backend.available(), true,
+	'read/send backend must not require an unused delete method');
+equal(read_send_backend.delete_available(), false,
+	'delete capability must be checked independently');
 
 let complete_connection = {
 	list: function() { return { lteat: { send: {}, get_sms: {}, send_sms: {}, del_sms: {} } }; }
 };
-equal(backend_module.create(complete_connection, {}).available(), true,
-	'complete backend method contract available');
+let complete_backend = backend_module.create(complete_connection, {});
+equal(complete_backend.available(), true, 'complete backend method contract available');
+equal(complete_backend.delete_available(), true, 'complete delete method contract available');
+
+let name_only_backend = backend_module.create({
+	list: function() { return ['lteat']; }
+}, {});
+equal(name_only_backend.available(), true, 'name-only backend remains usable for read/send');
+equal(name_only_backend.delete_available(), false,
+	'name-only backend must not claim destructive method availability');
 
 let switch_error_connection = {
 	list: function() { return ['lteat']; },

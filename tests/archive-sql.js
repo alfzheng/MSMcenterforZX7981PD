@@ -9,6 +9,11 @@ const schema = fs.readFileSync(path.resolve(__dirname,
 const db = new DatabaseSync(':memory:', { allowExtension: false });
 db.exec(schema);
 
+const sourceOlder = '1'.repeat(64);
+const contentOlder = '2'.repeat(64);
+const sourceNewer = '3'.repeat(64);
+const contentNewer = '4'.repeat(64);
+
 const insert = db.prepare(`
 	INSERT INTO messages (
 		archive_id, source_identity_digest, content_digest, direction, number, body,
@@ -17,9 +22,9 @@ const insert = db.prepare(`
 		first_archived_at, updated_at
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
-insert.run('a-older', 'source-1', 'content-1', 'inbound', '+8613800000000', 'fixture older',
+insert.run('a-older', sourceOlder, contentOlder, 'inbound', '+8613800000000', 'fixture older',
 	100, 'GSM-7', 1, 1, 1, 'lossless', 'trusted', 1, 'SM', 100, 100);
-insert.run('a-newer', 'source-2', 'content-2', 'outbound', '+8613900000000', 'fixture newer',
+insert.run('a-newer', sourceNewer, contentNewer, 'outbound', '+8613900000000', 'fixture newer',
 	200, 'UCS2', 2, 2, 1, 'lossless', 'trusted', 1, 'ME', 200, 200);
 
 const page = db.prepare(`
@@ -45,7 +50,7 @@ const duplicate = db.prepare(`
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 let duplicateRejected = false;
 try {
-	duplicate.run('a-duplicate', 'source-1', 'content-1', 'inbound', 'duplicate',
+	duplicate.run('a-duplicate', sourceOlder, contentOlder, 'inbound', 'duplicate',
 		'GSM-7', 1, 1, 1, 'lossless', 'trusted', 1, 'SM', 300, 300);
 } catch {
 	duplicateRejected = true;

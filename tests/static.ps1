@@ -22,7 +22,9 @@ $requiredFiles = @(
     'packages/modem-sms-archived/files/etc/init.d/modem-sms-archived',
     'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived',
     'packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql',
-    'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua'
+    'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua',
+    'tests/stagec-sql.js',
+    'tests/archive-migration.lua'
 )
 
 foreach ($relative in $requiredFiles) {
@@ -93,6 +95,12 @@ if (-not $core.Contains('request_status_report ?? false')) {
 if (-not $backend.Contains('features: { read: true, send: true, delete: false')) {
     throw 'r5+ backend capability must fail closed for device deletion'
 }
+if (-not $backend.Contains('function contract_available(required_methods, require_signature)') -or
+    -not $backend.Contains('function delete_available()') -or
+    -not $backend.Contains('return contract_available([switch_method, list_method, send_method], false)') -or
+    -not $backend.Contains('return contract_available([switch_method, list_method, send_method, delete_method], true)')) {
+    throw 'backend read/send availability must be independent from delete method presence'
+}
 if (-not $daemon.Contains("capabilities.features.delete = false") -or
     -not $daemon.Contains("error_result('DEVICE_DELETE_DISABLED')")) {
     throw 'r5+ daemon must advertise and enforce the device-delete safety gate'
@@ -106,6 +114,7 @@ $archiveConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-
 $archiveInit = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/init.d/modem-sms-archived') -Raw -Encoding UTF8
 $archiveDaemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived') -Raw -Encoding UTF8
 $archiveStore = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua') -Raw -Encoding UTF8
+$archiveSchema = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_schema.sql') -Raw -Encoding UTF8
 $archiveMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/Makefile') -Raw -Encoding UTF8
 if (-not $archiveConfig.Contains("option archive_enabled '0'") -or
     -not $archiveConfig.Contains("option archive_copy_enabled '0'") ) {
@@ -132,8 +141,42 @@ if ($archiveDaemon.Contains('allow_content') -or $archiveDaemon.Contains('curren
 if (-not $archiveStore.Contains('PRAGMA journal_mode') -or
     -not $archiveStore.Contains('wal_autocheckpoint') -or
     -not $archiveStore.Contains('journal_bytes') -or
-    -not $archiveStore.Contains('capacity_snapshot')) {
+    -not $archiveStore.Contains('capacity_snapshot') -or
+    -not $archiveStore.Contains('migrate_schema') -or
+    -not $archiveStore.Contains('ARCHIVE_SCHEMA_OUTDATED') -or
+    -not $archiveStore.Contains('stage_c_gate_ok') -or
+    -not $archiveStore.Contains('STAGE_C_GATE_INVALID') -or
+    -not $archiveStore.Contains('BEGIN IMMEDIATE') -or
+    -not $archiveStore.Contains('foreign_keys_ok') -or
+    -not $archiveStore.Contains('source_integrity_ok')) {
     throw 'r7 archive storage gates are incomplete'
+}
+foreach ($stageTable in @('stage_jobs', 'stage_job_items', 'stage_tombstones', 'stage_cpms_leases',
+        'stage_cpms_lease_history', 'stage_events')) {
+    if (-not $archiveSchema.Contains("CREATE TABLE IF NOT EXISTS $stageTable")) {
+        throw "Stage C schema table missing: $stageTable"
+    }
+}
+foreach ($stageTrigger in @('stage_jobs_insert_gate', 'stage_job_items_insert_gate',
+        'stage_tombstones_insert_gate', 'stage_jobs_identity_immutable',
+        'stage_job_items_identity_immutable', 'stage_tombstones_identity_immutable',
+        'stage_jobs_no_delete', 'stage_job_items_no_delete',
+        'stage_jobs_valid_transition', 'stage_job_items_valid_transition',
+        'stage_job_items_delete_call_once', 'stage_job_items_delete_completion_claim',
+        'stage_tombstones_valid_transition', 'stage_cpms_leases_valid_transition',
+        'stage_cpms_leases_insert_gate', 'stage_cpms_leases_immutable',
+        'stage_cpms_lease_history_insert', 'stage_cpms_lease_history_update',
+        'stage_cpms_lease_history_immutable', 'stage_cpms_lease_history_no_delete',
+        'stage_events_no_update', 'stage_events_no_delete',
+        'stage_tombstones_parent_state', 'stage_job_items_failed_reserved_tombstone',
+        'stage_tombstones_immutable')) {
+    if (-not $archiveSchema.Contains("CREATE TRIGGER IF NOT EXISTS $stageTrigger")) {
+        throw "Stage C schema trigger missing: $stageTrigger"
+    }
+}
+if (-not $archiveDaemon.Contains('stage_c_delete_enabled = false') -or
+    -not $archiveDaemon.Contains("stage_c_error_code = 'STAGE_C_NOT_IMPLEMENTED'")) {
+    throw 'Stage C archive capability must remain fail-closed'
 }
 if ($archiveStore.Contains('os.execute') -or $archiveStore.Contains('os.remove') -or
     $archiveStore.Contains('os.rename')) {

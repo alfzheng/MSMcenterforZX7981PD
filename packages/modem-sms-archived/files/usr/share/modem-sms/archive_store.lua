@@ -110,6 +110,64 @@ local function normalize_journal_mode(value)
 	return mode
 end
 
+local function ensure_column(db, table_name, column_name, definition)
+	local statement = db:prepare('PRAGMA table_info("' .. table_name .. '")')
+	if not statement then return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED' end
+	local present = false
+	for row in statement:nrows() do
+		if row.name == column_name then
+			present = true
+			break
+		end
+	end
+	statement:finalize()
+	if present then return true end
+	local code = db:exec('ALTER TABLE "' .. table_name .. '" ADD COLUMN "'
+		.. column_name .. '" ' .. definition)
+	if not is_ok(code) then return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED' end
+	return true
+end
+
+local function migrate_schema(db, transaction_active)
+	local owns_transaction = not transaction_active
+	if owns_transaction then
+		local begin_code = db:exec('BEGIN IMMEDIATE')
+		if not is_ok(begin_code) then return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED' end
+	end
+	local columns = {
+		{ 'source_token_digest', "TEXT NOT NULL DEFAULT ''" },
+		{ 'segment_no', 'INTEGER NOT NULL DEFAULT 1' },
+		{ 'segment_total', 'INTEGER NOT NULL DEFAULT 1' }
+	}
+	for _, column in ipairs(columns) do
+		local ok, err = ensure_column(db, 'message_sources', column[1], column[2])
+		if not ok then
+			if owns_transaction then db:exec('ROLLBACK') end
+			return nil, err
+		end
+	end
+	local code = db:exec("UPDATE metadata SET value = '2' WHERE key = 'schema_version' "
+		.. "AND CAST(value AS INTEGER) < 2")
+	if not is_ok(code) then
+		if owns_transaction then db:exec('ROLLBACK') end
+		return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+	end
+	code = db:exec("INSERT OR IGNORE INTO metadata(key, value) VALUES "
+		.. "('stage_c_schema_version', '1'), ('stage_c_delete_enabled', '0')")
+	if not is_ok(code) then
+		if owns_transaction then db:exec('ROLLBACK') end
+		return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+	end
+	if owns_transaction then
+		code = db:exec('COMMIT')
+		if not is_ok(code) then
+			db:exec('ROLLBACK')
+			return nil, db:errmsg() or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+		end
+	end
+	return true
+end
+
 local function capacity_snapshot(path, max_bytes, min_free_bytes)
 	local main = file_size(path)
 	local wal = file_size(path .. '-wal')
@@ -168,11 +226,29 @@ function Store:verify()
 	local journal_mode = scalar(self, 'PRAGMA journal_mode')
 	local journal_mode_normalized = journal_mode and string.upper(tostring(journal_mode)) or nil
 	local recovery = self:metadata('recovery_incomplete')
+	local schema_version = tonumber(self:metadata('schema_version') or '0') or 0
+	local stage_schema_version = tonumber(self:metadata('stage_c_schema_version') or '0') or 0
+	local stage_c_delete_enabled = self:metadata('stage_c_delete_enabled') or '0'
 	local capacity = self:capacity()
+	local foreign_keys = tonumber(scalar(self, 'PRAGMA foreign_keys') or '0') or 0
+	local foreign_keys_ok = foreign_keys == 1
+	local invalid_message_digests = tonumber(scalar(self,
+		"SELECT COUNT(*) FROM messages WHERE "
+		.. "length(source_identity_digest) <> 64 OR source_identity_digest GLOB '*[^0-9A-Fa-f]*' "
+		.. "OR length(content_digest) <> 64 OR content_digest GLOB '*[^0-9A-Fa-f]*'") or '1') or 1
+	local invalid_source_digests = tonumber(scalar(self,
+		"SELECT COUNT(*) FROM message_sources WHERE "
+		.. "length(raw_pdu_sha256) <> 64 OR raw_pdu_sha256 GLOB '*[^0-9A-Fa-f]*' "
+		.. "OR (source_token_digest <> '' AND (length(source_token_digest) <> 64 "
+		.. "OR source_token_digest GLOB '*[^0-9A-Fa-f]*'))") or '1') or 1
+	local source_integrity_ok = invalid_message_digests == 0 and invalid_source_digests == 0
 	local journal_mode_ok = journal_mode_normalized == self.journal_mode
+	local stage_c_gate_ok = stage_c_delete_enabled == '0'
+	local schema_ok = schema_version >= 2 and stage_schema_version >= 1 and stage_c_gate_ok
 	local layout_ok = page_size == 4096 and max_page_count == MAX_PAGE_COUNT and journal_mode_ok
 		and page_count > 0 and page_count <= MAX_PAGE_COUNT
-	local ok = integrity == 'ok' and layout_ok and recovery == '0' and capacity.capacity_ok
+	local ok = integrity == 'ok' and layout_ok and schema_ok and foreign_keys_ok
+		and source_integrity_ok and recovery == '0' and capacity.capacity_ok
 	return {
 		ok = ok,
 		integrity_check = integrity,
@@ -180,6 +256,16 @@ function Store:verify()
 		page_size = page_size,
 		max_page_count = max_page_count,
 		layout_ok = layout_ok,
+		foreign_keys = foreign_keys,
+		foreign_keys_ok = foreign_keys_ok,
+		invalid_message_digests = invalid_message_digests,
+		invalid_source_digests = invalid_source_digests,
+		source_integrity_ok = source_integrity_ok,
+		schema_version = schema_version,
+		stage_c_schema_version = stage_schema_version,
+		stage_c_delete_enabled = stage_c_delete_enabled == '1',
+		stage_c_gate_ok = stage_c_gate_ok,
+		schema_ok = schema_ok,
 		journal_mode = journal_mode_normalized,
 		journal_mode_ok = journal_mode_ok,
 		wal_autocheckpoint = WAL_AUTOCHECKPOINT,
@@ -188,6 +274,10 @@ function Store:verify()
 		capacity = capacity,
 		error_code = ok and nil or (integrity ~= 'ok' and 'ARCHIVE_VERIFY_FAILED'
 			or not layout_ok and 'ARCHIVE_LAYOUT_INVALID'
+			or not foreign_keys_ok and 'ARCHIVE_FOREIGN_KEYS_DISABLED'
+			or not source_integrity_ok and 'ARCHIVE_SOURCE_IDENTITY_INVALID'
+			or not stage_c_gate_ok and 'STAGE_C_GATE_INVALID'
+			or not schema_ok and 'ARCHIVE_SCHEMA_OUTDATED'
 			or recovery ~= '0' and 'RECOVERY_INCOMPLETE' or capacity.error_code)
 	}
 end
@@ -330,6 +420,11 @@ function M.open(path, options)
 	if not preflight then return nil, preflight_error end
 	local db = sqlite3.open(path)
 	if not db then return nil, 'ARCHIVE_OPEN_FAILED' end
+	if not is_ok(db:exec('PRAGMA foreign_keys = ON')) then
+		local error_code = db:errmsg()
+		db:close()
+		return nil, error_code or 'ARCHIVE_FOREIGN_KEYS_DISABLED'
+	end
 	local store = setmetatable({
 		db = db,
 		path = path,
@@ -344,10 +439,34 @@ function M.open(path, options)
 		.. 'PRAGMA busy_timeout = 2000; '
 		.. 'PRAGMA journal_mode = ' .. string.lower(journal_mode) .. '; '
 		.. 'PRAGMA wal_autocheckpoint = ' .. WAL_AUTOCHECKPOINT .. ';'
-	if not is_ok(db:exec(pragmas)) or not is_ok(db:exec(schema)) then
+	if not is_ok(db:exec(pragmas)) then
 		local error_code = db:errmsg()
 		store:close()
 		return nil, error_code or 'ARCHIVE_SCHEMA_FAILED'
+	end
+	local schema_begin = db:exec('BEGIN IMMEDIATE')
+	if not is_ok(schema_begin) then
+		local error_code = db:errmsg()
+		store:close()
+		return nil, error_code or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
+	end
+	if not is_ok(db:exec(schema)) then
+		local error_code = db:errmsg()
+		db:exec('ROLLBACK')
+		store:close()
+		return nil, error_code or 'ARCHIVE_SCHEMA_FAILED'
+	end
+	local migrated, migration_error = migrate_schema(db, true)
+	if not migrated then
+		db:exec('ROLLBACK')
+		store:close()
+		return nil, migration_error
+	end
+	if not is_ok(db:exec('COMMIT')) then
+		local error_code = db:errmsg()
+		db:exec('ROLLBACK')
+		store:close()
+		return nil, error_code or 'ARCHIVE_SCHEMA_MIGRATION_FAILED'
 	end
 	return store
 end
@@ -364,5 +483,6 @@ end
 M.Store = Store
 M.escape_like = escape_like
 M.normalize_limit = normalize_limit
+M.migrate_schema = migrate_schema
 
 return M

@@ -35,6 +35,25 @@ assert(/option journal_mode 'DELETE'/.test(config), 'journal mode default missin
 assert(/CREATE TABLE IF NOT EXISTS metadata/.test(schema), 'metadata schema missing');
 assert(/CREATE TABLE IF NOT EXISTS messages/.test(schema), 'messages schema missing');
 assert(/CREATE TABLE IF NOT EXISTS message_sources/.test(schema), 'source schema missing');
+for (const table of ['stage_jobs', 'stage_job_items', 'stage_tombstones', 'stage_cpms_leases',
+	'stage_cpms_lease_history', 'stage_events'])
+	assert(new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`).test(schema),
+		`Stage C table missing: ${table}`);
+for (const trigger of ['stage_jobs_insert_gate', 'stage_job_items_insert_gate',
+	'stage_tombstones_insert_gate', 'stage_jobs_identity_immutable',
+	'stage_job_items_identity_immutable', 'stage_tombstones_identity_immutable',
+	'stage_jobs_no_delete', 'stage_job_items_no_delete',
+	'stage_jobs_valid_transition', 'stage_job_items_valid_transition',
+	'stage_job_items_delete_call_once', 'stage_job_items_delete_completion_claim',
+	'stage_tombstones_valid_transition', 'stage_cpms_leases_valid_transition',
+	'stage_cpms_leases_insert_gate', 'stage_cpms_leases_immutable',
+	'stage_cpms_lease_history_insert', 'stage_cpms_lease_history_update',
+	'stage_cpms_lease_history_immutable', 'stage_cpms_lease_history_no_delete',
+	'stage_events_no_update', 'stage_events_no_delete',
+	'stage_tombstones_parent_state', 'stage_job_items_failed_reserved_tombstone',
+	'stage_tombstones_immutable'])
+	assert(new RegExp(`CREATE TRIGGER IF NOT EXISTS ${trigger}`).test(schema),
+		`Stage C trigger missing: ${trigger}`);
 assert(/bind_values/.test(store), 'archive SQL inputs must use bound parameters');
 assert(!/os\.execute|os\.remove|os\.rename/.test(store),
 	'archive store must not use shell/file mutation helpers');
@@ -50,6 +69,14 @@ assert(/PRAGMA journal_mode/.test(store) && /wal_autocheckpoint/.test(store),
 	'archive journal mode and WAL checkpoint policy missing');
 assert(/journal_bytes/.test(store) && /capacity_snapshot/.test(store),
 	'archive capacity accounting/preflight missing');
+assert(/migrate_schema/.test(store) && /ARCHIVE_SCHEMA_OUTDATED/.test(store) &&
+	/stage_c_gate_ok/.test(store) && /STAGE_C_GATE_INVALID/.test(store) &&
+	/BEGIN IMMEDIATE/.test(store) && /foreign_keys_ok/.test(store) &&
+	/source_integrity_ok/.test(store),
+	'archive schema migration/version gate missing');
+assert(/stage_c_delete_enabled = false/.test(archived) &&
+	/stage_c_error_code = 'STAGE_C_NOT_IMPLEMENTED'/.test(archived),
+	'Stage C archive capability must remain fail-closed');
 const archiveRead = acl['luci-app-modem-sms'].read.ubus['modem.sms'];
 assert(archiveRead.includes('archive_capabilities') && archiveRead.includes('messages_page'),
 	'LuCI metadata archive read methods missing');

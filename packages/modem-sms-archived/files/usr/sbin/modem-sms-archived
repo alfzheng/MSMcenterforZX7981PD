@@ -76,7 +76,12 @@ local function capabilities()
 		database_path = '/root/modem-sms/archive.sqlite3',
 		archive_max_bytes = config.archive_max_bytes,
 		archive_min_free_bytes = config.archive_min_free_bytes,
-		features = { page = false, get = false, copy = false, backup = false, restore = false },
+		features = {
+			page = false, get = false, copy = false, backup = false, restore = false,
+			stage_c = false, destructive = false
+		},
+		stage_c_delete_enabled = false,
+		stage_c_error_code = 'STAGE_C_NOT_IMPLEMENTED',
 		error_code = config.archive_enabled and 'ARCHIVE_UNAVAILABLE' or 'ARCHIVE_DISABLED'
 	}
 	local current, err, verification = get_store()
@@ -88,6 +93,8 @@ local function capabilities()
 		result.snapshot_version = verification.snapshot_version
 		result.capacity = verification.capacity
 		result.journal_mode = verification.journal_mode
+		result.schema_version = verification.schema_version
+		result.stage_c_schema_version = verification.stage_c_schema_version
 	else
 		result.error_code = err
 	end
