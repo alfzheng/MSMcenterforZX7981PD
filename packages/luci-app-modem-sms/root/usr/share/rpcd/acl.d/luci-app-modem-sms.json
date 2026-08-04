@@ -3,7 +3,7 @@
 		"description": "View and manage modem SMS messages",
 		"read": {
 			"ubus": {
-				"modem.sms": [ "capabilities", "analyse", "list", "get", "status", "summary", "archive_capabilities", "messages_page", "archive_verify" ]
+				"modem.sms": [ "capabilities", "analyse", "list", "get", "status", "summary", "archive_capabilities", "messages_page" ]
 			}
 		},
 		"write": {

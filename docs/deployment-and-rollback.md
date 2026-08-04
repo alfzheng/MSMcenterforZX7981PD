@@ -121,3 +121,43 @@ modem-smsctl summary --json
 ## 测试脚本安全边界
 
 两份设备测试脚本都会在发现 `/etc/config/modem-sms`、`/usr/share/modem-sms` 或现有 `modem.sms` 服务时拒绝运行，避免覆盖正式安装。`daemon-integration.sh` 使用内存假后端，号码 `10010` 只进入假发送函数；`daemon-live-read.sh` 仅调用 capabilities/list。脚本退出时只删除自己创建的精确路径。
+
+## r7 A0 archive package boundary
+
+The r7 A0 archive service is a separate package and must be installed, verified,
+and rolled back independently from `modem-smsd`. The default configuration keeps
+`archive_enabled=0`; do not enable it as part of a routine SMS service upgrade.
+
+Before installation, include the archive runtime packages in the SHA-256 manifest
+and install them together with the archive package:
+
+```sh
+apk add --allow-untrusted ./libsqlite3-0-*.apk ./lsqlite3-*.apk \
+  ./libubox-lua-*.apk ./modem-sms-archived-*.apk
+/etc/init.d/modem-sms-archived enable
+/etc/init.d/modem-sms-archived restart
+uci get modem-sms-archive.main.archive_enabled
+ubus call modem.sms.archive capabilities '{}'
+ubus call modem.sms.archive archive_verify '{}'
+```
+
+Acceptance is read-only: with the default gate, capabilities and verification must
+report `ARCHIVE_DISABLED`, and `/root/modem-sms/archive.sqlite3` must not be
+created. When the gate is explicitly enabled later, the service must create only
+the fixed root-owned directory and a `0600` database; capacity and integrity gates
+must pass before `messages_page` can read metadata. `archive_get` remains closed
+at both the public and underlying ubus layers.
+
+For package rollback, stop and disable the archive service first. Preserve the
+archive database as an explicitly backed-up data file; do not delete it as an
+implicit part of package rollback:
+
+```sh
+/etc/init.d/modem-sms-archived stop
+/etc/init.d/modem-sms-archived disable
+apk del modem-sms-archived
+```
+
+If a rollback also removes SQLite runtime packages, first confirm that no other
+installed package depends on them. Re-enable the archive service only after the
+replacement package has passed the same read-only verification.

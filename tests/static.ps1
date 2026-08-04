@@ -103,6 +103,8 @@ if (-not $daemon.Contains('archive_capabilities:') -or
     throw 'r7 A0 daemon archive proxy methods are missing'
 }
 $archiveConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/config/modem-sms-archive') -Raw -Encoding UTF8
+$archiveInit = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/init.d/modem-sms-archived') -Raw -Encoding UTF8
+$archiveDaemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/sbin/modem-sms-archived') -Raw -Encoding UTF8
 $archiveStore = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/usr/share/modem-sms/archive_store.lua') -Raw -Encoding UTF8
 $archiveMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/Makefile') -Raw -Encoding UTF8
 if (-not $archiveConfig.Contains("option archive_enabled '0'") -or
@@ -114,6 +116,24 @@ if (-not $archiveMakefile.Contains('+lsqlite3') -or
     -not $archiveMakefile.Contains('+libubox-lua') -or
     -not $archiveMakefile.Contains('+libubus-lua')) {
     throw 'r7 archive package dependencies are incomplete'
+}
+if (-not $archiveInit.Contains('umask 077') -or
+    -not $archiveInit.Contains('install -m 600 /dev/null') -or
+    -not $archiveInit.Contains('chmod 600')) {
+    throw 'r7 archive database permissions must be initialized to 0600'
+}
+if (-not [regex]::IsMatch($archiveDaemon,
+        "(?s)archive_get\s*=\s*\{\s*function\(req\)\s*connection:reply\(req, error_reply\('PERMISSION_DENIED'\)")) {
+    throw 'underlying r7 archive_get must fail closed'
+}
+if ($archiveDaemon.Contains('allow_content') -or $archiveDaemon.Contains('current:get')) {
+    throw 'underlying r7 archive daemon must not expose content access controls'
+}
+if (-not $archiveStore.Contains('PRAGMA journal_mode') -or
+    -not $archiveStore.Contains('wal_autocheckpoint') -or
+    -not $archiveStore.Contains('journal_bytes') -or
+    -not $archiveStore.Contains('capacity_snapshot')) {
+    throw 'r7 archive storage gates are incomplete'
 }
 if ($archiveStore.Contains('os.execute') -or $archiveStore.Contains('os.remove') -or
     $archiveStore.Contains('os.rename')) {
@@ -164,6 +184,9 @@ foreach ($method in @('send')) {
 }
 if ('delete' -in $writeMethods) {
     throw 'r5+ LuCI ACL must not grant the legacy device-delete method'
+}
+if ('archive_verify' -in $readMethods -or 'archive_get' -in $readMethods) {
+    throw 'r7 LuCI ACL must not grant archive diagnostics or content access'
 }
 
 Write-Output "static.ps1: $($jsonFiles.Count) JSON files, $($messageIds.Count) translations and package invariants passed"

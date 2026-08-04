@@ -20,7 +20,9 @@ local config = {
 	archive_max_bytes = number('archive_max_bytes', 5242880),
 	archive_min_free_bytes = number('archive_min_free_bytes', 12582912),
 	page_limit_max = number('page_limit_max', 100),
-	cursor_ttl_seconds = number('cursor_ttl_seconds', 600)
+	cursor_ttl_seconds = number('cursor_ttl_seconds', 600),
+	cursor_max = math.min(1024, math.max(1, math.floor(number('cursor_max', 128)))),
+	journal_mode = string.upper(uci:get('modem-sms-archive', 'main', 'journal_mode') or 'DELETE')
 }
 
 local connection = ubus.connect()
@@ -28,8 +30,8 @@ if not connection then error('unable to connect to ubus') end
 uloop.init()
 
 local store
-local store_error
 local cursors = {}
+local cursor_count = 0
 
 local function envelope(fields)
 	fields.schema_version = '1.0'
@@ -45,11 +47,24 @@ local function get_store()
 	if not config.enabled or not config.archive_enabled then
 		return nil, 'ARCHIVE_DISABLED'
 	end
-	if store then return store end
-	if store_error then return nil, store_error end
-	store, store_error = archive_store.open(config.archive_path, config)
-	if not store then return nil, store_error end
-	return store
+	if not store then
+		local opened, open_error = archive_store.open(config.archive_path, config)
+		if not opened then return nil, open_error end
+		store = opened
+	end
+	local verification, verify_error = store:verify()
+	if not verification then
+		store:close()
+		store = nil
+		return nil, verify_error or 'ARCHIVE_VERIFY_FAILED'
+	end
+	if not verification.ok then
+		local error_code = verification.error_code or 'ARCHIVE_VERIFY_FAILED'
+		store:close()
+		store = nil
+		return nil, error_code
+	end
+	return store, nil, verification
 end
 
 local function capabilities()
@@ -62,17 +77,17 @@ local function capabilities()
 		archive_max_bytes = config.archive_max_bytes,
 		archive_min_free_bytes = config.archive_min_free_bytes,
 		features = { page = false, get = false, copy = false, backup = false, restore = false },
-		error_code = config.archive_enabled and store_error or 'ARCHIVE_DISABLED'
+		error_code = config.archive_enabled and 'ARCHIVE_UNAVAILABLE' or 'ARCHIVE_DISABLED'
 	}
-	local current, err = get_store()
+	local current, err, verification = get_store()
 	if current then
-		local verify = current:verify()
-		result.available = verify.ok
-		result.features.page = verify.ok
-		result.features.get = verify.ok
-		result.error_code = verify.ok and nil or verify.error_code
-		result.snapshot_version = verify.snapshot_version
-		result.capacity = verify.capacity
+		result.available = verification.ok
+		result.features.page = verification.ok
+		result.features.get = false
+		result.error_code = nil
+		result.snapshot_version = verification.snapshot_version
+		result.capacity = verification.capacity
+		result.journal_mode = verification.journal_mode
 	else
 		result.error_code = err
 	end
@@ -87,25 +102,43 @@ local function cursor_key(message, token)
 	return principal(message) .. '\0' .. token
 end
 
+local function purge_cursors(now)
+	for key, state in pairs(cursors) do
+		if state.expires_at < now then
+			cursors[key] = nil
+			cursor_count = cursor_count - 1
+		end
+	end
+end
+
 local function new_cursor(message, state)
+	purge_cursors(os.time())
+	if cursor_count >= config.cursor_max then return nil, 'CURSOR_LIMIT' end
 	local token = archive_store.random_token()
-	if not token then return nil end
-	cursors[cursor_key(message, token)] = state
+	if not token then return nil, 'CURSOR_UNAVAILABLE' end
+	local key = cursor_key(message, token)
+	if cursors[key] then return nil, 'CURSOR_UNAVAILABLE' end
+	cursors[key] = state
+	cursor_count = cursor_count + 1
 	return token
 end
 
 local function lookup_cursor(message, token)
+	purge_cursors(os.time())
 	if type(token) ~= 'string' or #token ~= 64 then return nil, 'CURSOR_INVALID' end
-	local state = cursors[cursor_key(message, token)]
+	local key = cursor_key(message, token)
+	local state = cursors[key]
 	if not state then return nil, 'CURSOR_STALE' end
 	if state.expires_at < os.time() then
-		cursors[cursor_key(message, token)] = nil
+		cursors[key] = nil
+		cursor_count = cursor_count - 1
 		return nil, 'CURSOR_STALE'
 	end
 	return state
 end
 
 local function page(req, message)
+	purge_cursors(os.time())
 	if message.source ~= nil and message.source ~= 'LOCAL' then
 		connection:reply(req, error_reply('INVALID_SOURCE'))
 		return
@@ -163,13 +196,14 @@ local function page(req, message)
 	local next_cursor
 	if result.has_more and #result.items > 0 then
 		local last = result.items[#result.items]
-		next_cursor = new_cursor(message, {
+		local cursor_error
+		next_cursor, cursor_error = new_cursor(message, {
 			after = { message_time = last.message_time or 0, archive_id = last.archive_id },
 			snapshot_version = result.snapshot_version,
 			expires_at = os.time() + config.cursor_ttl_seconds
 		})
 		if not next_cursor then
-			connection:reply(req, error_reply('CURSOR_UNAVAILABLE'))
+			connection:reply(req, error_reply(cursor_error or 'CURSOR_UNAVAILABLE'))
 			return
 		end
 	end
@@ -192,24 +226,16 @@ local methods = {
 		{}
 	},
 	archive_get = {
-		function(req, message)
-			local current, err = get_store()
-			if not current then connection:reply(req, error_reply(err)); return end
-			if message.allow_content ~= true then
-				connection:reply(req, error_reply('PERMISSION_DENIED'))
-				return
-			end
-			local result, get_error = current:get(message.archive_id, true)
-			connection:reply(req, result and envelope({ message = result }) or error_reply(get_error))
+		function(req)
+			connection:reply(req, error_reply('PERMISSION_DENIED'))
 		end,
 		{}
 	},
 	archive_verify = {
-		function(req, message)
-			local current, err = get_store()
+		function(req)
+			local current, err, verification = get_store()
 			if not current then connection:reply(req, error_reply(err)); return end
-			local result, verify_error = current:verify()
-			connection:reply(req, result and envelope(result) or error_reply(verify_error))
+			connection:reply(req, envelope(verification))
 		end,
 		{}
 	}
