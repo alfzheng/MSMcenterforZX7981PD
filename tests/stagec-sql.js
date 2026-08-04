@@ -233,11 +233,21 @@ const deleteJob = db.prepare(`
 	INSERT INTO stage_jobs (
 		job_id, request_namespace, request_id, principal_id, operation,
 		request_digest, selection_digest, token_digest, snapshot_version,
-		worker_generation, lease_generation, lease_owner_id, lease_nonce_digest,
+		worker_generation, lease_generation, lease_acquired_at, lease_owner_id, lease_nonce_digest,
 		lease_storage, state, created_at, updated_at, expires_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+let deleteAcquiredAtMismatchRejected = false;
+try {
+	deleteJob.run('job-delete-mismatch', 'sms-stage-c-v1', 'request-delete-mismatch', 'principal-1', 'delete_device',
+		digest, digestB, digestC, 7, 'worker-1', 2, 99, 'owner-2', digestB, 'SM',
+		'accepted', now, now, 200);
+} catch {
+	deleteAcquiredAtMismatchRejected = true;
+}
+if (!deleteAcquiredAtMismatchRejected)
+	throw new Error('device-delete job bypassed lease acquired_at binding');
 deleteJob.run('job-delete', 'sms-stage-c-v1', 'request-delete', 'principal-1', 'delete_device',
-	digest, digestB, digestC, 7, 'worker-1', 2, 'owner-2', digestB, 'SM',
+		digest, digestB, digestC, 7, 'worker-1', 2, 100, 'owner-2', digestB, 'SM',
 	'accepted', now, now, 200);
 item.run('job-delete', 0, 'archive-2', digest, digestB, 'SM', 8, 'epoch-1', 3,
 	digestC, 1, 1, digest, digestB, 'proposed', now, now);

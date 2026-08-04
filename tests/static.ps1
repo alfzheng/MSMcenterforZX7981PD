@@ -161,6 +161,9 @@ foreach ($stagecFunction in @('function M.recover', 'function M.acquire',
         throw "Stage C worker function or recovery gate missing: $stagecFunction"
     }
 }
+if (-not $archiveSchema.Contains('lease_acquired_at')) {
+    throw 'Stage C delete jobs must bind the lease acquisition timestamp'
+}
 if ($stagecWorker.Contains('ubus') -or $stagecWorker.Contains('lteat') -or
     $stagecWorker.Contains('delete_record') -or $stagecWorker.Contains('os.execute')) {
     throw 'Stage C worker must remain database-only and modem-independent'
@@ -210,8 +213,8 @@ if ($cli.Contains("command == 'delete'")) {
 if (-not $daemonMakefile.Contains('PKG_RELEASE:=7') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
     throw 'modem-smsd must remain at PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
 }
-if (-not $archiveMakefile.Contains('PKG_RELEASE:=5')) {
-    throw 'modem-sms-archived must use PKG_RELEASE:=5'
+if (-not $archiveMakefile.Contains('PKG_RELEASE:=6')) {
+    throw 'modem-sms-archived must use PKG_RELEASE:=6'
 }
 if (-not [regex]::IsMatch($daemon,
         '(?s)summary:\s*\{.*?if\s*\(!cache\.loaded\).*?request_load\(null\).*?loaded:\s*false,\s*loading:\s*true')) {

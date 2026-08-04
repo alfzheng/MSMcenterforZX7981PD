@@ -151,6 +151,7 @@ local function ensure_stage_job_columns(db)
 	if not present then return true end
 	local columns = {
 		{ 'lease_generation', 'INTEGER NOT NULL DEFAULT 0' },
+		{ 'lease_acquired_at', 'INTEGER NOT NULL DEFAULT 0' },
 		{ 'lease_owner_id', "TEXT NOT NULL DEFAULT ''" },
 		{ 'lease_nonce_digest', "TEXT NOT NULL DEFAULT ''" },
 		{ 'lease_storage', 'TEXT' }

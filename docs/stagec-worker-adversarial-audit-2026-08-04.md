@@ -30,7 +30,8 @@ This record preserves the body-level count: three P1 and seven P2 findings.
 | P2-4 | P2 | SQLite errors were too coarsely classified. | Improved with explicit mappings for busy/locked, full, I/O, constraint and Stage C state errors. The mapping is intentionally conservative and never converts a database error into a modem operation. |
 | P2-5 | P2 | Lua `unpack` was used as a global. | Fixed with `table.unpack or unpack` compatibility binding. |
 | P2-6 | P2 | The target-runtime worker test was not part of the static required-file set. | Fixed: `tests/stagec-worker.lua` is required by `tests/static.ps1`; it was run successfully on the target runtime, including after package installation. |
-| P2-7 | P2 | `modem-smsd` had a release bump without source changes. | Fixed by returning `modem-smsd` to r7. Only `modem-sms-archived` was released for this change, as r5. |
+| P2-7 | P2 | `modem-smsd` had a release bump without source changes. | Fixed by returning `modem-smsd` to r7. Only `modem-sms-archived` was released for this change. |
+| P2-8 | P2 (conditional) | The delete job snapshot did not explicitly store and compare the lease `acquired_at` value. | Fixed in r6 with `stage_jobs.lease_acquired_at`, migration support, immutable identity checks and active-lease comparisons in all delete job/item gates. The local SQL and installed target Lua/migration tests passed. |
 
 ## Defects found during remediation
 
@@ -62,22 +63,22 @@ node --check tests/archive-sql.js
 git diff --check
 ```
 
-Target OpenWrt 25.12.5 / aarch64 checks passed with the installed r5 files:
+Target OpenWrt 25.12.5 / aarch64 checks passed with the installed r6 files:
 
 ```text
 lua tests/stagec-worker.lua
 lua tests/archive-migration.lua
 ```
 
-The target package transaction upgraded `modem-sms-archived` from r4 to r5
-after the migration-order fix. The r5 APK SHA-256 is
-`d9239db884895080931e8bfde59f594890624c2cbce95fbdc58281ee25d44f2f`; the
+The target package transaction upgraded `modem-sms-archived` from r5 to r6
+after the explicit lease-acquisition binding fix. The r6 APK SHA-256 is
+`89adb99e530315a804f558e72ac463dc103eaa96288821708b915ee855e9a130`; the
 target-side hash matched before installation.
 
 The post-deployment read-only state was:
 
 ```text
-modem-sms-archived: 0.1.0-r5
+modem-sms-archived: 0.1.0-r6
 archive_enabled=0
 archive_copy_enabled=0
 stage_c_delete_enabled=false
@@ -93,32 +94,26 @@ evidence directory. Its SHA-256 is
 
 ## Second-agent re-audit status
 
-A fresh re-audit was dispatched to subagent Halley
-(`019fcbfb-8058-7eb3-ad25-28f9dac7e403`) after the remediation. The scheduler
-timed out twice; after an explicit stop request the agent returned a report
-stating that it had not completed the latest-worktree review and had not
-performed any target or SMS operation. Its open-item list describes the
-pre-remediation state and is therefore not evidence against the final version.
-It is recorded as an incomplete audit, not as a pass, and no claim of “two
-independent audits passed” is made here.
+A fresh completed re-audit was performed by subagent Erdos
+(`019fcc40-39db-7b70-b7cb-57dc2944fbc9`) after the first remediation. It found
+no P0 or P1 issue and one conditional P2: the missing explicit
+`lease_acquired_at` binding recorded above. That item was fixed in r6 and then
+verified by local SQL/static checks and the installed target Lua/migration
+tests. The agent made no edits, commits, target connections or SMS calls.
 
-The final version instead has direct evidence for the items the stopped report
-called out: local SQL/static checks passed; the target ran the installed r5
-worker test, including the 5,001-item recovery-limit case, and the installed
-r5 migration test; the target package hashes and runtime-file hashes matched;
-and the post-deployment delete safety probe remained closed.
+An earlier attempted re-audit by Halley
+(`019fcbfb-8058-7eb3-ad25-28f9dac7e403`) timed out and is retained as an
+incomplete, non-gating attempt; it is not counted as a passing audit.
 
 ## Audit conclusion
 
-The first independent audit findings are addressed and backed by local SQL,
-target Lua and post-deployment safety checks. The result is a durable,
+The independent audit findings are addressed and backed by local SQL, target
+Lua and post-deployment safety checks. The result is a durable,
 database-only recovery/lease foundation with fail-closed delete semantics.
 It is not a release of device deletion: no public Stage C worker RPC, CLI,
 LuCI action or modem delete call exists, and the two independent gates remain
 closed.
 
-A second fresh read-only re-audit was attempted after the remediation, but it
-did not complete and is explicitly not counted as a passing gate. The next
-change that would expose device deletion still requires a completed fresh
-independent review, separate approval, and additional modem fault-injection
-evidence.
+The completed second-agent review found no unresolved P0/P1 issue. This still
+does not expose device deletion: any future enablement requires separate
+approval and additional modem fault-injection evidence.

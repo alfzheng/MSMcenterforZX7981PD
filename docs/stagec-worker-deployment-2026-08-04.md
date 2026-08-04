@@ -11,7 +11,7 @@ Built in the retained Alpine/QEMU OpenWrt 25.12.5 mediatek/filogic SDK with
 
 | Package | Result |
 |---|---|
-| `modem-sms-archived-0.1.0-r5.apk` | `d9239db884895080931e8bfde59f594890624c2cbce95fbdc58281ee25d44f2f` |
+| `modem-sms-archived-0.1.0-r6.apk` | `89adb99e530315a804f558e72ac463dc103eaa96288821708b915ee855e9a130` |
 | `modem-smsd` | unchanged at r7; not reinstalled |
 | LuCI package | unchanged at r6; not reinstalled |
 
@@ -37,7 +37,7 @@ Backup SHA-256:
 
 ## Transaction and acceptance
 
-The target upgraded `modem-sms-archived` from r4 to r5 and restarted only the
+The target upgraded `modem-sms-archived` from r5 to r6 and restarted only the
 archive service. The existing modem SMS daemon was not replaced.
 
 The installed package and runtime checks passed:
@@ -55,7 +55,7 @@ rejection, lost-lease recovery, unknown/blocked terminal states and a
 Post-deployment read-only state:
 
 ```text
-modem-sms-archived: 0.1.0-r5
+modem-sms-archived: 0.1.0-r6
 archive_enabled=0
 archive_copy_enabled=0
 archive database absent

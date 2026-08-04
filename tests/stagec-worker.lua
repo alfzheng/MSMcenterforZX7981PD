@@ -104,10 +104,10 @@ exec(delete_db, [[
 	INSERT INTO stage_jobs (
 		job_id, request_namespace, request_id, principal_id, operation,
 		request_digest, selection_digest, token_digest, snapshot_version,
-		worker_generation, lease_generation, lease_owner_id, lease_nonce_digest,
+		worker_generation, lease_generation, lease_acquired_at, lease_owner_id, lease_nonce_digest,
 		lease_storage, state, created_at, updated_at, expires_at)
 	VALUES ('job-delete', 'stagec-worker', 'request-delete', 'root', 'delete_device',
-		?, ?, ?, 1, 'worker-1', 1, 'worker-1', ?, 'SM', 'accepted', 100, 100, 200)]],
+		?, ?, ?, 1, 'worker-1', 1, 100, 'worker-1', ?, 'SM', 'accepted', 100, 100, 200)]],
 	{ digest, digest_b, digest_c, digest })
 exec(delete_db, [[
 	INSERT INTO stage_job_items (

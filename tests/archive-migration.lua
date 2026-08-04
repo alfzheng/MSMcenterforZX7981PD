@@ -45,6 +45,7 @@ assert(has_column(legacy, 'source_token_digest'), 'source token migration missin
 assert(has_column(legacy, 'segment_no'), 'segment number migration missing')
 assert(has_column(legacy, 'segment_total'), 'segment total migration missing')
 assert(has_column(legacy, 'lease_generation', 'stage_jobs'), 'stage job lease generation migration missing')
+assert(has_column(legacy, 'lease_acquired_at', 'stage_jobs'), 'stage job lease acquired_at migration missing')
 assert(has_column(legacy, 'lease_owner_id', 'stage_jobs'), 'stage job lease owner migration missing')
 assert(has_column(legacy, 'lease_nonce_digest', 'stage_jobs'), 'stage job lease nonce migration missing')
 assert(has_column(legacy, 'lease_storage', 'stage_jobs'), 'stage job lease storage migration missing')

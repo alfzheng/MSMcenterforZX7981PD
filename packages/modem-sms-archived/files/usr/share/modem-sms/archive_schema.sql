@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS stage_jobs (
     snapshot_version INTEGER NOT NULL,
     worker_generation TEXT NOT NULL,
     lease_generation INTEGER NOT NULL DEFAULT 0,
+    lease_acquired_at INTEGER NOT NULL DEFAULT 0,
     lease_owner_id TEXT NOT NULL DEFAULT '',
     lease_nonce_digest TEXT NOT NULL DEFAULT '' CHECK (lease_nonce_digest = ''
         OR (length(lease_nonce_digest) = 64
@@ -265,6 +266,7 @@ WHEN NEW.state <> 'accepted'
     OR (NEW.operation = 'delete_device' AND (
         COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') <> '1'
         OR NEW.lease_generation < 1
+        OR NEW.lease_acquired_at < 1
         OR NEW.lease_owner_id = ''
         OR length(NEW.lease_nonce_digest) <> 64
         OR NEW.lease_nonce_digest GLOB '*[^0-9A-Fa-f]*'
@@ -276,6 +278,7 @@ WHEN NEW.state <> 'accepted'
                 AND l.owner_nonce_digest = NEW.lease_nonce_digest
                 AND l.storage = NEW.lease_storage
                 AND l.lease_generation = NEW.lease_generation
+                AND l.acquired_at = NEW.lease_acquired_at
                 AND l.state = 'active')))
 BEGIN
     SELECT RAISE(ABORT, 'STAGE_JOB_MUST_START_ACCEPTED');
@@ -311,6 +314,7 @@ WHEN NEW.state <> 'proposed'
                 AND l.owner_nonce_digest = j.lease_nonce_digest
                 AND l.storage = j.lease_storage
                 AND l.lease_generation = j.lease_generation
+                AND l.acquired_at = j.lease_acquired_at
                 AND l.state = 'active'
             WHERE j.job_id = NEW.job_id
                 AND NEW.storage = j.lease_storage
@@ -345,7 +349,7 @@ END;
 CREATE TRIGGER IF NOT EXISTS stage_jobs_identity_immutable
 BEFORE UPDATE OF request_namespace, request_id, principal_id, operation,
     request_digest, selection_digest, token_digest, snapshot_version,
-    worker_generation, lease_generation, lease_owner_id, lease_nonce_digest,
+    worker_generation, lease_generation, lease_acquired_at, lease_owner_id, lease_nonce_digest,
     lease_storage, created_at, expires_at ON stage_jobs
 WHEN NEW.request_namespace <> OLD.request_namespace
     OR NEW.request_id <> OLD.request_id
@@ -357,6 +361,7 @@ WHEN NEW.request_namespace <> OLD.request_namespace
     OR NEW.snapshot_version <> OLD.snapshot_version
     OR NEW.worker_generation <> OLD.worker_generation
     OR NEW.lease_generation <> OLD.lease_generation
+    OR NEW.lease_acquired_at <> OLD.lease_acquired_at
     OR NEW.lease_owner_id <> OLD.lease_owner_id
     OR NEW.lease_nonce_digest <> OLD.lease_nonce_digest
     OR NEW.lease_storage IS NOT OLD.lease_storage
@@ -435,6 +440,7 @@ WHEN NEW.operation = 'delete_device'
             AND l.owner_nonce_digest = NEW.lease_nonce_digest
             AND l.storage = NEW.lease_storage
             AND l.lease_generation = NEW.lease_generation
+            AND l.acquired_at = NEW.lease_acquired_at
             AND l.state = 'active'
             AND COALESCE((SELECT value FROM metadata WHERE key = 'stage_c_delete_enabled'), '0') = '1')
 BEGIN
@@ -522,6 +528,7 @@ WHEN (SELECT operation FROM stage_jobs WHERE job_id = NEW.job_id) = 'delete_devi
             AND l.owner_nonce_digest = j.lease_nonce_digest
             AND l.storage = j.lease_storage
             AND l.lease_generation = j.lease_generation
+            AND l.acquired_at = j.lease_acquired_at
             AND l.state = 'active'
         WHERE j.job_id = NEW.job_id
             AND NEW.storage = j.lease_storage
