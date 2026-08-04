@@ -188,8 +188,11 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=6') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
-    throw 'both r6 package Makefiles must use PKG_RELEASE:=6'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=7') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
+    throw 'modem-smsd must use PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
+}
+if (-not $archiveMakefile.Contains('PKG_RELEASE:=2')) {
+    throw 'modem-sms-archived must use PKG_RELEASE:=2'
 }
 if (-not [regex]::IsMatch($daemon,
         '(?s)summary:\s*\{.*?if\s*\(!cache\.loaded\).*?request_load\(null\).*?loaded:\s*false,\s*loading:\s*true')) {
