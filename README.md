@@ -2,6 +2,8 @@
 
 这是面向 OpenWrt 25.12 / LuCI 26 的短信收发实现。当前版本只提供通用短信能力，不包含运营商指令模板或 App 私有接口。
 
+English version: [README.en.md](README.en.md)
+
 ## 组成
 
 - `packages/modem-smsd`：常驻 ucode/ubus 服务、PDU 编解码、串行发送队列、`ME/SM` 合并、`lteat` 适配器和 SSH JSON CLI。
