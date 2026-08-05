@@ -70,3 +70,5 @@ Build an `.apk` with the matching OpenWrt SDK, verify the target architecture an
 - [ZX OpenClash configuration and routing record (2026-07-27)](docs/zx-openclash-configuration-2026-07-27.md)
 - [Project closeout and archive record (2026-07-27)](docs/project-closeout-2026-07-27.md)
 - [SMS backend live regression record (2026-08-05)](docs/sms-backend-live-regression-2026-08-05.md)
+- [lteat contract investigation and P1B trigger (2026-08-05)](docs/lteat-contract-investigation-2026-08-05.md)
+- [SMS diagnostic deployment and read-only acceptance (2026-08-05)](docs/sms-diagnostic-deployment-2026-08-05.md)

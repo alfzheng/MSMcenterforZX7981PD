@@ -51,3 +51,5 @@ r6 安全热修继承 r5 的设备短信删除门禁：LuCI 不显示删除入�
 - [ZX OpenClash 配置与 Antigravity 分流记录（2026-07-27）](docs/zx-openclash-configuration-2026-07-27.md)
 - [项目收口与归档记录（2026-07-27）](docs/project-closeout-2026-07-27.md)
 - [短信后端现场回归记录（2026-08-05）](docs/sms-backend-live-regression-2026-08-05.md)
+- [lteat 契约调查与 P1B 触发记录（2026-08-05）](docs/lteat-contract-investigation-2026-08-05.md)
+- [短信诊断包部署与只读验收记录（2026-08-05）](docs/sms-diagnostic-deployment-2026-08-05.md)

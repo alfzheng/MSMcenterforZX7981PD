@@ -417,6 +417,8 @@ function execute_load(done) {
 					failure.parsed_count = +result.parsed_count;
 				if (result.expected_count != null)
 					failure.expected_count = +result.expected_count;
+				if (result.serialized_response_bytes != null)
+					failure.serialized_response_bytes = +result.serialized_response_bytes;
 				if (result.attempts != null)
 					failure.attempts = +result.attempts;
 				push(errors, failure);

@@ -219,8 +219,8 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=16') -or -not $luciMakefile.Contains('PKG_RELEASE:=7')) {
-    throw 'modem-smsd must use r16 and LuCI must use r7 for storage diagnostics'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=17') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
+	throw 'modem-smsd must use r17 and LuCI must use r8 for storage diagnostics'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'

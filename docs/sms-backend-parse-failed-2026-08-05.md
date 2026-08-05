@@ -21,7 +21,15 @@ single response count matches the `+CPMS` used count. An invalid or out-of-range
 index, a duplicate index, an over-capacity result, or an incomplete result
 after the retry bound remains a fail-closed `BACKEND_PARSE_FAILED` result. The bounded
 diagnostics include `CAPACITY_MISMATCH`, parsed count, expected count, and
-attempt count without exposing message content.
+attempt count without exposing message content. The adapter now also reports
+the serialized response size as `serialized_response_bytes`, which is a bounded
+numeric diagnostic and not the raw modem response. A response without an `OK`
+terminator is now rejected as `RESPONSE_INCOMPLETE`.
+
+Follow-up contract investigation found that the target `lteat` ubus method is
+`get_sms:{}` with no page/range arguments; the binary contains fixed
+`AT+CMGL=4`. See
+[`lteat-contract-investigation-2026-08-05.md`](lteat-contract-investigation-2026-08-05.md).
 
 The default is configured as `read_retry_max '20'`; the backend also caps this
 at twenty even if a local configuration is changed; non-numeric values fall back

@@ -66,6 +66,28 @@ function factory(connection, options) {
 		return false;
 	}
 
+	function reply_contains_ok(reply) {
+		let kind = type(reply);
+		if (kind == 'string') {
+			for (let line in split(reply, /\r?\n/))
+				if (trim(line) == 'OK')
+					return true;
+			return false;
+		}
+		if (kind == 'array') {
+			for (let item in reply)
+				if (reply_contains_ok(item))
+					return true;
+			return false;
+		}
+		if (kind == 'object') {
+			for (let key in reply)
+				if (reply_contains_ok(reply[key]))
+					return true;
+		}
+		return false;
+	}
+
 	function submit_error(code, reply) {
 		let raw = uc(sprintf('%.J', reply ?? {}));
 		if (match(raw, /(\+CMS ERROR:\s*(322|512)|MEMORY\s+FULL|STORAGE\s+FULL)/))
@@ -219,6 +241,7 @@ function factory(connection, options) {
 			let last_backend_status = 0;
 			let successful_reads = 0;
 			let last_parsed_count = 0;
+			let last_serialized_response_bytes = 0;
 
 			function fail_parse(detail) {
 				let result = { ok: false, error_code: 'BACKEND_PARSE_FAILED', detail: detail,
@@ -227,6 +250,8 @@ function factory(connection, options) {
 					result.parsed_count = last_parsed_count;
 					result.expected_count = capacity.used;
 				}
+				if (last_serialized_response_bytes > 0)
+					result.serialized_response_bytes = last_serialized_response_bytes;
 				callback(result);
 			}
 
@@ -246,6 +271,9 @@ function factory(connection, options) {
 					last_backend_status = list_code;
 					if (!list_code && !reply_contains_error(reply)) {
 						successful_reads++;
+						/* Keep only the serialized response size as a bounded diagnostic.
+						 * The raw modem response must never escape the backend. */
+						last_serialized_response_bytes = length(sprintf('%.J', reply ?? {}));
 						let records = extract_records(reply);
 						let response_indexes = {};
 						for (let item in records) {
@@ -266,6 +294,10 @@ function factory(connection, options) {
 							response_indexes[index_key] = true;
 						}
 						last_parsed_count = length(records);
+						if (!reply_contains_ok(reply)) {
+							fail_parse('RESPONSE_INCOMPLETE');
+							return;
+						}
 
 						/* Do not synthesize a snapshot by combining different modem
 						 * responses. A physical index can be reused while the modem is

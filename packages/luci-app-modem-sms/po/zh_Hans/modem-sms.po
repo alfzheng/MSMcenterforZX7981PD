@@ -160,6 +160,15 @@ msgstr "更新于 %s"
 msgid "%d/%d parts"
 msgstr "%d/%d 段"
 
+msgid "%d/%d records"
+msgstr "%d/%d 条记录"
+
+msgid "%d attempts"
+msgstr "尝试 %d 次"
+
+msgid "%d-byte serialized response"
+msgstr "%d 字节序列化响应"
+
 msgid "SMS storage is at least 80% full. Device deletion is temporarily disabled until the safe archive workflow is available."
 msgstr "短信存储已使用至少 80%。安全归档流程就绪前，设备短信删除功能暂时禁用。"
 

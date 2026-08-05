@@ -182,6 +182,25 @@ equal(retry_result.ok, false, 'partial snapshots are not synthesized');
 equal(retry_result.error_code, 'BACKEND_PARSE_FAILED', 'partial snapshot error code');
 equal(retry_result.detail, 'CAPACITY_MISMATCH', 'partial snapshot detail');
 equal(retry_result.attempts, 4, 'partial snapshot retry bound');
+if (!(retry_result.serialized_response_bytes > 0))
+	die('partial snapshot response size diagnostic missing');
+
+let incomplete_response_connection = {
+	list: function() { return ['lteat']; },
+	defer: function(object, method, args, callback) {
+		if (method == 'send')
+			callback(0, { result: '+CPMS: 1,50,1,50,1,50\r\nOK\r\n' });
+		else if (method == 'get_sms')
+			callback(0, { result: '+CMGL: 1,"REC READ"\r\n00112233445566778899AABB\r\n' });
+		return {};
+	}
+};
+let incomplete_response_result = null;
+backend_module.create(incomplete_response_connection, { read_retry_max: 1 }).list_storage('SM',
+	function(result) { incomplete_response_result = result; });
+equal(incomplete_response_result.ok, false, 'missing OK terminator rejected');
+equal(incomplete_response_result.detail, 'RESPONSE_INCOMPLETE',
+	'missing OK terminator detail');
 
 let full_after_conflict_calls = 0;
 let full_after_conflict_connection = {

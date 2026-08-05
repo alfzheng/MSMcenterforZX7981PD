@@ -59,6 +59,15 @@ intentional non-error response: callers should retry without `refresh` until
 `loading` is false. Once a snapshot exists, normal cached reads are immediate;
 an explicit `refresh: true` remains a foreground modem operation.
 
+When a storage read is rejected as incomplete, `list` keeps the prior snapshot
+and includes bounded diagnostics in `errors`: `storage`, `error_code`, optional
+`detail`, `parsed_count`, `expected_count`, `attempts`, and
+`serialized_response_bytes`. These fields never contain a raw modem response
+or PDU. The serialized size is a bounded diagnostic, not a proof of a modem
+hardware buffer size. A `CAPACITY_MISMATCH` result is not a partial
+authoritative snapshot; callers must not archive, make send-capacity decisions,
+or delete from it.
+
 Starting with r6, `summary` uses the same non-blocking cold-load contract. Its
 first cold reply contains `loaded:false`, `loading:true`, zero provisional
 counts and no message content. Callers should poll until

@@ -218,9 +218,23 @@ function storageErrorText(errors) {
 		if (!item)
 			return '';
 		const name = item.storage ? `${item.storage}: ` : '';
-		const detail = item.detail ? ` (${item.detail})` : '';
+		const details = [];
+		if (item.detail)
+			details.push(item.detail);
+		if (item.parsed_count != null && item.expected_count != null)
+			details.push(_('%d/%d records').format(item.parsed_count, item.expected_count));
+		if (item.attempts != null)
+			details.push(_('%d attempts').format(item.attempts));
+		if (item.serialized_response_bytes != null)
+			details.push(_('%d-byte serialized response').format(item.serialized_response_bytes));
+		const detail = details.length ? ` (${details.join(', ')})` : '';
 		return `${name}${item.error_code || _('Unknown error')}${detail}`;
 	}).filter(Boolean).join(', ');
+}
+
+function operationErrorText(result) {
+	const details = storageErrorText(result && result.errors || [ result ]);
+	return details || result && result.error_code || _('Unknown error');
 }
 
 return view.extend({
@@ -255,7 +269,7 @@ return view.extend({
 
 	showError(result) {
 		ui.addNotification(null, E('p', {}, [
-			_('Operation failed: %s').format(result && result.error_code || _('Unknown error'))
+			_('Operation failed: %s').format(operationErrorText(result))
 		]));
 	},
 
