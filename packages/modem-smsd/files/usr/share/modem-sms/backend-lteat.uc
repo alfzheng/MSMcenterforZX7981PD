@@ -12,6 +12,9 @@ function factory(connection, options) {
 	const send_method = options.send_method ?? 'send_sms';
 	const delete_method = options.delete_method ?? 'del_sms';
 	const send_storage = uc(options.default_storage ?? 'SM');
+	const configured_retry_max = +(options.read_retry_max ?? 10);
+	const list_retry_max = configured_retry_max < 1 ? 1 :
+		(configured_retry_max > 12 ? 12 : configured_retry_max);
 
 	function invoke(method, args, callback) {
 		let settled = false;
@@ -114,8 +117,14 @@ function factory(connection, options) {
 				current_status = header[3] ?? null;
 				continue;
 			}
-			if (match(line, /^[0-9A-Fa-f]{20,}$/))
-				record(out, current, line, current_status);
+			/* Quectel firmware may format a PDU with spaces between octets.
+			 * Keep the accepted alphabet narrow, then let record() apply the
+			 * existing length and even-byte guards. */
+			let formatted_pdu = replace(line, /[ \t]/g, '');
+			if (match(line, /^[0-9A-Fa-f][0-9A-Fa-f \t]*$/) &&
+				length(formatted_pdu) >= 20 && length(formatted_pdu) <= 1024 &&
+				length(formatted_pdu) % 2 == 0)
+				record(out, current, formatted_pdu, current_status);
 		}
 		return { index: current, storage_status: current_status };
 	}
@@ -204,33 +213,94 @@ function factory(connection, options) {
 				return;
 			}
 
-			invoke(list_method, {}, function(list_code, reply) {
-				if (list_code || reply_contains_error(reply)) {
-					callback({ ok: false, error_code: 'BACKEND_READ_FAILED', backend_status: list_code });
+			let capacity = extract_capacity(switch_reply);
+			let merged_records = [];
+			let records_by_index = {};
+			let attempts = 0;
+			let last_backend_status = 0;
+			let successful_reads = 0;
+			let has_conflict = false;
+
+			function fail_parse(detail) {
+				let result = { ok: false, error_code: 'BACKEND_PARSE_FAILED', detail: detail,
+					attempts: attempts };
+				if (capacity.used != null) {
+					result.parsed_count = length(merged_records);
+					result.expected_count = capacity.used;
+				}
+				callback(result);
+			}
+
+			function read_again() {
+				if (attempts >= list_retry_max) {
+					if (!successful_reads) {
+						callback({ ok: false, error_code: 'BACKEND_READ_FAILED',
+							backend_status: last_backend_status, attempts: attempts });
+					}
+					else {
+						fail_parse(has_conflict ? 'INDEX_CONTENT_CHANGED' : 'CAPACITY_MISMATCH');
+					}
 					return;
 				}
-				let records = extract_records(reply);
-				let capacity = extract_capacity(switch_reply);
-				let seen_indexes = {};
-				for (let item in records) {
-					if (item.index == null || !match(`${item.index}`, /^(0|[1-9][0-9]*)$/)) {
-						callback({ ok: false, error_code: 'BACKEND_PARSE_FAILED', detail: 'INVALID_RECORD_INDEX' });
-						return;
+
+				attempts++;
+				invoke(list_method, {}, function(list_code, reply) {
+					last_backend_status = list_code;
+					if (!list_code && !reply_contains_error(reply)) {
+						successful_reads++;
+						let records = extract_records(reply);
+						let response_indexes = {};
+						for (let item in records) {
+							if (item.index == null || !match(`${item.index}`, /^(0|[1-9][0-9]*)$/)) {
+								fail_parse('INVALID_RECORD_INDEX');
+								return;
+							}
+							let index_key = `${item.index}`;
+							if (exists(response_indexes, index_key)) {
+								fail_parse('DUPLICATE_RECORD_INDEX');
+								return;
+							}
+							response_indexes[index_key] = true;
+						}
+
+						/* Prefer an internally complete response over merging it with
+						 * earlier partial snapshots. A modem may rotate or truncate
+						 * partial responses while the full response remains coherent. */
+						if (capacity.used != null && length(records) > capacity.used) {
+							fail_parse('CAPACITY_MISMATCH');
+							return;
+						}
+						if (capacity.used == null || length(records) == capacity.used) {
+							callback({ ok: true, records: records, raw_count: length(records),
+								capacity: capacity, attempts: attempts });
+							return;
+						}
+
+						for (let item in records) {
+							let index_key = `${item.index}`;
+							if (exists(records_by_index, index_key)) {
+								if (records_by_index[index_key].pdu != item.pdu) {
+									has_conflict = true;
+								}
+								continue;
+							}
+							records_by_index[index_key] = item;
+							push(merged_records, item);
+						}
+
+						if (capacity.used == null ||
+							(length(merged_records) == capacity.used && !has_conflict)) {
+							callback({ ok: true, records: merged_records,
+								raw_count: length(merged_records), capacity: capacity,
+								attempts: attempts });
+							return;
+						}
 					}
-					let index_key = `${item.index}`;
-					if (exists(seen_indexes, index_key)) {
-						callback({ ok: false, error_code: 'BACKEND_PARSE_FAILED', detail: 'DUPLICATE_RECORD_INDEX' });
-						return;
-					}
-					seen_indexes[index_key] = true;
-				}
-				if (capacity.used != null && capacity.used != length(records)) {
-					callback({ ok: false, error_code: 'BACKEND_PARSE_FAILED',
-						parsed_count: length(records), expected_count: capacity.used });
-					return;
-				}
-				callback({ ok: true, records: records, raw_count: length(records), capacity: capacity });
-			});
+					read_again();
+				});
+			}
+
+			read_again();
 		});
 	}
 

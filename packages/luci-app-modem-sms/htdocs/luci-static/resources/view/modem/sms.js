@@ -213,6 +213,16 @@ function storageWarning(storage) {
 	return '';
 }
 
+function storageErrorText(errors) {
+	return (errors || []).map(item => {
+		if (!item)
+			return '';
+		const name = item.storage ? `${item.storage}: ` : '';
+		const detail = item.detail ? ` (${item.detail})` : '';
+		return `${name}${item.error_code || _('Unknown error')}${detail}`;
+	}).filter(Boolean).join(', ');
+}
+
 return view.extend({
 	capabilities: null,
 	data: null,
@@ -325,12 +335,13 @@ return view.extend({
 
 		const warning = document.querySelector('#sms-storage-warning');
 		if (warning) {
+			const storageErrors = storageErrorText(this.data && this.data.errors);
 			warning.textContent = this.data && this.data.loading
-				? _('The modem is being read. This may take up to one minute on a cold start.')
+				? _('The modem is being read. This may take up to two minutes on a cold start.')
 				: !this.data.ok
 				? _('SMS messages could not be loaded: %s').format(this.data.error_code || _('Unknown error'))
 				: this.data.stale
-					? _('Some modem storage could not be read. The displayed message list may be incomplete.')
+					? _('Some modem storage could not be read. The displayed message list may be incomplete. %s').format(storageErrors)
 					: storageWarning(this.data.storage);
 			warning.style.display = warning.textContent ? '' : 'none';
 		}

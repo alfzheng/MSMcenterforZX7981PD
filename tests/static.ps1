@@ -90,6 +90,9 @@ if (-not $backendConfig.Contains("option cache_seconds '300'")) {
 if (-not $backendConfig.Contains("option read_call_timeout_seconds '60'")) {
     throw 'read timeout must exceed the measured cold dual-storage read'
 }
+if (-not $backendConfig.Contains("option read_retry_max '10'")) {
+    throw 'SM reads must retry and merge changing partial snapshots up to ten times'
+}
 if (-not $frontend.Contains('this.data && this.data.loading') -or -not $frontend.Contains('Loading messages from the modem')) {
     throw 'frontend must distinguish a cold modem load from service unavailability'
 }
@@ -216,8 +219,8 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=7') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
-    throw 'modem-smsd must remain at PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=13') -or -not $luciMakefile.Contains('PKG_RELEASE:=7')) {
+    throw 'modem-smsd must use r13 and LuCI must use r7 for storage diagnostics'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'

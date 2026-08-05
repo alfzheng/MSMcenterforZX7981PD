@@ -51,7 +51,8 @@ const backend_options = {
 	list_method: uci.get('modem-sms', selected_backend, 'list_method'),
 	send_method: uci.get('modem-sms', selected_backend, 'send_method'),
 	delete_method: uci.get('modem-sms', selected_backend, 'delete_method'),
-	default_storage: config.default_storage
+	default_storage: config.default_storage,
+	read_retry_max: +(uci.get('modem-sms', selected_backend, 'read_retry_max') ?? 10)
 };
 const backend = backend_module.create(bus, backend_options);
 const send_backend = backend_module.create(send_bus, backend_options);
@@ -407,7 +408,18 @@ function execute_load(done) {
 		let storage = uc(config.storage_order[position++]);
 		backend.list_storage(storage, function(result) {
 			if (!result.ok) {
-				push(errors, { storage: storage, error_code: result.error_code });
+				let failure = { storage: storage, error_code: result.error_code };
+				/* Preserve only bounded, non-content diagnostics so a partial
+				 * storage read can be distinguished from an opaque failure. */
+				if (result.detail != null)
+					failure.detail = `${result.detail}`;
+				if (result.parsed_count != null)
+					failure.parsed_count = +result.parsed_count;
+				if (result.expected_count != null)
+					failure.expected_count = +result.expected_count;
+				if (result.attempts != null)
+					failure.attempts = +result.attempts;
+				push(errors, failure);
 				storage_info[storage] = {
 					available: false,
 					used: null,

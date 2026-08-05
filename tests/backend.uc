@@ -97,6 +97,7 @@ let mismatch_result = null;
 backend_module.create(mismatch_connection, {}).list_storage('SM', function(result) { mismatch_result = result; });
 equal(mismatch_result.ok, false, 'record/capacity mismatch rejected');
 equal(mismatch_result.error_code, 'BACKEND_PARSE_FAILED', 'record/capacity mismatch code');
+equal(mismatch_result.detail, 'CAPACITY_MISMATCH', 'record/capacity mismatch detail');
 
 let duplicate_index_connection = {
 	list: function() { return ['lteat']; },
@@ -131,6 +132,74 @@ backend_module.create(split_array_connection, {}).list_storage('SM',
 	function(result) { split_array_result = result; });
 equal(split_array_result.ok, true, 'split array CMGL parsed');
 equal(split_array_result.records[0].index, 9, 'split array index context preserved');
+
+let spaced_pdu_connection = {
+	list: function() { return ['lteat']; },
+	defer: function(object, method, args, callback) {
+		if (method == 'send')
+			callback(0, { result: '+CPMS: 1,50,1,50,1,50\r\nOK\r\n' });
+		else if (method == 'get_sms')
+			callback(0, { result: '+CMGL: 10,"REC READ"\r\n00 11 22 33 44 55 66 77 88 99 AA BB\r\nOK\r\n' });
+		return {};
+	}
+};
+let spaced_pdu_result = null;
+backend_module.create(spaced_pdu_connection, {}).list_storage('SM',
+	function(result) { spaced_pdu_result = result; });
+equal(spaced_pdu_result.ok, true, 'space-separated PDU parsed');
+equal(spaced_pdu_result.records[0].index, 10, 'space-separated PDU index');
+
+let retry_calls = 0;
+let retry_connection = {
+	list: function() { return ['lteat']; },
+	defer: function(object, method, args, callback) {
+		if (method == 'send')
+			callback(0, { result: '+CPMS: 3,50,3,50,3,50\r\nOK\r\n' });
+		else if (method == 'get_sms') {
+			retry_calls++;
+			if (retry_calls == 1)
+				callback(0, { result: '+CMGL: 1,"REC READ"\r\n00112233445566778899AABB\r\n' +
+					'+CMGL: 2,"REC READ"\r\n00112233445566778899AABC\r\nOK\r\n' });
+			else
+				callback(0, { result: '+CMGL: 2,"REC READ"\r\n00112233445566778899AABC\r\n' +
+					'+CMGL: 3,"REC UNREAD"\r\n00112233445566778899AABD\r\nOK\r\n' });
+		}
+		return {};
+	}
+};
+let retry_result = null;
+backend_module.create(retry_connection, { read_retry_max: 4 }).list_storage('SM',
+	function(result) { retry_result = result; });
+equal(retry_result.ok, true, 'partial snapshots merged');
+equal(length(retry_result.records), 3, 'merged record count');
+equal(retry_result.attempts, 2, 'merged snapshot attempt count');
+
+let full_after_conflict_calls = 0;
+let full_after_conflict_connection = {
+	list: function() { return ['lteat']; },
+	defer: function(object, method, args, callback) {
+		if (method == 'send')
+			callback(0, { result: '+CPMS: 3,50,3,50,3,50\r\nOK\r\n' });
+		else if (method == 'get_sms') {
+			full_after_conflict_calls++;
+			if (full_after_conflict_calls == 1)
+				callback(0, { result: '+CMGL: 1,"REC READ"\r\n00112233445566778899AABB\r\n' +
+					'+CMGL: 2,"REC READ"\r\n00112233445566778899AABC\r\nOK\r\n' });
+			else
+				callback(0, { result: '+CMGL: 1,"REC READ"\r\n00112233445566778899AABD\r\n' +
+					'+CMGL: 2,"REC READ"\r\n00112233445566778899AABC\r\n' +
+					'+CMGL: 3,"REC UNREAD"\r\n00112233445566778899AABE\r\nOK\r\n' });
+		}
+		return {};
+	}
+};
+let full_after_conflict_result = null;
+backend_module.create(full_after_conflict_connection, { read_retry_max: 3 }).list_storage('SM',
+	function(result) { full_after_conflict_result = result; });
+equal(full_after_conflict_result.ok, true, 'complete snapshot supersedes partial conflict');
+equal(full_after_conflict_result.attempts, 2, 'complete snapshot attempt count');
+equal(full_after_conflict_result.records[0].pdu, '00112233445566778899AABD',
+	'complete snapshot content retained');
 
 let throwing_connection = {
 	list: function() { return ['lteat']; },
