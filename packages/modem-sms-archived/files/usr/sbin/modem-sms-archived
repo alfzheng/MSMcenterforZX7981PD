@@ -13,13 +13,19 @@ local function number(name, fallback)
 	return value or fallback
 end
 
+local function capacity_number(name, fallback)
+	local raw = uci:get('modem-sms-archive', 'main', name)
+	if raw == nil then return fallback end
+	return tonumber(raw) or raw
+end
+
 local config = {
 	enabled = uci:get('modem-sms-archive', 'main', 'enabled') ~= '0',
 	archive_enabled = uci:get('modem-sms-archive', 'main', 'archive_enabled') == '1',
 	archive_copy_enabled = uci:get('modem-sms-archive', 'main', 'archive_copy_enabled') == '1',
 	archive_path = uci:get('modem-sms-archive', 'main', 'archive_path') or '/root/modem-sms/archive.sqlite3',
-	archive_max_bytes = number('archive_max_bytes', 5242880),
-	archive_min_free_bytes = number('archive_min_free_bytes', 12582912),
+	archive_max_bytes = capacity_number('archive_max_bytes', 5242880),
+	archive_min_free_bytes = capacity_number('archive_min_free_bytes', 12582912),
 	page_limit_max = number('page_limit_max', 100),
 	cursor_ttl_seconds = number('cursor_ttl_seconds', 600),
 	cursor_max = math.min(1024, math.max(1, math.floor(number('cursor_max', 128)))),

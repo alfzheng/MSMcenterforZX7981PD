@@ -16,11 +16,20 @@ start_service() {
 	# Do not create the archive directory while the feature is disabled.
 	if [ "$archive_enabled" -eq 1 ]; then
 		[ "$archive_path" = '/root/modem-sms/archive.sqlite3' ] || return 1
-		install -d -m 700 /root/modem-sms || return 1
+		[ ! -L /root/modem-sms ] || return 1
+		# OpenWrt's busybox image does not necessarily include the host
+		# coreutils `install` command. Keep initialization limited to the
+		# fixed path and use utilities present in the target image.
+		mkdir -p /root/modem-sms || return 1
+		[ -d /root/modem-sms ] || return 1
+		chmod 700 /root/modem-sms || return 1
+		[ ! -L "$archive_path" ] || return 1
 		if [ -e "$archive_path" ]; then
+			[ -f "$archive_path" ] || return 1
 			chmod 600 "$archive_path" || return 1
 		else
-			install -m 600 /dev/null "$archive_path" || return 1
+			touch "$archive_path" || return 1
+			chmod 600 "$archive_path" || return 1
 		fi
 	fi
 

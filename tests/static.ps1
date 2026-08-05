@@ -27,7 +27,8 @@ $requiredFiles = @(
     'tests/stagec-sql.js',
     'tests/stagec-worker.lua',
     'tests/stagec-fault-injection.lua',
-    'tests/archive-migration.lua'
+    'tests/archive-migration.lua',
+    'tests/archive-runtime.lua'
 )
 
 foreach ($relative in $requiredFiles) {
@@ -111,7 +112,7 @@ if (-not $daemon.Contains("capabilities.features.delete = false") -or
 if (-not $daemon.Contains('archive_capabilities:') -or
     -not $daemon.Contains('messages_page:') -or
     -not $daemon.Contains('archive_verify:')) {
-    throw 'r7 A0 daemon archive proxy methods are missing'
+    throw 'A0 daemon archive proxy methods are missing'
 }
 $archiveConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/config/modem-sms-archive') -Raw -Encoding UTF8
 $archiveInit = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/files/etc/init.d/modem-sms-archived') -Raw -Encoding UTF8
@@ -122,25 +123,29 @@ $stagecWorker = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-s
 $archiveMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-archived/Makefile') -Raw -Encoding UTF8
 if (-not $archiveConfig.Contains("option archive_enabled '0'") -or
     -not $archiveConfig.Contains("option archive_copy_enabled '0'") ) {
-    throw 'r7 A0/A1 archive gates must default closed'
+    throw 'A0/A1 archive gates must default closed'
 }
 if (-not $archiveMakefile.Contains('+lsqlite3') -or
     -not $archiveMakefile.Contains('+libsqlite3-0') -or
     -not $archiveMakefile.Contains('+libubox-lua') -or
     -not $archiveMakefile.Contains('+libubus-lua')) {
-    throw 'r7 archive package dependencies are incomplete'
+    throw 'archive package dependencies are incomplete'
 }
 if (-not $archiveInit.Contains('umask 077') -or
-    -not $archiveInit.Contains('install -m 600 /dev/null') -or
-    -not $archiveInit.Contains('chmod 600')) {
-    throw 'r7 archive database permissions must be initialized to 0600'
+    -not $archiveInit.Contains('touch "$archive_path"') -or
+    -not $archiveInit.Contains('mkdir -p /root/modem-sms') -or
+    -not $archiveInit.Contains('chmod 600') -or
+    -not $archiveInit.Contains('[ ! -L /root/modem-sms ]') -or
+    -not $archiveInit.Contains('[ ! -L "$archive_path" ]') -or
+    -not $archiveInit.Contains('[ -f "$archive_path" ]')) {
+    throw 'archive database permissions must be initialized to 0600'
 }
 if (-not [regex]::IsMatch($archiveDaemon,
         "(?s)archive_get\s*=\s*\{\s*function\(req\)\s*connection:reply\(req, error_reply\('PERMISSION_DENIED'\)")) {
-    throw 'underlying r7 archive_get must fail closed'
+    throw 'underlying archive_get must fail closed'
 }
 if ($archiveDaemon.Contains('allow_content') -or $archiveDaemon.Contains('current:get')) {
-    throw 'underlying r7 archive daemon must not expose content access controls'
+    throw 'underlying archive daemon must not expose content access controls'
 }
 if (-not $archiveStore.Contains('PRAGMA journal_mode') -or
     -not $archiveStore.Contains('wal_autocheckpoint') -or
@@ -153,7 +158,7 @@ if (-not $archiveStore.Contains('PRAGMA journal_mode') -or
     -not $archiveStore.Contains('BEGIN IMMEDIATE') -or
     -not $archiveStore.Contains('foreign_keys_ok') -or
     -not $archiveStore.Contains('source_integrity_ok')) {
-    throw 'r7 archive storage gates are incomplete'
+    throw 'archive storage gates are incomplete'
 }
 foreach ($stagecFunction in @('function M.recover', 'function M.acquire',
 		'function M.renew', 'function M.release', 'MAX_RECOVERY_ITEMS',
@@ -214,8 +219,8 @@ if ($cli.Contains("command == 'delete'")) {
 if (-not $daemonMakefile.Contains('PKG_RELEASE:=7') -or -not $luciMakefile.Contains('PKG_RELEASE:=6')) {
     throw 'modem-smsd must remain at PKG_RELEASE:=7 while the unchanged LuCI package remains at r6'
 }
-if (-not $archiveMakefile.Contains('PKG_RELEASE:=6')) {
-    throw 'modem-sms-archived must use PKG_RELEASE:=6'
+if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
+    throw 'modem-sms-archived must use PKG_RELEASE:=12'
 }
 if (-not [regex]::IsMatch($daemon,
         '(?s)summary:\s*\{.*?if\s*\(!cache\.loaded\).*?request_load\(null\).*?loaded:\s*false,\s*loading:\s*true')) {
@@ -255,7 +260,7 @@ if ('delete' -in $writeMethods) {
     throw 'r5+ LuCI ACL must not grant the legacy device-delete method'
 }
 if ('archive_verify' -in $readMethods -or 'archive_get' -in $readMethods) {
-    throw 'r7 LuCI ACL must not grant archive diagnostics or content access'
+    throw 'LuCI ACL must not grant archive diagnostics or content access'
 }
 
 Write-Output "static.ps1: $($jsonFiles.Count) JSON files, $($messageIds.Count) translations and package invariants passed"

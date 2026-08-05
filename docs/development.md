@@ -14,6 +14,7 @@
 - `tests/archive-sql.js`: SQLite schema, ordering, idempotency and integrity checks.
 - `tests/stagec-sql.js`: Stage C durable state, identity binding and fail-closed transition checks.
 - `tests/archive-migration.lua`: target-runtime v1-to-v2 migration, repeatability and rollback checks.
+- `tests/archive-runtime.lua`: target-runtime capacity, fixed-path, parent-guard and verify checks.
 - `tests/stagec-worker.lua`: target-runtime lease ownership, bounded recovery and safe terminal-state checks.
 - `tests/stagec-fault-injection.lua`: target-runtime SQLite lock, rollback and restart-recovery checks.
 
@@ -62,6 +63,10 @@ Before release, repeat the target checks with the exact firmware ucode version a
 The Stage C foundation test is still non-destructive. `archive-migration.lua`
 must run with the target Lua/SQLite runtime before any package installation is
 considered; it does not authorize Stage C activation.
+
+`archive-runtime.lua` is a target-only smoke test for the fixed archive path,
+capacity fail-closed behavior and live SQLite verification. Run it only against
+the explicitly authorized archive target; it does not read modem SMS data.
 
 The current private `lteat` API does not offer one atomic “select storage and operate” call. Before every deployment or firmware upgrade, search the target filesystem and process list for other `AT+CPMS`, `lteat.get_sms`, `lteat.del_sms` or `lteat.send_sms` callers. Release is blocked if another caller can switch SMS storage concurrently; all SMS/CPMS access must be routed through `modem-smsd`.
 

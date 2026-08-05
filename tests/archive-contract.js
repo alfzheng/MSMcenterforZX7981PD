@@ -21,6 +21,7 @@ const daemon = read('packages/modem-smsd/files/usr/sbin/modem-smsd');
 assert(/option archive_enabled '0'/.test(config), 'A0 archive must default to disabled');
 assert(/option archive_copy_enabled '0'/.test(config), 'A1 copy must default to disabled');
 assert(/PKG_NAME:=modem-sms-archived/.test(makefile), 'archive package name missing');
+assert(/PKG_RELEASE:=12/.test(makefile), 'archive package release must be r12');
 assert(/\+lsqlite3/.test(makefile) && /\+libsqlite3-0/.test(makefile),
 	'SQLite runtime dependencies missing');
 assert(/\+lua/.test(makefile) && /\+libubus-lua/.test(makefile),
@@ -28,8 +29,12 @@ assert(/\+lua/.test(makefile) && /\+libubus-lua/.test(makefile),
 assert(/\+libubox-lua/.test(makefile), 'Lua uloop runtime dependency missing');
 assert(/\/root\/modem-sms\//.test(init), 'archive init must use the fixed data directory');
 assert(/umask 077/.test(init), 'archive init must set a restrictive umask');
-assert(/install -m 600 \/dev\/null/.test(init) && /chmod 600/.test(init),
-	'archive database must be initialized with mode 0600');
+assert(/touch \"\$archive_path\"/.test(init) && /chmod 600/.test(init),
+	'archive database must be initialized with mode 0600 using target-compatible utilities');
+assert(/\[ ! -L \/root\/modem-sms \]/.test(init) && /\[ ! -L \"\$archive_path\" \]/.test(init),
+	'archive init must reject symlinked directory and database paths');
+assert(/\[ -f \"\$archive_path\" \]/.test(init),
+	'archive init must reject non-regular existing database objects');
 assert(/option cursor_max '128'/.test(config), 'cursor limit default missing');
 assert(/option journal_mode 'DELETE'/.test(config), 'journal mode default missing');
 assert(/CREATE TABLE IF NOT EXISTS metadata/.test(schema), 'metadata schema missing');
@@ -57,6 +62,8 @@ for (const trigger of ['stage_jobs_insert_gate', 'stage_job_items_insert_gate',
 	assert(new RegExp(`CREATE TRIGGER IF NOT EXISTS ${trigger}`).test(schema),
 		`Stage C trigger missing: ${trigger}`);
 assert(/bind_values/.test(store), 'archive SQL inputs must use bound parameters');
+assert(store.includes('for _, value in pairs(row) do'),
+	'archive scalar queries must support named-only LuaSQLite3 result rows');
 assert(!/os\.execute|os\.remove|os\.rename/.test(store),
 	'archive store must not use shell/file mutation helpers');
 assert(!/lteat|CPMS|send_sms|del_sms/.test(archived),
@@ -71,6 +78,22 @@ assert(/PRAGMA journal_mode/.test(store) && /wal_autocheckpoint/.test(store),
 	'archive journal mode and WAL checkpoint policy missing');
 assert(/journal_bytes/.test(store) && /capacity_snapshot/.test(store),
 	'archive capacity accounting/preflight missing');
+assert(store.includes("local probe = path:match('^(.*)/[^/]+$') or path"),
+	'archive capacity probe must use the database parent directory for BusyBox df');
+assert(store.includes('__MODEM_SMS_DF_OK__') && store.includes('ARCHIVE_PATH_UNSAFE'),
+	'archive capacity and path probes must fail closed on command or object errors');
+assert(store.includes('valid_capacity_value') && store.includes('ARCHIVE_CAPACITY_UNVERIFIED'),
+	'archive capacity thresholds must reject invalid numeric configuration');
+assert(store.includes('local function option_number') &&
+	store.includes('[ ! -L "\' .. parent') &&
+	store.includes('[ -d "\' .. parent'),
+	'archive store must independently reject a symlinked or missing parent directory');
+assert(archived.includes('local function capacity_number') &&
+	archived.includes('return tonumber(raw) or raw'),
+	'invalid UCI capacity strings must reach the fail-closed archive validator');
+assert(store.includes('local capacity_ok = peak_ok and free_ok') &&
+	store.includes('if available == nil then'),
+	'archive capacity error reporting must preserve a nil error on a valid budget');
 assert(/migrate_schema/.test(store) && /ARCHIVE_SCHEMA_OUTDATED/.test(store) &&
 	/stage_c_gate_ok/.test(store) && /STAGE_C_GATE_INVALID/.test(store) &&
 	/BEGIN IMMEDIATE/.test(store) && /foreign_keys_ok/.test(store) &&

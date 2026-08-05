@@ -15,7 +15,8 @@ fdca6a7 [Codex@gpt-5] Bind Stage C jobs to lease acquisition time
 The only unrelated working-tree item is the pre-existing untracked
 `4d4yapi.md`; it has not been edited or committed.
 
-Target read-only state rechecked on 2026-08-05:
+Target read-only state captured before the archive-only rehearsal on 2026-08-05
+(r6 baseline):
 
 ```text
 modem-sms-archived: 0.1.0-r6
@@ -28,6 +29,11 @@ public delete probe: DEVICE_DELETE_DISABLED
 ```
 
 No SMS list, read, send or delete operation was performed.
+
+The post-rehearsal final state is recorded separately in
+`docs/archive-only-rehearsal-2026-08-05.md`: `modem-sms-archived r12`,
+`archive_enabled=0`, `archive_copy_enabled=0`, the archive database preserved,
+and the device-delete gate still returning `DEVICE_DELETE_DISABLED`.
 
 ## Delivered scope
 
@@ -55,13 +61,14 @@ node --check tests/stagec-sql.js
 git diff --check
 ```
 
-Target OpenWrt 25.12.5 / aarch64 checks passed with the installed r6
+Target OpenWrt 25.12.5 / aarch64 checks passed with the installed r12
 runtime files:
 
 ```text
 lua tests/stagec-worker.lua
 lua tests/stagec-fault-injection.lua
 lua tests/archive-migration.lua
+lua tests/archive-runtime.lua
 ```
 
 The fault-injection test covers SQLite lock contention, rollback/no residual
@@ -85,7 +92,7 @@ Full evidence is in
 
 ## Deployment evidence
 
-Final package:
+Historical Stage C deployment package (r6 baseline; retained for provenance):
 
 ```text
 modem-sms-archived-0.1.0-r6.apk
@@ -104,17 +111,17 @@ sysupgrade-before.tar.gz SHA-256:
 Package-index warnings for unavailable third-party indexes did not affect the
 local APK transaction, package version, hash match or read-only acceptance.
 
-## Next gate
+## Archive-only rehearsal result
 
-The next bounded step is an archive-only enablement rehearsal, not device
-deletion:
+The bounded archive-only enablement rehearsal is complete. It used a fresh
+target backup, exercised the target BusyBox/LuaSQLite3 runtime, verified the
+read-only archive capability/page path, checked negative capacity fail-closed
+behavior, and rolled back to the disabled configuration while preserving the
+empty archive database. The detailed evidence is in
+`docs/archive-only-rehearsal-2026-08-05.md`.
 
-1. obtain explicit approval for a temporary archive-only configuration;
-2. capture a fresh target backup and verify capacity/permissions;
-3. enable only archive storage and run read-only capability/page checks;
-4. restart the archive service and verify startup recovery and rollback;
-5. disable archive storage again and confirm the database/config state.
-
-Device deletion must remain disabled throughout this rehearsal. Enabling any
-delete capability requires a separate design review, approval and modem
+The next gate is a separate review of whether to retain the archive foundation
+disabled or authorize a longer observation window. Archive copy, Stage C
+destructive work, and device deletion remain out of scope; enabling any delete
+capability still requires a separate design review, approval and modem
 fault-injection plan.

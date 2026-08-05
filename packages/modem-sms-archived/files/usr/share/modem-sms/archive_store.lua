@@ -7,6 +7,14 @@ local JOURNAL_SIZE_LIMIT = 524288
 local TRANSACTION_PEAK = 524288
 local WAL_AUTOCHECKPOINT = 100
 
+local function valid_capacity_value(value, minimum)
+	return type(value) == 'number'
+		and value == value
+		and value < math.huge
+		and value >= minimum
+		and value == math.floor(value)
+end
+
 local function is_ok(code)
 	return code == nil or code == 0 or code == sqlite3.OK
 end
@@ -32,22 +40,44 @@ local function file_size(path)
 end
 
 local function free_bytes(path)
-	local probe = path
-	local file = io.open(path, 'rb')
-	if file then
-		file:close()
-	else
-		probe = path:match('^(.*)/[^/]+$') or path
-	end
-	local pipe = io.popen('/bin/df -Pk ' .. probe .. ' 2>/dev/null', 'r')
+	-- BusyBox df expects a mount point or directory, not an existing file.
+	-- The archive path is fixed and validated by preflight, so probing its
+	-- parent directory is both target-compatible and independent of whether
+	-- SQLite has created the file yet.
+	local probe = path:match('^(.*)/[^/]+$') or path
+	local success_marker = '__MODEM_SMS_DF_OK__'
+	local pipe = io.popen('/bin/df -Pk "' .. probe .. '" 2>/dev/null && echo ' .. success_marker, 'r')
 	if not pipe then return nil end
 	local available
+	local command_ok = false
 	for line in pipe:lines() do
-		local value = line:match('^%S+%s+%d+%s+%d+%s+(%d+)%s+')
-		if value then available = tonumber(value) * 1024 end
+		if line == success_marker then
+			command_ok = true
+		else
+			local value = line:match('^%S+%s+%d+%s+%d+%s+(%d+)%s+')
+			if value then available = tonumber(value) * 1024 end
+		end
 	end
 	pipe:close()
+	if not command_ok then return nil end
 	return available
+end
+
+local function archive_object_safe(path)
+	local marker = '__MODEM_SMS_ARCHIVE_PATH_OK__'
+	local parent = path:match('^(.*)/[^/]+$') or path
+	local pipe = io.popen('[ ! -L "' .. parent .. '" ] && [ -d "' .. parent
+		.. '" ] && [ ! -L "' .. path .. '" ] && { [ ! -e "' .. path
+		.. '" ] || [ -f "' .. path .. '" ]; } && echo ' .. marker, 'r')
+	if not pipe then return false end
+	local output = pipe:read('*a') or ''
+	pipe:close()
+	return output:find(marker, 1, true) ~= nil
+end
+
+local function option_number(options, name, fallback)
+	if options[name] == nil then return fallback end
+	return tonumber(options[name])
 end
 
 local function scalar(store, sql, values)
@@ -63,6 +93,14 @@ local function scalar(store, sql, values)
 	local result
 	for row in statement:nrows() do
 		result = row[1]
+		if result == nil then
+			-- LuaSQLite3 on the target exposes named columns but may not
+			-- populate numeric indexes for a one-column result.
+			for _, value in pairs(row) do
+				result = value
+				break
+			end
+		end
 		break
 	end
 	statement:finalize()
@@ -209,6 +247,16 @@ local function migrate_schema(db, transaction_active)
 end
 
 local function capacity_snapshot(path, max_bytes, min_free_bytes)
+	if not valid_capacity_value(max_bytes, TRANSACTION_PEAK)
+		or not valid_capacity_value(min_free_bytes, 1) then
+		return {
+			archive_max_bytes = max_bytes,
+			archive_min_free_bytes = min_free_bytes,
+			persistent_bytes = 0,
+			capacity_ok = false,
+			error_code = 'ARCHIVE_CAPACITY_UNVERIFIED'
+		}
+	end
 	local main = file_size(path)
 	local wal = file_size(path .. '-wal')
 	local shm = file_size(path .. '-shm')
@@ -217,6 +265,13 @@ local function capacity_snapshot(path, max_bytes, min_free_bytes)
 	local persistent_bytes = main + wal + shm + journal
 	local peak_ok = persistent_bytes + TRANSACTION_PEAK <= max_bytes
 	local free_ok = available ~= nil and available - TRANSACTION_PEAK >= min_free_bytes
+	local capacity_ok = peak_ok and free_ok
+	local error_code
+	if available == nil then
+		error_code = 'ARCHIVE_CAPACITY_UNVERIFIED'
+	elseif not capacity_ok then
+		error_code = 'ARCHIVE_FULL'
+	end
 	return {
 		archive_max_bytes = max_bytes,
 		archive_min_free_bytes = min_free_bytes,
@@ -227,9 +282,8 @@ local function capacity_snapshot(path, max_bytes, min_free_bytes)
 		journal_bytes = journal,
 		available_bytes = available,
 		transaction_peak_bytes = TRANSACTION_PEAK,
-		capacity_ok = peak_ok and free_ok,
-		error_code = available == nil and 'ARCHIVE_CAPACITY_UNVERIFIED'
-			or (peak_ok and free_ok and nil or 'ARCHIVE_FULL')
+		capacity_ok = capacity_ok,
+		error_code = error_code
 	}
 end
 
@@ -451,15 +505,20 @@ function M.open(path, options)
 	if not schema then return nil, 'ARCHIVE_SCHEMA_UNAVAILABLE' end
 	local journal_mode, journal_error = normalize_journal_mode(options.journal_mode)
 	if not journal_mode then return nil, journal_error end
-	local max_bytes = tonumber(options.archive_max_bytes) or 5242880
-	local min_free_bytes = tonumber(options.archive_min_free_bytes) or 12582912
+	local max_bytes = option_number(options, 'archive_max_bytes', 5242880)
+	local min_free_bytes = option_number(options, 'archive_min_free_bytes', 12582912)
 	local preflight, preflight_error = M.preflight(path, {
 		archive_max_bytes = max_bytes,
 		archive_min_free_bytes = min_free_bytes
 	})
 	if not preflight then return nil, preflight_error end
+	if not archive_object_safe(path) then return nil, 'ARCHIVE_PATH_UNSAFE' end
 	local db = sqlite3.open(path)
 	if not db then return nil, 'ARCHIVE_OPEN_FAILED' end
+	if not archive_object_safe(path) then
+		db:close()
+		return nil, 'ARCHIVE_PATH_UNSAFE'
+	end
 	if not is_ok(db:exec('PRAGMA foreign_keys = ON')) then
 		local error_code = db:errmsg()
 		db:close()
@@ -520,8 +579,8 @@ end
 function M.preflight(path, options)
 	if path ~= '/root/modem-sms/archive.sqlite3' then return nil, 'ARCHIVE_PATH_UNSAFE' end
 	options = options or {}
-	local max_bytes = tonumber(options.archive_max_bytes) or 5242880
-	local min_free_bytes = tonumber(options.archive_min_free_bytes) or 12582912
+	local max_bytes = option_number(options, 'archive_max_bytes', 5242880)
+	local min_free_bytes = option_number(options, 'archive_min_free_bytes', 12582912)
 	local result = capacity_snapshot(path, max_bytes, min_free_bytes)
 	return result.capacity_ok and result or nil, result.error_code
 end
