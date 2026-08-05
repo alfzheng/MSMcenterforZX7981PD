@@ -261,8 +261,8 @@ msgstr "刷新短信可能会将模块存储中的 REC UNREAD 改为 REC READ。
 msgid "Loading messages from the modem…"
 msgstr "正在从模块读取短信……"
 
-msgid "The modem is being read. This may take up to two minutes on a cold start."
-msgstr "正在读取模块。冷启动时可能需要最长两分钟。"
+msgid "The modem is being read. This may take up to four minutes on a cold start."
+msgstr "正在读取模块。冷启动时可能需要最长四分钟。"
 
 msgid "Device message deletion is temporarily disabled until the safe local archive workflow is available."
 msgstr "安全的本地归档流程就绪前，设备短信删除功能暂时禁用。"

@@ -12,9 +12,10 @@ function factory(connection, options) {
 	const send_method = options.send_method ?? 'send_sms';
 	const delete_method = options.delete_method ?? 'del_sms';
 	const send_storage = uc(options.default_storage ?? 'SM');
-	const configured_retry_max = +(options.read_retry_max ?? 10);
+	const retry_text = `${options.read_retry_max ?? '20'}`;
+	const configured_retry_max = match(retry_text, /^[0-9]+$/) ? +retry_text : 20;
 	const list_retry_max = configured_retry_max < 1 ? 1 :
-		(configured_retry_max > 12 ? 12 : configured_retry_max);
+		(configured_retry_max > 20 ? 20 : configured_retry_max);
 
 	function invoke(method, args, callback) {
 		let settled = false;
@@ -214,18 +215,16 @@ function factory(connection, options) {
 			}
 
 			let capacity = extract_capacity(switch_reply);
-			let merged_records = [];
-			let records_by_index = {};
 			let attempts = 0;
 			let last_backend_status = 0;
 			let successful_reads = 0;
-			let has_conflict = false;
+			let last_parsed_count = 0;
 
 			function fail_parse(detail) {
 				let result = { ok: false, error_code: 'BACKEND_PARSE_FAILED', detail: detail,
 					attempts: attempts };
 				if (capacity.used != null) {
-					result.parsed_count = length(merged_records);
+					result.parsed_count = last_parsed_count;
 					result.expected_count = capacity.used;
 				}
 				callback(result);
@@ -237,9 +236,8 @@ function factory(connection, options) {
 						callback({ ok: false, error_code: 'BACKEND_READ_FAILED',
 							backend_status: last_backend_status, attempts: attempts });
 					}
-					else {
-						fail_parse(has_conflict ? 'INDEX_CONTENT_CHANGED' : 'CAPACITY_MISMATCH');
-					}
+					else
+						fail_parse('CAPACITY_MISMATCH');
 					return;
 				}
 
@@ -256,16 +254,23 @@ function factory(connection, options) {
 								return;
 							}
 							let index_key = `${item.index}`;
+							if (capacity.total != null &&
+								(+item.index < 1 || +item.index > capacity.total)) {
+								fail_parse('INDEX_OUT_OF_RANGE');
+								return;
+							}
 							if (exists(response_indexes, index_key)) {
 								fail_parse('DUPLICATE_RECORD_INDEX');
 								return;
 							}
 							response_indexes[index_key] = true;
 						}
+						last_parsed_count = length(records);
 
-						/* Prefer an internally complete response over merging it with
-						 * earlier partial snapshots. A modem may rotate or truncate
-						 * partial responses while the full response remains coherent. */
+						/* Do not synthesize a snapshot by combining different modem
+						 * responses. A physical index can be reused while the modem is
+						 * rotating or truncating a partial response; only one internally
+						 * complete response is safe to expose. */
 						if (capacity.used != null && length(records) > capacity.used) {
 							fail_parse('CAPACITY_MISMATCH');
 							return;
@@ -273,26 +278,6 @@ function factory(connection, options) {
 						if (capacity.used == null || length(records) == capacity.used) {
 							callback({ ok: true, records: records, raw_count: length(records),
 								capacity: capacity, attempts: attempts });
-							return;
-						}
-
-						for (let item in records) {
-							let index_key = `${item.index}`;
-							if (exists(records_by_index, index_key)) {
-								if (records_by_index[index_key].pdu != item.pdu) {
-									has_conflict = true;
-								}
-								continue;
-							}
-							records_by_index[index_key] = item;
-							push(merged_records, item);
-						}
-
-						if (capacity.used == null ||
-							(length(merged_records) == capacity.used && !has_conflict)) {
-							callback({ ok: true, records: merged_records,
-								raw_count: length(merged_records), capacity: capacity,
-								attempts: attempts });
 							return;
 						}
 					}

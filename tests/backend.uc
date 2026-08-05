@@ -98,6 +98,13 @@ backend_module.create(mismatch_connection, {}).list_storage('SM', function(resul
 equal(mismatch_result.ok, false, 'record/capacity mismatch rejected');
 equal(mismatch_result.error_code, 'BACKEND_PARSE_FAILED', 'record/capacity mismatch code');
 equal(mismatch_result.detail, 'CAPACITY_MISMATCH', 'record/capacity mismatch detail');
+equal(mismatch_result.attempts, 20, 'default retry bound');
+
+let invalid_retry_result = null;
+backend_module.create(mismatch_connection, { read_retry_max: 'not-a-number' }).list_storage('SM',
+	function(result) { invalid_retry_result = result; });
+equal(invalid_retry_result.ok, false, 'invalid retry setting fails closed');
+equal(invalid_retry_result.attempts, 20, 'invalid retry setting uses safe default');
 
 let duplicate_index_connection = {
 	list: function() { return ['lteat']; },
@@ -139,7 +146,7 @@ let spaced_pdu_connection = {
 		if (method == 'send')
 			callback(0, { result: '+CPMS: 1,50,1,50,1,50\r\nOK\r\n' });
 		else if (method == 'get_sms')
-			callback(0, { result: '+CMGL: 10,"REC READ"\r\n00 11 22 33 44 55 66 77 88 99 AA BB\r\nOK\r\n' });
+			callback(0, { result: '+CMGL: 10,"REC READ"\r\n00 11 22 33 44 55 66 77 88 99 aa bb\r\nOK\r\n' });
 		return {};
 	}
 };
@@ -148,6 +155,7 @@ backend_module.create(spaced_pdu_connection, {}).list_storage('SM',
 	function(result) { spaced_pdu_result = result; });
 equal(spaced_pdu_result.ok, true, 'space-separated PDU parsed');
 equal(spaced_pdu_result.records[0].index, 10, 'space-separated PDU index');
+equal(spaced_pdu_result.records[0].pdu, '00112233445566778899AABB', 'lowercase PDU normalized');
 
 let retry_calls = 0;
 let retry_connection = {
@@ -170,9 +178,10 @@ let retry_connection = {
 let retry_result = null;
 backend_module.create(retry_connection, { read_retry_max: 4 }).list_storage('SM',
 	function(result) { retry_result = result; });
-equal(retry_result.ok, true, 'partial snapshots merged');
-equal(length(retry_result.records), 3, 'merged record count');
-equal(retry_result.attempts, 2, 'merged snapshot attempt count');
+equal(retry_result.ok, false, 'partial snapshots are not synthesized');
+equal(retry_result.error_code, 'BACKEND_PARSE_FAILED', 'partial snapshot error code');
+equal(retry_result.detail, 'CAPACITY_MISMATCH', 'partial snapshot detail');
+equal(retry_result.attempts, 4, 'partial snapshot retry bound');
 
 let full_after_conflict_calls = 0;
 let full_after_conflict_connection = {
@@ -200,6 +209,22 @@ equal(full_after_conflict_result.ok, true, 'complete snapshot supersedes partial
 equal(full_after_conflict_result.attempts, 2, 'complete snapshot attempt count');
 equal(full_after_conflict_result.records[0].pdu, '00112233445566778899AABD',
 	'complete snapshot content retained');
+
+let out_of_range_connection = {
+	list: function() { return ['lteat']; },
+	defer: function(object, method, args, callback) {
+		if (method == 'send')
+			callback(0, { result: '+CPMS: 1,2,1,2,1,2\r\nOK\r\n' });
+		else if (method == 'get_sms')
+			callback(0, { result: '+CMGL: 3,"REC READ"\r\n00112233445566778899AABB\r\nOK\r\n' });
+		return {};
+	}
+};
+let out_of_range_result = null;
+backend_module.create(out_of_range_connection, {}).list_storage('SM',
+	function(result) { out_of_range_result = result; });
+equal(out_of_range_result.ok, false, 'out-of-range index rejected');
+equal(out_of_range_result.detail, 'INDEX_OUT_OF_RANGE', 'out-of-range index detail');
 
 let throwing_connection = {
 	list: function() { return ['lteat']; },

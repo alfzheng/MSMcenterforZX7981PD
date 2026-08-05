@@ -52,7 +52,7 @@ const backend_options = {
 	send_method: uci.get('modem-sms', selected_backend, 'send_method'),
 	delete_method: uci.get('modem-sms', selected_backend, 'delete_method'),
 	default_storage: config.default_storage,
-	read_retry_max: +(uci.get('modem-sms', selected_backend, 'read_retry_max') ?? 10)
+	read_retry_max: +(uci.get('modem-sms', selected_backend, 'read_retry_max') ?? 20)
 };
 const backend = backend_module.create(bus, backend_options);
 const send_backend = backend_module.create(send_bus, backend_options);

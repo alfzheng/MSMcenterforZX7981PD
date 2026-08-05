@@ -15,16 +15,17 @@ existing PDU length checks.
 
 ## Fix
 
-`backend-lteat.uc` now performs at most ten `get_sms` reads per storage and
-merges records by physical index. It succeeds only when the merged count
-matches the `+CPMS` used count. A changed PDU at an already-seen physical index,
-an invalid index, an over-capacity result, or an incomplete result after the
-retry bound remains a fail-closed `BACKEND_PARSE_FAILED` result. The bounded
+`backend-lteat.uc` now performs at most twenty `get_sms` reads per storage and
+accepts only one internally complete response. It succeeds only when that
+single response count matches the `+CPMS` used count. An invalid or out-of-range
+index, a duplicate index, an over-capacity result, or an incomplete result
+after the retry bound remains a fail-closed `BACKEND_PARSE_FAILED` result. The bounded
 diagnostics include `CAPACITY_MISMATCH`, parsed count, expected count, and
 attempt count without exposing message content.
 
-The default is configured as `read_retry_max '10'`; it is capped by the backend
-at twelve even if a local configuration is changed. The UI now displays the
+The default is configured as `read_retry_max '20'`; the backend also caps this
+at twenty even if a local configuration is changed; non-numeric values fall back
+to twenty. The UI now displays the
 storage and bounded backend detail instead of converting it to “未知错误”.
 
 ## Verification boundary

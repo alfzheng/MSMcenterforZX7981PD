@@ -337,7 +337,7 @@ return view.extend({
 		if (warning) {
 			const storageErrors = storageErrorText(this.data && this.data.errors);
 			warning.textContent = this.data && this.data.loading
-				? _('The modem is being read. This may take up to two minutes on a cold start.')
+				? _('The modem is being read. This may take up to four minutes on a cold start.')
 				: !this.data.ok
 				? _('SMS messages could not be loaded: %s').format(this.data.error_code || _('Unknown error'))
 				: this.data.stale

@@ -23,6 +23,6 @@ config backend 'lteat'
 	option storage_order 'SM ME'
 	# A cold dual-storage read has been measured at up to 44 seconds on ZX7981PD.
 	option read_call_timeout_seconds '60'
-	# Quectel get_sms may return a changing partial SM snapshot; merge up to ten reads.
-	option read_retry_max '10'
+	# Quectel get_sms may return a changing partial SM snapshot; retry up to twenty reads.
+	option read_retry_max '20'
 	option send_call_timeout_seconds '120'
