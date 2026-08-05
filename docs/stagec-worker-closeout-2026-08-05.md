@@ -2,7 +2,7 @@
 
 ## Current verified state
 
-Repository: `D:\Projects\ZX7891PD 优化` on `main`.
+Repository: `D:\Projects\ZX7981PD 优化` on `main`.
 
 Latest owned commits:
 

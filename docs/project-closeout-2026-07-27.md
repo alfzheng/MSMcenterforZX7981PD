@@ -75,13 +75,13 @@ archive-2026-07-27
 本地仓库：
 
 ```text
-D:\Projects\ZX7891PD 优化
+D:\Projects\ZX7981PD 优化
 ```
 
 离线Git bundle保存在Git忽略的`.device-backups`目录。恢复示例：
 
 ```powershell
-git clone .\ZX7891PD-archive-2026-07-27.bundle ZX7891PD-恢复
+git clone .\ZX7981PD-archive-2026-07-27.bundle ZX7981PD-恢复
 ```
 
 恢复后以`archive-2026-07-27`标签核对收口版本。

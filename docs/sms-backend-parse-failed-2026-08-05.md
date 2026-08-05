@@ -32,7 +32,7 @@ storage and bounded backend detail instead of converting it to “未知错误�
 
 - Local static, Stage C, archive SQLite, and whitespace/PDU regression checks
   pass.
-- The package must be rebuilt and installed as `modem-smsd` r12 before claiming
+- The package was rebuilt and installed as `modem-smsd` r16 before claiming
   the target fix is active.
 - Target verification is read-only: package hash, `ucode tests/backend.uc`,
   `ubus call modem.sms list`, storage state, and delete-disabled capability.
