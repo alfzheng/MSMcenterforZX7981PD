@@ -189,3 +189,17 @@ The audit therefore rates host/static/build as GO and the disabled-state
 candidate as conditional GO, but installation/enabling, owner switching, real
 SMS reading, sending, and deletion remain NO-GO. The untracked user file
 `4d4yapi.md` was not touched.
+
+## Deployment attempt - 2026-08-06
+
+The deployment request was advanced through read-only preflight only. The target
+`192.168.88.1` responds on HTTP and TCP/22, but the SSH probe for `root` returned
+`Permission denied (publickey,password)`. The LuCI root page returned HTTP 200,
+while `/cgi-bin/luci/` returned HTTP 403 with `x-luci-login-required: yes`.
+
+No package upload, installation, service restart, configuration change, serial
+owner switch, backup overwrite, or SMS operation was attempted. Without an
+authenticated management channel, the required target-side backup, owner/data-
+plane inspection, reversible install, and rollback verification cannot be
+performed safely. The deployment state therefore remains **BLOCKED / NO-GO**;
+the broker-disabled baseline is unchanged.
