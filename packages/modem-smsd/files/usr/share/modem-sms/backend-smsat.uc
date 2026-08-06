@@ -8,6 +8,15 @@
  */
 function factory(connection, options) {
 	const STATUS_CONNECTION_FAILED = 10;
+	const MAX_SCAN_TOTAL = 4096;
+	const MIN_PDU_HEX_LENGTH = 20;
+	const MAX_PDU_HEX_LENGTH = 1024;
+	const VALID_STATUS = {
+		'REC READ': true,
+		'REC UNREAD': true,
+		'STO SENT': true,
+		'STO UNSENT': true
+	};
 	const object_name = options.object ?? 'modem.smsat';
 
 	function invoke(method, args, callback) {
@@ -32,12 +41,39 @@ function factory(connection, options) {
 	}
 
 	function integer(value) {
-		let text = `${value ?? ''}`;
-		return match(text, /^[0-9]+$/) ? +text : null;
+		return type(value) == 'int' && value >= 0 ? value : null;
+	}
+
+	function flag(value) {
+		if (value === true || value === 1)
+			return true;
+		if (value === false || value === 0)
+			return false;
+		return null;
+	}
+
+	function schema_ok(reply) {
+		return type(reply) == 'object' && integer(reply.schema_version) == 1;
+	}
+
+	function scan_id_ok(value) {
+		return integer(value) != null && value > 0;
+	}
+
+	function pdu_ok(reply) {
+		if (type(reply.pdu) != 'string' || !match(reply.pdu, /^[0-9A-Fa-f]+$/) ||
+			length(reply.pdu) < MIN_PDU_HEX_LENGTH ||
+			length(reply.pdu) > MAX_PDU_HEX_LENGTH || length(reply.pdu) % 2 ||
+			integer(reply.pdu_bytes) == null || integer(reply.pdu_bytes) != length(reply.pdu) / 2)
+			return false;
+		let smsc_length = hex(substr(reply.pdu, 0, 2));
+		return smsc_length != null && 1 + smsc_length <= reply.pdu_bytes;
 	}
 
 	function descriptor_available() {
-		let objects = connection.list(object_name);
+		let objects = null;
+		try { objects = connection.list(object_name); }
+		catch (exception) { return false; }
 		if (objects == null)
 			return false;
 		let descriptor = null;
@@ -60,6 +96,11 @@ function factory(connection, options) {
 		return result;
 	}
 
+	function error_code(reply, fallback) {
+		return type(reply) == 'object' && reply.error_code != null ?
+			`${reply.error_code}` : fallback;
+	}
+
 	function list_storage(storage, callback) {
 		if (!match(storage, /^(SM|ME)$/)) {
 			callback(fail('INVALID_STORAGE'));
@@ -79,23 +120,36 @@ function factory(connection, options) {
 		}
 
 		invoke('scan_begin', { storage: storage }, function(begin_code, begin) {
-			if (begin_code || !begin.ok) {
-				finish(fail(begin.error_code ?? 'BROKER_SCAN_BEGIN_FAILED', null,
+			let begin_scan_id = type(begin) == 'object' && scan_id_ok(begin.scan_id) ?
+				begin.scan_id : null;
+			function abort_begin(result) {
+				if (begin_scan_id == null) {
+					finish(result);
+					return;
+				}
+				invoke('scan_end', { scan_id: begin_scan_id }, function(end_code, end) {
+					if (end_code || !schema_ok(end) || !flag(end.ok) || !flag(end.stable)) {
+						finish(fail('BROKER_SCAN_RELEASE_UNCONFIRMED',
+							error_code(end, 'scan_end failed'), {
+								backend_status: end_code, original_error_code: result.error_code
+							}));
+						return;
+					}
+					finish(result);
+				});
+			}
+			if (begin_code || type(begin) != 'object' || !schema_ok(begin) || !flag(begin.ok)) {
+				abort_begin(fail(error_code(begin, 'BROKER_SCAN_BEGIN_FAILED'), null,
 					{ backend_status: begin_code }));
 				return;
 			}
-			let scan_id = `${begin.scan_id ?? ''}`;
+			let scan_id = begin.scan_id;
+			let generation = integer(begin.generation);
 			let used = integer(begin.used);
 			let total = integer(begin.total);
-			function abort_begin(result) {
-				if (match(scan_id, /^[0-9]+$/))
-					invoke('scan_end', { scan_id: scan_id }, function() { finish(result); });
-				else
-					finish(result);
-			}
-			if (!match(scan_id, /^[0-9]+$/) || `${begin.storage ?? ''}` !== storage ||
-				used == null || total == null ||
-				used < 0 || total < used || total > 4096) {
+			if (!scan_id_ok(scan_id) || generation == null || generation < 1 ||
+				`${begin.storage ?? ''}` !== storage || used == null || total == null ||
+				used > total || total > MAX_SCAN_TOTAL) {
 				abort_begin(fail('BROKER_CONTRACT_INVALID'));
 				return;
 			}
@@ -108,10 +162,19 @@ function factory(connection, options) {
 
 			function close_scan(result) {
 				invoke('scan_end', { scan_id: scan_id }, function(end_code, end) {
-					if (result.ok && (end_code || !end.ok || !end.stable ||
-						integer(end.used) !== used || integer(end.total) !== total)) {
-						finish(fail(end.error_code ?? 'BROKER_SCAN_END_FAILED', null,
-							{ backend_status: end_code }));
+					if (end_code || type(end) != 'object' || !schema_ok(end) ||
+						!flag(end.ok) || !flag(end.stable)) {
+						finish(fail('BROKER_SCAN_RELEASE_UNCONFIRMED',
+							error_code(end, 'scan_end failed'), {
+								backend_status: end_code, original_error_code: result.error_code
+							}));
+						return;
+					}
+					if (integer(end.used) !== used || integer(end.total) !== total ||
+						integer(end.generation) !== generation) {
+						finish(fail('BROKER_SCAN_UNSTABLE', null, {
+							original_error_code: result.error_code
+						}));
 						return;
 					}
 					finish(result);
@@ -142,8 +205,9 @@ function factory(connection, options) {
 
 				let index = next_index;
 				invoke('scan_read', { scan_id: scan_id, index: index }, function(read_code, reply) {
-					if (read_code || !reply.ok) {
-						fail_scan(reply.error_code ?? 'BROKER_SCAN_READ_FAILED');
+					if (read_code || type(reply) != 'object' || !schema_ok(reply) || !flag(reply.ok) ||
+						exists(reply, 'error_code')) {
+						fail_scan(error_code(reply, 'BROKER_SCAN_READ_FAILED'));
 						return;
 					}
 					let reply_index = integer(reply.index);
@@ -151,15 +215,36 @@ function factory(connection, options) {
 						fail_scan('BROKER_INDEX_MISMATCH');
 						return;
 					}
-					let empty = reply.empty === true || reply.empty === 1;
+					let empty = flag(reply.empty);
+					if (empty == null) {
+						fail_scan('BROKER_CONTRACT_INVALID');
+						return;
+					}
+					let pass_complete = flag(reply.pass_complete);
+					let complete = flag(reply.complete);
+					let phase = integer(reply.phase);
+					let at_end = index == total;
+					let expected_phase = at_end ? pass + 1 : pass;
+					if (pass_complete == null || complete == null || phase == null ||
+						pass_complete !== at_end || complete !== (pass == 1 && at_end) ||
+						phase !== expected_phase) {
+						fail_scan('BROKER_SCAN_PHASE_INVALID');
+						return;
+					}
+					if (empty && (exists(reply, 'error_code') || exists(reply, 'pdu') ||
+						exists(reply, 'pdu_bytes') || exists(reply, 'status'))) {
+						fail_scan('BROKER_EMPTY_CONTRACT_INVALID');
+						return;
+					}
 					let current = { empty: empty, status: `${reply.status ?? ''}`, pdu: '' };
 					if (!empty) {
-						current.pdu = `${reply.pdu ?? ''}`;
-						if (!match(current.pdu, /^[0-9A-Fa-f]+$/) || length(current.pdu) < 20 ||
-							length(current.pdu) > 1024 || length(current.pdu) % 2) {
+						if (type(reply.status) != 'string' || !exists(VALID_STATUS, reply.status) ||
+							!pdu_ok(reply)) {
 							fail_scan('BROKER_PDU_INVALID');
 							return;
 						}
+						current.status = reply.status;
+						current.pdu = reply.pdu;
 						nonempty++;
 					}
 					if (pass == 0) {
@@ -175,11 +260,6 @@ function factory(connection, options) {
 							fail_scan('BROKER_SCAN_CONTENT_CHANGED');
 							return;
 						}
-					}
-					if (pass == 1 && index == total &&
-						(reply.complete !== true && reply.complete !== 1)) {
-						fail_scan('BROKER_SCAN_INCOMPLETE');
-						return;
 					}
 					next_index++;
 					read_next();
@@ -206,7 +286,7 @@ function factory(connection, options) {
 			callback(fail('DEVICE_DELETE_DISABLED'));
 		},
 		delete_available: function() { return false; },
-		restore_storage: function(storage, callback) { callback(2); },
+		restore_storage: function(storage, callback) { callback(0); },
 		capabilities: function() {
 			return {
 				backend_id: 'smsat-v1',

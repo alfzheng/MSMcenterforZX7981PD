@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=modem-smsd
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=18
+PKG_RELEASE:=19
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=ZX7981PD SMS Project
 
@@ -40,6 +40,7 @@ define Package/modem-smsd/install
 	$(INSTALL_DIR) $(1)/usr/share/modem-sms
 	$(INSTALL_DATA) ./files/usr/share/modem-sms/core.uc $(1)/usr/share/modem-sms/core.uc
 	$(INSTALL_DATA) ./files/usr/share/modem-sms/backend-lteat.uc $(1)/usr/share/modem-sms/backend-lteat.uc
+	$(INSTALL_DATA) ./files/usr/share/modem-sms/backend-smsat.uc $(1)/usr/share/modem-sms/backend-smsat.uc
 endef
 
 $(eval $(call BuildPackage,modem-smsd))

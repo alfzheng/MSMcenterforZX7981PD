@@ -107,7 +107,9 @@ if (-not $backend.Contains('features: { read: true, send: true, delete: false'))
 }
 if (-not $backend.Contains('function contract_available(required_methods, require_signature)') -or
     -not $backend.Contains('function delete_available()') -or
-    -not $backend.Contains('return contract_available([switch_method, list_method, send_method], false)') -or
+    -not $backend.Contains('return contract_available([switch_method, list_method], false)') -or
+    -not $backend.Contains('function send_available()') -or
+    -not $backend.Contains('return contract_available([switch_method, send_method], false)') -or
     -not $backend.Contains('return contract_available([switch_method, list_method, send_method, delete_method], true)')) {
     throw 'backend read/send availability must be independent from delete method presence'
 }
@@ -115,7 +117,10 @@ if (-not $smsatBackend.Contains('scan_begin') -or
     -not $smsatBackend.Contains('scan_read') -or
     -not $smsatBackend.Contains('scan_end') -or
     -not $smsatBackend.Contains('send_available: function() { return false; }') -or
-    -not $smsatBackend.Contains('BROKER_SCAN_CONTENT_CHANGED')) {
+    -not $smsatBackend.Contains('BROKER_SCAN_CONTENT_CHANGED') -or
+    -not $smsatBackend.Contains('BROKER_SCAN_RELEASE_UNCONFIRMED') -or
+    -not $smsatBackend.Contains('restore_storage: function(storage, callback) { callback(0); }') -or
+    -not $daemonMakefile.Contains('$(INSTALL_DATA) ./files/usr/share/modem-sms/backend-smsat.uc')) {
     throw 'smsat adapter must use the private two-pass broker contract and keep send disabled'
 }
 if (-not $backendConfig.Contains("config backend 'smsat'") -or
@@ -237,8 +242,8 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=18') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
-	throw 'modem-smsd must use r18 and LuCI must use r8 for storage diagnostics'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=19') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
+	throw 'modem-smsd must use r19 and LuCI must use r8 for storage diagnostics'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'

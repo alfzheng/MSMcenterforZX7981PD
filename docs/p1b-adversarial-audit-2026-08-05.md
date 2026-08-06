@@ -66,3 +66,35 @@ ZX7981PD、未部署。审计在本轮后续状态机修复之前完成，因此
 
 在这些条件满足前，继续保留已部署 r17 的 fail-closed 行为：不启用 broker、不启用
 设备短信删除、不以部分列表覆盖已有缓存。
+
+## Independent P1C re-audit and remediation checkpoint - 2026-08-06
+
+The independent read-only re-audit of the `backend-smsat.uc` integration returned
+NO-GO. It found two P0 issues and several P1 issues: the adapter was not installed
+by the `modem-smsd` package, release was not confirmed on all begin/read failure
+paths, `scan_id` was stringified before an int64 ubus call, generation/phase fields
+were not checked, empty/PDU/status semantics were too permissive, and the adapter's
+`restore_storage()` reported failure after a successful broker scan.
+
+The source remediation in this checkpoint covers all of those findings:
+
+1. `backend-smsat.uc` is now installed by `modem-smsd` r19.
+2. Every scan failure attempts `scan_end`; a failed or malformed release returns
+   `BROKER_SCAN_RELEASE_UNCONFIRMED` instead of hiding the release result.
+3. The adapter preserves numeric scan tokens, checks schema version and generation,
+   enforces phase/pass-complete/complete transitions, validates `pdu_bytes` and the
+   SMSC-length boundary, accepts only known storage statuses, and rejects mixed
+   `empty`/error/PDU replies.
+4. Broker-backed `restore_storage()` is an explicit no-op because `scan_end` already
+   performs the CPMS recheck and serial release. The legacy `lteat` adapter now
+   exposes an explicit `send_available()` capability separate from read availability.
+
+Local JS/static gates and the isolated OpenWrt build passed. The latest candidate
+artifacts are `modem-smsd-0.1.0-r19.apk` (SHA-256
+`FDA3640F991210602508533167569AE79E7A2EDE37B133B3B3097A4B374BD955`) and
+`modem-sms-broker-0.1.0-r1.apk` (SHA-256
+`47CA950CA45BD6A0001E099E8BECB77BEDDCCC203A6EDE7A1554F5E169BDF437`).
+The target-only `ucode` runtime was not available on the x86 build host, so
+`tests/backend-smsat.uc` remains explicitly skipped rather than counted as passed.
+The target owner switch, ACL validation, fake-PTY/ubus end-to-end test, and any
+send/delete enablement remain NO-GO.

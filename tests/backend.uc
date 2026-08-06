@@ -30,6 +30,7 @@ let connection = {
 
 let backend = backend_module.create(connection, {});
 equal(backend.available(), true, 'backend availability');
+equal(backend.send_available(), true, 'send availability');
 equal(backend.capabilities().features.delete, false, 'r5 delete capability fails closed');
 
 let list_callbacks = 0;
@@ -290,6 +291,7 @@ let name_only_backend = backend_module.create({
 	list: function() { return ['lteat']; }
 }, {});
 equal(name_only_backend.available(), true, 'name-only backend remains usable for read/send');
+equal(name_only_backend.send_available(), true, 'name-only send availability remains compatible');
 equal(name_only_backend.delete_available(), false,
 	'name-only backend must not claim destructive method availability');
 

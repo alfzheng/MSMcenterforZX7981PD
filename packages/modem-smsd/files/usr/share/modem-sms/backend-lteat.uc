@@ -385,9 +385,12 @@ function factory(connection, options) {
 	}
 
 	function available() {
-		/* Read/send support must not depend on the presence of an unused delete
-		 * method. Stage C will perform its own stronger delete/owner checks. */
-		return contract_available([switch_method, list_method, send_method], false);
+		/* Read support must not depend on the presence of a send method. */
+		return contract_available([switch_method, list_method], false);
+	}
+
+	function send_available() {
+		return contract_available([switch_method, send_method], false);
 	}
 
 	function delete_available() {
@@ -399,6 +402,7 @@ function factory(connection, options) {
 		id: 'lteat-v1',
 		transport: 'ubus',
 		available: available,
+		send_available: send_available,
 		list_storage: list_storage,
 		send_pdu: send_pdu,
 		delete_record: delete_record,
