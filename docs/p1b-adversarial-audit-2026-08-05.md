@@ -235,3 +235,20 @@ The default `lteat` backend, SMS send/delete gates, and broker disabled state
 are unchanged. Target-side UCode execution, empty-slot verification, private
 ACL testing, and LTE owner/data-plane compatibility remain required before any
 broker start, backend change, SMS read through the new adapter, send, or delete.
+
+## Target runtime verification - 2026-08-06
+
+- The installed `/usr/share/modem-sms/backend-smsat.uc` passed
+  `tests/backend-smsat.uc` under the target's real UCode runtime. This closes the
+  target-UCode adapter contract gate for the disabled package deployment.
+- The target ACL file grants LuCI access to selected `modem.sms` methods only;
+  it contains no `modem.smsat` entry. The unauthenticated ACL exposes only
+  session login/access methods.
+- `ubus list modem.smsat` returned `Command failed: Not found`, as expected
+  while the broker remains disabled. Therefore this is source/ACL evidence, not
+  a claim that broker-started private-object negative access has passed.
+
+The remaining activation blockers are the real C broker + fake-PTY/ubus loop,
+target empty-slot response verification, broker-started ACL negative testing,
+and LTE owner/data-plane compatibility. No broker start or SMS operation was
+performed during this verification.
