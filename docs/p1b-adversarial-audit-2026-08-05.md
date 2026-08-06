@@ -203,3 +203,35 @@ authenticated management channel, the required target-side backup, owner/data-
 plane inspection, reversible install, and rollback verification cannot be
 performed safely. The deployment state therefore remains **BLOCKED / NO-GO**;
 the broker-disabled baseline is unchanged.
+## Disabled-state target deployment - 2026-08-06
+
+After the target SSH key was installed, the candidate packages were deployed in
+the fail-closed, disabled state. The target matched the build contract:
+ZX7981PD, OpenWrt 25.12.5 `r33051-f5dae5ece4`, `mediatek/filogic`, and
+`aarch64_cortex-a53`.
+
+### Actions and evidence
+
+- Created `/root/modem-sms-predeploy-20260806.tar.gz` and a manifest before
+  mutation. The backup SHA-256 is
+  `6A46BBE036FC18198BF8964FB63E8AF890AAB34A02977CEC180B2F7A6D7F1FE5`.
+- Uploaded and verified broker r5
+  (`A57D1CF8D9D716D6FF250121F82DA813BD8043379FB5A39C5A37C961EF926182`) and
+  smsd r20
+  (`C9B42A1EECE7307B295415B8AAEE0E01A2FCB987B9E5F10A34399DD6384A4611`).
+- Upgraded `modem-smsd` r17 to r20 and installed `modem-sms-broker` r5 using
+  the local APK files. The existing `/etc/config/modem-sms` remained
+  `enabled=1`, `backend=lteat`.
+- Confirmed `/etc/config/modem-sms-broker` has `enabled=0`, the broker init
+  service is disabled/inactive, no broker process exists, and `modem.smsat` is
+  absent from the ubus object list.
+- Confirmed `modem-smsd` is running and the existing `lteat` process still owns
+  the modem path. Overlay free space remained approximately 23.3 MB.
+
+### Safety boundary
+
+This is a package deployment only, not an owner switch or feature activation.
+The default `lteat` backend, SMS send/delete gates, and broker disabled state
+are unchanged. Target-side UCode execution, empty-slot verification, private
+ACL testing, and LTE owner/data-plane compatibility remain required before any
+broker start, backend change, SMS read through the new adapter, send, or delete.
