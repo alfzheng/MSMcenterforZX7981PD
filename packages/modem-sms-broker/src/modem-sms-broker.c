@@ -265,13 +265,18 @@ static int write_all(const char *data, size_t length)
 
 static int terminal_line(const char *line, int *is_error)
 {
+	size_t length;
 	while (*line == ' ' || *line == '\t' || *line == '\r')
 		line++;
-	if (!strncmp(line, "OK\n", 3) || !strcmp(line, "OK")) {
+	length = strlen(line);
+	while (length && (line[length - 1] == '\r' || line[length - 1] == '\n' ||
+		line[length - 1] == ' ' || line[length - 1] == '\t'))
+		length--;
+	if (length == 2 && !strncmp(line, "OK", length)) {
 		*is_error = 0;
 		return 1;
 	}
-	if (!strncmp(line, "ERROR\n", 6) || !strcmp(line, "ERROR") ||
+	if ((length == 5 && !strncmp(line, "ERROR", length)) ||
 		!strncmp(line, "+CME ERROR", 10) || !strncmp(line, "+CMS ERROR", 10)) {
 		*is_error = 1;
 		return 1;
@@ -377,6 +382,21 @@ static int parse_capacity(const char *response, int *used, int *total)
 static int valid_storage(const char *storage)
 {
 	return storage && (!strcmp(storage, "SM") || !strcmp(storage, "ME"));
+}
+
+static int blobmsg_get_u64_flexible(struct blob_attr *attribute, uint64_t *value)
+{
+	if (!attribute || !value)
+		return -EINVAL;
+	if (blobmsg_type(attribute) == BLOBMSG_TYPE_INT64) {
+		*value = blobmsg_get_u64(attribute);
+		return 0;
+	}
+	if (blobmsg_type(attribute) == BLOBMSG_TYPE_INT32) {
+		*value = blobmsg_get_u32(attribute);
+		return 0;
+	}
+	return -EINVAL;
 }
 
 static int select_storage(const char *storage, char *response, size_t response_size,
@@ -631,7 +651,7 @@ enum {
 	__READ_MAX
 };
 static const struct blobmsg_policy read_policy[__READ_MAX] = {
-	[READ_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_INT64 },
+	[READ_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_UNSPEC },
 	[READ_INDEX] = { .name = "index", .type = BLOBMSG_TYPE_INT32 },
 	[READ_OWNER_NONCE] = { .name = "owner_nonce", .type = BLOBMSG_TYPE_INT64 },
 };
@@ -642,10 +662,11 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 	struct blob_attr *tb[__READ_MAX];
 	char response[MAX_RESPONSE], command[64], status[64], pdu[MAX_PDU + 1];
 	struct scan_record current = { 0 };
+	uint64_t scan_id = 0;
 	int is_error = 0, result, pdu_bytes = 0, pass_complete = 0;
 	blobmsg_parse(read_policy, __READ_MAX, tb, blob_data(message), blob_len(message));
 	if (!g_state.active || !tb[READ_SCAN_ID] || !tb[READ_INDEX] || !tb[READ_OWNER_NONCE] ||
-		blobmsg_get_u64(tb[READ_SCAN_ID]) != g_state.scan_id) {
+		blobmsg_get_u64_flexible(tb[READ_SCAN_ID], &scan_id) || scan_id != g_state.scan_id) {
 		reply_error(ctx, request, "BROKER_LEASE_INVALID", -EINVAL);
 		return 0;
 	}
@@ -757,7 +778,7 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 	}
 	blobmsg_add_u8(&g_blob, "pass_complete", pass_complete);
 	blobmsg_add_u8(&g_blob, "complete", g_state.complete);
-	blobmsg_add_u8(&g_blob, "phase", (uint8_t)g_state.phase);
+	blobmsg_add_u32(&g_blob, "phase", (uint32_t)g_state.phase);
 	return ubus_send_reply(ctx, request, g_blob.head);
 }
 
@@ -767,7 +788,7 @@ enum {
 	__END_MAX
 };
 static const struct blobmsg_policy end_policy[__END_MAX] = {
-	[END_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_INT64 },
+	[END_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_UNSPEC },
 	[END_OWNER_NONCE] = { .name = "owner_nonce", .type = BLOBMSG_TYPE_INT64 },
 };
 
@@ -776,10 +797,11 @@ static int method_scan_end(struct ubus_context *ctx, struct ubus_object *object,
 {
 	struct blob_attr *tb[__END_MAX];
 	char response[MAX_RESPONSE];
+	uint64_t scan_id = 0;
 	int is_error = 0, used = 0, total = 0, result;
 	blobmsg_parse(end_policy, __END_MAX, tb, blob_data(message), blob_len(message));
 	if (!g_state.active || !tb[END_SCAN_ID] || !tb[END_OWNER_NONCE] ||
-		blobmsg_get_u64(tb[END_SCAN_ID]) != g_state.scan_id) {
+		blobmsg_get_u64_flexible(tb[END_SCAN_ID], &scan_id) || scan_id != g_state.scan_id) {
 		reply_error(ctx, request, "BROKER_LEASE_INVALID", -EINVAL);
 		return 0;
 	}

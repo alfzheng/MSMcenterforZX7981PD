@@ -252,3 +252,84 @@ The remaining activation blockers are the real C broker + fake-PTY/ubus loop,
 target empty-slot response verification, broker-started ACL negative testing,
 and LTE owner/data-plane compatibility. No broker start or SMS operation was
 performed during this verification.
+
+## Target fake-PTY and real broker integration - 2026-08-06
+
+The broker was rebuilt as r8 after the target integration exposed three
+protocol defects that source-only tests did not cover:
+
+1. `terminal_line()` now accepts the modem-standard `OK\r\n` framing instead
+   of timing out on a valid CPMS response.
+2. `scan_read` and `scan_end` accept a JSON-decoded 32-bit `scan_id` as well as
+   the internal 64-bit representation. Small ubus JSON integers are decoded as
+   INT32 by the target CLI.
+3. `phase` is emitted as a numeric `u32`, while boolean fields remain boolean.
+
+The isolated OpenWrt SDK build completed successfully and produced
+`modem-sms-broker-0.1.0-r8.apk`, SHA-256
+`bafad8e6ec0c37a8836e20878c69f5e51a71b75757ebcccdec732fe364938896`.
+The package was upgraded on ZX7981PD while the broker stayed disabled.
+
+The target-side `tests/broker-target-integration.sh` then passed against the
+installed r8 binary and a statically cross-built aarch64 fake-PTY helper
+(SHA-256 `a3044a806238a79d08853bf750b8b7d5008939012715940b8fe8579f4f4e93e8`).
+The test exercised real C broker/ubus calls, CPMS selection, a valid CMGR/PDU,
+the configured model-specific empty CMS error `321`, two complete identical
+passes, stable CPMS release, PDU/status/byte-count assertions, lease timeout
+and retry, incomplete-scan release, and owner-nonce rejection. The script
+restored the original configuration and removed all temporary processes and
+files.
+
+Final target read-only state after the test:
+
+- `modem-sms-broker-0.1.0-r8` is installed, but `/etc/config/modem-sms-broker`
+  remains `enabled '0'` with `empty_cms_error_code ''`.
+- No `modem-sms-broker` process is running and `ubus list modem.smsat` returns
+  `Not found`.
+- `modem-smsd` and `lteat` remain running; `lteat` still holds `/dev/ttyUSB2`.
+- No real modem SMS read, send, delete, backend switch, or owner handoff was
+  performed.
+
+This closes the fake-PTY/real-C/ubus scan-contract gate, but it does not close
+activation. The remaining NO-GO gates are the exact RM500U-CNV empty-slot
+response, broker-started ACL negative testing, and a complete LTE owner/data
+plane handoff or compatibility contract. The safe disabled-state baseline
+therefore remains in force.
+
+## Independent adversarial audit - 2026-08-06 (Poincare)
+
+Poincare performed a fresh read-only audit of the r8 changes, the fake-PTY
+integration harness, and the target evidence. The agent did not modify files,
+deploy packages, enable the broker, or switch the serial owner. The result was
+**NO-GO overall**, with the r8 disabled-state candidate conditionally GO.
+
+### Confirmed
+
+- The target evidence is sufficient to establish that r8 is installed and that
+  the fake-PTY/real-C/ubus two-pass scan result is genuine rather than a host
+  simulation or a fabricated pass.
+- The test restores `enabled=0`, removes temporary processes/files, leaves
+  `modem.smsd` and `lteat` running, and leaves `lteat` holding `/dev/ttyUSB2`.
+- No evidence shows a false positive in the recorded fake-PTY integration
+  result.
+
+### Remaining P0/P1 findings
+
+1. **P0:** Complete LTE data-plane compatibility and an atomic owner handoff
+   are still absent; broker and `lteat` must not both become owners of the real
+   modem path.
+2. **P0:** The real RM500U-CNV empty-slot response and exact model-specific CMS
+   error code remain unverified. The production classifier is therefore still
+   disabled and unknown errors remain fail-closed.
+3. **P1:** A broker-started ACL negative test is not closed. The installed ACL
+   source evidence is useful, but it is not equivalent to checking an ordinary
+   LuCI/rpcd session while `modem.smsat` is actually registered.
+4. **P1:** Before the follow-up test extension, coverage did not assert all PDU
+   fields or exercise lease timeout/retry and incomplete release. The harness
+   now includes those assertions and target checks; an INT64 scan-id path still
+   remains source-level rather than a long-run target counter test.
+
+The audit therefore confirms the target integration gate but does not authorize
+activation, owner switching, real SMS reads, sending, or deletion. The next
+release step is to commit the source/test/audit chain reproducibly; the
+activation blockers above remain open.

@@ -15,8 +15,17 @@ $requiredFiles = @(
     'packages/modem-smsd/files/usr/share/modem-sms/core.uc',
     'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc',
     'packages/modem-smsd/files/usr/share/modem-sms/backend-smsat.uc',
+    'packages/modem-sms-broker/Makefile',
+    'packages/modem-sms-broker/src/modem-sms-broker.c',
+    'packages/modem-sms-broker/files/etc/config/modem-sms-broker',
+    'packages/modem-sms-broker/files/etc/init.d/modem-sms-broker',
     'tests/backend.uc',
     'tests/backend-smsat.uc',
+    'tests/broker-package.js',
+    'tests/broker-serial.js',
+    'tests/broker-snapshot.js',
+    'tests/broker-fake-pty.c',
+    'tests/broker-target-integration.sh',
     'packages/luci-app-modem-sms/Makefile',
     'packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js',
     'packages/modem-sms-archived/Makefile',
@@ -247,9 +256,9 @@ if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
 if (-not $daemonMakefile.Contains('PKG_RELEASE:=20') -or
-    -not $brokerMakefile.Contains('PKG_RELEASE:=5') -or
+    -not $brokerMakefile.Contains('PKG_RELEASE:=8') -or
     -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
-	throw 'modem-smsd must use r20, broker must use r5, and LuCI must use r8 for storage diagnostics'
+	throw 'modem-smsd must use r20, broker must use r8, and LuCI must use r8 for storage diagnostics'
 }
 if (-not $brokerConfig.Contains("option empty_cms_error_code ''")) {
     throw 'broker empty-slot classifier must remain disabled by default'

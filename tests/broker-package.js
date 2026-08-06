@@ -21,6 +21,9 @@ assert.match(source, /"serial_ready"/, 'capabilities must distinguish service he
 assert.match(source, /empty_cms_error_code/, 'empty-slot classification must be explicit and configurable');
 assert.match(config, /option empty_cms_error_code ''/, 'empty-slot classification must default to disabled');
 assert.match(source, /if \(!current\.empty\)\s+g_state\.nonempty_count\+\+/, 'empty records must not count as occupied slots');
+assert.match(source, /line\[length - 1\] == '\\r'/, 'CRLF terminal framing must be normalized');
+assert.match(source, /blobmsg_get_u64_flexible/, 'scan IDs must accept ubus JSON integer widths');
+assert.match(source, /blobmsg_add_u32\(&g_blob, "phase"/, 'scan phase must remain numeric in JSON');
 assert.match(source, /BEGIN_OWNER_NONCE|READ_OWNER_NONCE|END_OWNER_NONCE/, 'scan methods must bind owner nonce');
 assert.match(source, /"serial_owner", g_state\.fd >= 0/, 'serial owner must reflect the held descriptor');
 assert.doesNotMatch(source, /UBUS_METHOD(?:_NOARG)?\("(?:send_sms|delete_sms)"/, 'send/delete remain gated');

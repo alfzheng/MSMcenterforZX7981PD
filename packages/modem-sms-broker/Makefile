@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=modem-sms-broker
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=5
+PKG_RELEASE:=8
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=ZX7981PD SMS Project
 
