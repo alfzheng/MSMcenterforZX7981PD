@@ -97,10 +97,62 @@ The source remediation in this checkpoint covers all of those findings:
 
 Local JS/static gates and the isolated OpenWrt build passed. The latest candidate
 artifacts are `modem-smsd-0.1.0-r20.apk` (SHA-256
-`EF4FE71D63B0E693298B27B6330BBD4ACA8EF07C35E1AA6480AF25D4391EAFA1`) and
-`modem-sms-broker-0.1.0-r1.apk` (SHA-256
-`8877679FF779F7000A6435F4164B7465831725E4E2872765C1534A252290DD5C`).
+`C9B42A1EECE7307B295415B8AAEE0E01A2FCB987B9E5F10A34399DD6384A4611`) and
+`modem-sms-broker-0.1.0-r5.apk` (SHA-256
+`A57D1CF8D9D716D6FF250121F82DA813BD8043379FB5A39C5A37C961EF926182`).
 The target-only `ucode` runtime was not available on the x86 build host, so
 `tests/backend-smsat.uc` remains explicitly skipped rather than counted as passed.
 The target owner switch, ACL validation, fake-PTY/ubus end-to-end test, and any
 send/delete enablement remain NO-GO.
+
+## Independent adversarial audit - 2026-08-06 (Newton)
+
+This was a fresh read-only audit of HEAD `c7a975a` plus the then-uncommitted
+working-tree changes. The agent did not modify files, deploy, authenticate to the
+target, or switch the serial owner. The result was **NO-GO**.
+
+### Findings
+
+1. **P0 - empty-slot count path was still unsafe.** The new configurable
+   `empty_cms_error_code` was disabled by default, which correctly kept unknown
+   modem errors fail-closed, but the C broker still incremented
+   `nonempty_count` for an explicitly classified empty slot. A `used=1,
+   total=2` scan would therefore end in `BROKER_COUNT_MISMATCH`. This was fixed
+   in the follow-up working-tree change by incrementing only for non-empty
+   records and returning `empty=true` without PDU/status fields.
+2. **P0 - no owner/data-plane deployment closure.** The broker opens and locks
+   `/dev/ttyUSB2`, while the installed `lteat` owner and its LTE data-plane
+   methods remain in place. No atomic owner handoff, complete compatibility
+   object, stop/restore procedure, or canary evidence exists. Enabling the broker
+   remains prohibited.
+3. **P1 - target Ucode contract is unexecuted.** `tests/backend-smsat.uc` uses
+   fake Ubus callbacks only; the isolated build explicitly skips target-only
+   Ucode on the x86 host. Cross-compilation is not target runtime evidence.
+4. **P1 - no C broker + fake PTY + real Ubus end-to-end test.** CPMS switching,
+   real empty-slot responses, lease timeout/restart, release on callback/error,
+   and actual broker output into the adapter are not exercised together.
+5. **P1 - private broker ACL and negative access test are absent.** The public
+   LuCI ACL covers `modem.sms` only, but there is no target proof that ordinary
+   LuCI sessions, non-root SSH, or other local Ubus clients cannot reach
+   `modem.smsat` and its PDU-bearing methods.
+6. **P1 - owner fields were too optimistic and scan calls lacked nonce binding.**
+   The broker previously reported `serial_owner=true` even when no TTY lock was
+   held, and scan calls did not carry the capability nonce. The follow-up change
+   makes `serial_owner` track the held descriptor and binds `owner_nonce` across
+   `scan_begin`, `scan_read`, and `scan_end`; target verification is still needed.
+7. **P1 - host/worktree/release metadata could diverge.** At audit time the
+   worktree was ahead of HEAD and the audit artifact text still mentioned an
+   older broker release. The follow-up release must be rebuilt from a clean,
+   committed state and its hashes/docs updated together.
+
+### Audit evidence and remaining gates
+
+The agent confirmed host/static tests and `BUILD_RC=0` only establish source and
+cross-build health. They do not cover target Ucode, real Ubus, fake PTY, empty
+slots, ACLs, LTE owner arbitration, or data-plane compatibility. The remaining
+deployment gates are therefore: target Ucode execution, C broker/fake-PTY/Ubus
+integration, private ACL negative tests, exact RM500U-CNV empty-slot response
+verification, complete `lteat` data-plane inventory/compatibility or an official
+atomic delegation interface, and a reversible canary with fresh backup. Until
+all pass, the default `lteat` backend and broker-disabled baseline remain in
+force; send/delete and owner switching remain disabled.

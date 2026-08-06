@@ -6,3 +6,6 @@ config broker 'main'
 	option read_timeout_ms '2000'
 	option lease_timeout_ms '300000'
 	option response_limit '32768'
+	# Keep empty-slot classification disabled until the target modem's exact
+	# model-specific CMGR error has been verified with a read-only probe.
+	option empty_cms_error_code ''

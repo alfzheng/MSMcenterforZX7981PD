@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=modem-sms-broker
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=2
+PKG_RELEASE:=5
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=ZX7981PD SMS Project
 
@@ -17,8 +17,10 @@ endef
 
 define Package/modem-sms-broker/description
  A disabled-by-default serial owner foundation for the SMS broker. It exposes
- a private scan lease and bounded indexed reads; it does not replace lteat or
- enable device deletion until the compatibility and target gates pass.
+ a private scan lease and bounded indexed reads; an empty-slot classifier is
+ disabled unless a model-specific CMS error is explicitly verified. It does
+ not replace lteat or enable device deletion until the compatibility and target
+ gates pass.
 endef
 
 define Build/Compile

@@ -129,8 +129,9 @@ function factory(connection, options) {
 			callback(result);
 		}
 
+		let owner_nonce = null;
 		function begin_scan() {
-		invoke('scan_begin', { storage: storage }, function(begin_code, begin) {
+		invoke('scan_begin', { storage: storage, owner_nonce: owner_nonce }, function(begin_code, begin) {
 			let begin_scan_id = type(begin) == 'object' && scan_id_ok(begin.scan_id) ?
 				begin.scan_id : null;
 			function abort_begin(result) {
@@ -138,8 +139,9 @@ function factory(connection, options) {
 					finish(result);
 					return;
 				}
-				invoke('scan_end', { scan_id: begin_scan_id }, function(end_code, end) {
-					if (end_code || !schema_ok(end) || !flag(end.ok) || !flag(end.stable)) {
+				invoke('scan_end', { scan_id: begin_scan_id, owner_nonce: owner_nonce }, function(end_code, end) {
+					if (end_code || !schema_ok(end) || !flag(end.ok) || !flag(end.stable) ||
+						integer(end.owner_nonce) !== owner_nonce) {
 						finish(fail('BROKER_SCAN_RELEASE_UNCONFIRMED',
 							error_code(end, 'scan_end failed'), {
 								backend_status: end_code, original_error_code: result.error_code
@@ -149,7 +151,8 @@ function factory(connection, options) {
 					finish(result);
 				});
 			}
-			if (begin_code || type(begin) != 'object' || !schema_ok(begin) || !flag(begin.ok)) {
+			if (begin_code || type(begin) != 'object' || !schema_ok(begin) || !flag(begin.ok) ||
+				integer(begin.owner_nonce) !== owner_nonce) {
 				abort_begin(fail(error_code(begin, 'BROKER_SCAN_BEGIN_FAILED'), null,
 					{ backend_status: begin_code }));
 				return;
@@ -172,9 +175,10 @@ function factory(connection, options) {
 			let nonempty = 0;
 
 			function close_scan(result) {
-				invoke('scan_end', { scan_id: scan_id }, function(end_code, end) {
+				invoke('scan_end', { scan_id: scan_id, owner_nonce: owner_nonce }, function(end_code, end) {
 					if (end_code || type(end) != 'object' || !schema_ok(end) ||
-						!flag(end.ok) || !flag(end.stable)) {
+						!flag(end.ok) || !flag(end.stable) ||
+						integer(end.owner_nonce) !== owner_nonce) {
 						finish(fail('BROKER_SCAN_RELEASE_UNCONFIRMED',
 							error_code(end, 'scan_end failed'), {
 								backend_status: end_code, original_error_code: result.error_code
@@ -215,9 +219,9 @@ function factory(connection, options) {
 				}
 
 				let index = next_index;
-				invoke('scan_read', { scan_id: scan_id, index: index }, function(read_code, reply) {
+				invoke('scan_read', { scan_id: scan_id, index: index, owner_nonce: owner_nonce }, function(read_code, reply) {
 					if (read_code || type(reply) != 'object' || !schema_ok(reply) || !flag(reply.ok) ||
-						exists(reply, 'error_code')) {
+						exists(reply, 'error_code') || integer(reply.owner_nonce) !== owner_nonce) {
 						fail_scan(error_code(reply, 'BROKER_SCAN_READ_FAILED'));
 						return;
 					}
@@ -292,6 +296,7 @@ function factory(connection, options) {
 					{ backend_status: capability_code }));
 				return;
 			}
+			owner_nonce = capabilities.owner_nonce;
 			begin_scan();
 		});
 	}

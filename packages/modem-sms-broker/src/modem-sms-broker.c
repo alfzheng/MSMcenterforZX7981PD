@@ -46,6 +46,7 @@ struct broker_state {
 	int baud;
 	int timeout_ms;
 	int lease_timeout_ms;
+	int empty_cms_error_code;
 	size_t response_limit;
 	uint64_t owner_nonce;
 	uint64_t generation;
@@ -71,6 +72,7 @@ static struct broker_state g_state = {
 	.baud = DEFAULT_BAUD,
 	.timeout_ms = DEFAULT_TIMEOUT_MS,
 	.lease_timeout_ms = DEFAULT_LEASE_TIMEOUT_MS,
+	.empty_cms_error_code = -1,
 	.response_limit = DEFAULT_RESPONSE_LIMIT,
 };
 static struct blob_buf g_blob;
@@ -141,6 +143,13 @@ static void load_config(void)
 	parsed = strtol(lease_timeout, &end, 10);
 	if (end && *end == '\0' && parsed >= 1000 && parsed <= 900000)
 		g_state.lease_timeout_ms = (int)parsed;
+
+	const char *empty_error = uci_option(ctx, section, "empty_cms_error_code", "",
+		value, sizeof(value));
+	end = NULL;
+	parsed = strtol(empty_error, &end, 10);
+	if (empty_error[0] && end && *end == '\0' && parsed >= 0 && parsed <= 999)
+		g_state.empty_cms_error_code = (int)parsed;
 
 out:
 	if (package)
@@ -477,6 +486,38 @@ static int parse_cmgr(const char *response, char *status, size_t status_size,
 	return 0;
 }
 
+static int cms_error_code(const char *response)
+{
+	const char *cursor = response;
+	while (*cursor) {
+		const char *end = strchr(cursor, '\n');
+		const char *line = cursor;
+		char *number_end = NULL;
+		long code;
+		while (*line == ' ' || *line == '\t' || *line == '\r')
+			line++;
+		if (!strncmp(line, "+CMS ERROR:", 11))
+			line += 11;
+		else {
+			if (!end)
+				break;
+			cursor = end + 1;
+			continue;
+		}
+		while (*line == ' ' || *line == '\t')
+			line++;
+		code = strtol(line, &number_end, 10);
+		while (*number_end == ' ' || *number_end == '\t' || *number_end == '\r')
+			number_end++;
+		if (number_end != line && (*number_end == '\0' || *number_end == '\n'))
+			return (int)code;
+		if (!end)
+			break;
+		cursor = end + 1;
+	}
+	return -1;
+}
+
 static void reply_error(struct ubus_context *ctx, struct ubus_request_data *request,
 	const char *error, int status)
 {
@@ -494,10 +535,10 @@ static int method_capabilities(struct ubus_context *ctx, struct ubus_object *obj
 {
 	blob_buf_init(&g_blob, 0);
 	blobmsg_add_u32(&g_blob, "schema_version", 1);
-	blobmsg_add_u8(&g_blob, "ok", g_state.fd >= 0);
+	blobmsg_add_u8(&g_blob, "ok", 1);
 	blobmsg_add_string(&g_blob, "backend_id", "smsat-v1");
 	blobmsg_add_string(&g_blob, "transport", "exclusive-tty");
-	blobmsg_add_u8(&g_blob, "serial_owner", 1);
+	blobmsg_add_u8(&g_blob, "serial_owner", g_state.fd >= 0);
 	blobmsg_add_u8(&g_blob, "serial_ready", g_state.fd >= 0);
 	blobmsg_add_u64(&g_blob, "owner_nonce", g_state.owner_nonce);
 	blobmsg_add_u8(&g_blob, "indexed_read", 1);
@@ -507,10 +548,12 @@ static int method_capabilities(struct ubus_context *ctx, struct ubus_object *obj
 
 enum {
 	BEGIN_STORAGE,
+	BEGIN_OWNER_NONCE,
 	__BEGIN_MAX
 };
 static const struct blobmsg_policy begin_policy[__BEGIN_MAX] = {
 	[BEGIN_STORAGE] = { .name = "storage", .type = BLOBMSG_TYPE_STRING },
+	[BEGIN_OWNER_NONCE] = { .name = "owner_nonce", .type = BLOBMSG_TYPE_INT64 },
 };
 
 static int method_scan_begin(struct ubus_context *ctx, struct ubus_object *object,
@@ -520,8 +563,12 @@ static int method_scan_begin(struct ubus_context *ctx, struct ubus_object *objec
 	char response[MAX_RESPONSE];
 	int is_error = 0, used = 0, total = 0, result;
 	blobmsg_parse(begin_policy, __BEGIN_MAX, tb, blob_data(message), blob_len(message));
-	if (!tb[BEGIN_STORAGE] || g_state.active) {
+	if (!tb[BEGIN_STORAGE] || !tb[BEGIN_OWNER_NONCE] || g_state.active) {
 		reply_error(ctx, request, g_state.active ? "BROKER_BUSY" : "INVALID_STORAGE", -EINVAL);
+		return 0;
+	}
+	if (blobmsg_get_u64(tb[BEGIN_OWNER_NONCE]) != g_state.owner_nonce) {
+		reply_error(ctx, request, "BROKER_OWNER_INVALID", -EPERM);
 		return 0;
 	}
 	const char *storage = blobmsg_get_string(tb[BEGIN_STORAGE]);
@@ -568,6 +615,7 @@ static int method_scan_begin(struct ubus_context *ctx, struct ubus_object *objec
 	blob_buf_init(&g_blob, 0);
 	blobmsg_add_u32(&g_blob, "schema_version", 1);
 	blobmsg_add_u8(&g_blob, "ok", 1);
+	blobmsg_add_u64(&g_blob, "owner_nonce", g_state.owner_nonce);
 	blobmsg_add_u64(&g_blob, "scan_id", g_state.scan_id);
 	blobmsg_add_u64(&g_blob, "generation", g_state.generation);
 	blobmsg_add_string(&g_blob, "storage", g_state.storage);
@@ -579,11 +627,13 @@ static int method_scan_begin(struct ubus_context *ctx, struct ubus_object *objec
 enum {
 	READ_SCAN_ID,
 	READ_INDEX,
+	READ_OWNER_NONCE,
 	__READ_MAX
 };
 static const struct blobmsg_policy read_policy[__READ_MAX] = {
 	[READ_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_INT64 },
 	[READ_INDEX] = { .name = "index", .type = BLOBMSG_TYPE_INT32 },
+	[READ_OWNER_NONCE] = { .name = "owner_nonce", .type = BLOBMSG_TYPE_INT64 },
 };
 
 static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object,
@@ -594,9 +644,13 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 	struct scan_record current = { 0 };
 	int is_error = 0, result, pdu_bytes = 0, pass_complete = 0;
 	blobmsg_parse(read_policy, __READ_MAX, tb, blob_data(message), blob_len(message));
-	if (!g_state.active || !tb[READ_SCAN_ID] || !tb[READ_INDEX] ||
+	if (!g_state.active || !tb[READ_SCAN_ID] || !tb[READ_INDEX] || !tb[READ_OWNER_NONCE] ||
 		blobmsg_get_u64(tb[READ_SCAN_ID]) != g_state.scan_id) {
 		reply_error(ctx, request, "BROKER_LEASE_INVALID", -EINVAL);
+		return 0;
+	}
+	if (blobmsg_get_u64(tb[READ_OWNER_NONCE]) != g_state.owner_nonce) {
+		reply_error(ctx, request, "BROKER_OWNER_INVALID", -EPERM);
 		return 0;
 	}
 	if (g_state.read_failed) {
@@ -632,24 +686,33 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 		return 0;
 	}
 	if (is_error) {
-		/* A generic AT error is not proof that the slot is empty. */
-		g_state.read_failed = 1;
-		reply_error(ctx, request, "BROKER_EMPTY_UNCERTAIN", -EBADE);
-		return 0;
+		/* Only an explicitly configured, model-specific CMS error may mean empty. */
+		if (g_state.empty_cms_error_code < 0 ||
+			cms_error_code(response) != g_state.empty_cms_error_code) {
+			g_state.read_failed = 1;
+			reply_error(ctx, request, "BROKER_EMPTY_UNCERTAIN", -EBADE);
+			return 0;
+		}
+		current.empty = 1;
+		current.status[0] = '\0';
+		current.pdu[0] = '\0';
+		pdu_bytes = 0;
+	} else {
+		result = parse_cmgr(response, status, sizeof(status), pdu, sizeof(pdu), &pdu_bytes);
+		if (result) {
+			g_state.read_failed = 1;
+			reply_error(ctx, request, result == -EMSGSIZE ?
+				"BROKER_PDU_LENGTH_MISMATCH" : "BROKER_READ_PARSE_FAILED", result);
+			return 0;
+		}
+		current.empty = 0;
+		strncpy(current.status, status, sizeof(current.status) - 1);
+		strncpy(current.pdu, pdu, sizeof(current.pdu) - 1);
 	}
-	result = parse_cmgr(response, status, sizeof(status), pdu, sizeof(pdu), &pdu_bytes);
-	if (result) {
-		g_state.read_failed = 1;
-		reply_error(ctx, request, result == -EMSGSIZE ?
-			"BROKER_PDU_LENGTH_MISMATCH" : "BROKER_READ_PARSE_FAILED", result);
-		return 0;
-	}
-	current.empty = 0;
-	strncpy(current.status, status, sizeof(current.status) - 1);
-	strncpy(current.pdu, pdu, sizeof(current.pdu) - 1);
 	if (g_state.phase == 0) {
 		g_state.records[index] = current;
-		g_state.nonempty_count++;
+		if (!current.empty)
+			g_state.nonempty_count++;
 	} else if (g_state.phase == 1) {
 		if (g_state.records[index].empty != current.empty ||
 			strcmp(g_state.records[index].status, current.status) ||
@@ -658,7 +721,8 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 			reply_error(ctx, request, "BROKER_SCAN_CONTENT_CHANGED", -ESTALE);
 			return 0;
 		}
-		g_state.nonempty_count++;
+		if (!current.empty)
+			g_state.nonempty_count++;
 	}
 	g_state.next_index++;
 	if (g_state.next_index > g_state.total) {
@@ -683,11 +747,14 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 	blob_buf_init(&g_blob, 0);
 	blobmsg_add_u32(&g_blob, "schema_version", 1);
 	blobmsg_add_u8(&g_blob, "ok", 1);
-	blobmsg_add_u8(&g_blob, "empty", 0);
+	blobmsg_add_u64(&g_blob, "owner_nonce", g_state.owner_nonce);
+	blobmsg_add_u8(&g_blob, "empty", current.empty);
 	blobmsg_add_u32(&g_blob, "index", (uint32_t)index);
-	blobmsg_add_string(&g_blob, "status", current.status);
-	blobmsg_add_string(&g_blob, "pdu", current.pdu);
-	blobmsg_add_u32(&g_blob, "pdu_bytes", (uint32_t)pdu_bytes);
+	if (!current.empty) {
+		blobmsg_add_string(&g_blob, "status", current.status);
+		blobmsg_add_string(&g_blob, "pdu", current.pdu);
+		blobmsg_add_u32(&g_blob, "pdu_bytes", (uint32_t)pdu_bytes);
+	}
 	blobmsg_add_u8(&g_blob, "pass_complete", pass_complete);
 	blobmsg_add_u8(&g_blob, "complete", g_state.complete);
 	blobmsg_add_u8(&g_blob, "phase", (uint8_t)g_state.phase);
@@ -696,10 +763,12 @@ static int method_scan_read(struct ubus_context *ctx, struct ubus_object *object
 
 enum {
 	END_SCAN_ID,
+	END_OWNER_NONCE,
 	__END_MAX
 };
 static const struct blobmsg_policy end_policy[__END_MAX] = {
 	[END_SCAN_ID] = { .name = "scan_id", .type = BLOBMSG_TYPE_INT64 },
+	[END_OWNER_NONCE] = { .name = "owner_nonce", .type = BLOBMSG_TYPE_INT64 },
 };
 
 static int method_scan_end(struct ubus_context *ctx, struct ubus_object *object,
@@ -709,9 +778,13 @@ static int method_scan_end(struct ubus_context *ctx, struct ubus_object *object,
 	char response[MAX_RESPONSE];
 	int is_error = 0, used = 0, total = 0, result;
 	blobmsg_parse(end_policy, __END_MAX, tb, blob_data(message), blob_len(message));
-	if (!g_state.active || !tb[END_SCAN_ID] ||
+	if (!g_state.active || !tb[END_SCAN_ID] || !tb[END_OWNER_NONCE] ||
 		blobmsg_get_u64(tb[END_SCAN_ID]) != g_state.scan_id) {
 		reply_error(ctx, request, "BROKER_LEASE_INVALID", -EINVAL);
+		return 0;
+	}
+	if (blobmsg_get_u64(tb[END_OWNER_NONCE]) != g_state.owner_nonce) {
+		reply_error(ctx, request, "BROKER_OWNER_INVALID", -EPERM);
 		return 0;
 	}
 	result = select_storage(g_state.storage, response, sizeof(response), &is_error, &used, &total);
@@ -737,6 +810,7 @@ static int method_scan_end(struct ubus_context *ctx, struct ubus_object *object,
 	blob_buf_init(&g_blob, 0);
 	blobmsg_add_u32(&g_blob, "schema_version", 1);
 	blobmsg_add_u8(&g_blob, "ok", 1);
+	blobmsg_add_u64(&g_blob, "owner_nonce", g_state.owner_nonce);
 	blobmsg_add_u8(&g_blob, "stable", 1);
 	blobmsg_add_u64(&g_blob, "generation", g_state.generation);
 	blobmsg_add_u32(&g_blob, "used", (uint32_t)used);

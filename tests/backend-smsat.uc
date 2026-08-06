@@ -20,24 +20,25 @@ let connection = {
 				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 11,
 				indexed_read: true, device_delete: false });
 		else if (method == 'scan_begin')
-			callback(0, { schema_version: 1, ok: true, scan_id: 7, generation: 4,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 11, scan_id: 7, generation: 4,
 				storage: 'SM', used: 1, total: 2 });
 		else if (method == 'scan_read') {
 			read_count++;
 			equal(type(args.scan_id), 'int', 'scan id must stay int64-compatible');
+			equal(args.owner_nonce, 11, 'scan calls must bind the broker owner nonce');
 			if (args.index == 1)
-				callback(0, { schema_version: 1, ok: true, index: 1, empty: false,
+				callback(0, { schema_version: 1, ok: true, owner_nonce: 11, index: 1, empty: false,
 					status: 'REC READ', pdu: '00AABBCCDDEEFF001122', pdu_bytes: 10,
 					pass_complete: read_count == 2 || read_count == 4,
 					complete: read_count == 4, phase: read_count <= 2 ?
 						(read_count == 2 ? 1 : 0) : (read_count == 4 ? 2 : 1) });
 			else
-				callback(0, { schema_version: 1, ok: true, index: 2, empty: true,
+				callback(0, { schema_version: 1, ok: true, owner_nonce: 11, index: 2, empty: true,
 					complete: read_count == 4, pass_complete: true,
 					phase: read_count == 4 ? 2 : 1 });
 		}
 		else if (method == 'scan_end')
-			callback(0, { schema_version: 1, ok: true, stable: true, generation: 4,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 11, stable: true, generation: 4,
 				used: 1, total: 2 });
 		else
 			callback(9, {});
@@ -66,18 +67,18 @@ let changed_connection = {
 				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 12,
 				indexed_read: true, device_delete: false });
 		else if (method == 'scan_begin')
-			callback(0, { schema_version: 1, ok: true, scan_id: 8, generation: 5,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 12, scan_id: 8, generation: 5,
 				storage: 'SM', used: 1, total: 1 });
 		else if (method == 'scan_read') {
 			changed_reads++;
-			callback(0, { schema_version: 1, ok: true, index: 1, empty: false,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 12, index: 1, empty: false,
 				status: 'REC READ', pdu: changed_reads == 1 ?
 					'00AABBCCDDEEFF001122' : '00FFEEDDCCBBAA001122', pdu_bytes: 10,
 				pass_complete: true, complete: changed_reads == 2,
 				phase: changed_reads == 1 ? 1 : 2 });
 		}
 		else if (method == 'scan_end')
-			callback(0, { schema_version: 1, ok: true, stable: true, generation: 5,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 12, stable: true, generation: 5,
 				used: 1, total: 1 });
 		return null;
 	}
@@ -97,12 +98,12 @@ let release_connection = {
 				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 13,
 				indexed_read: true, device_delete: false });
 		else if (method == 'scan_begin')
-			callback(0, { schema_version: 1, ok: true, scan_id: 9, generation: 6,
+			callback(0, { schema_version: 1, ok: true, owner_nonce: 13, scan_id: 9, generation: 6,
 				storage: 'SM', used: 1, total: 1 });
 		else if (method == 'scan_read')
 			callback(9, { schema_version: 1, ok: false, error_code: 'BROKER_READ_TIMEOUT' });
 		else if (method == 'scan_end')
-			callback(9, { schema_version: 1, ok: false, error_code: 'BROKER_CPMS_RECHECK_FAILED' });
+			callback(9, { schema_version: 1, ok: false, owner_nonce: 13, error_code: 'BROKER_CPMS_RECHECK_FAILED' });
 		return {};
 	}
 };

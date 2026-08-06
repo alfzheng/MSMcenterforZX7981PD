@@ -18,6 +18,11 @@ assert.match(source, /BROKER_PDU_LENGTH_MISMATCH/, 'PDU length must be checked')
 assert.match(source, /uloop_timeout_set\(&g_state\.lease_timer/, 'scan lease must expire');
 assert.match(source, /scan_begin|scan_read|scan_end/, 'versioned scan methods must exist');
 assert.match(source, /"serial_ready"/, 'capabilities must distinguish service health from an idle serial');
+assert.match(source, /empty_cms_error_code/, 'empty-slot classification must be explicit and configurable');
+assert.match(config, /option empty_cms_error_code ''/, 'empty-slot classification must default to disabled');
+assert.match(source, /if \(!current\.empty\)\s+g_state\.nonempty_count\+\+/, 'empty records must not count as occupied slots');
+assert.match(source, /BEGIN_OWNER_NONCE|READ_OWNER_NONCE|END_OWNER_NONCE/, 'scan methods must bind owner nonce');
+assert.match(source, /"serial_owner", g_state\.fd >= 0/, 'serial owner must reflect the held descriptor');
 assert.doesNotMatch(source, /UBUS_METHOD(?:_NOARG)?\("(?:send_sms|delete_sms)"/, 'send/delete remain gated');
 assert.match(makefile, /\+libubus \+libubox \+libuci/, 'runtime dependencies must be explicit');
 

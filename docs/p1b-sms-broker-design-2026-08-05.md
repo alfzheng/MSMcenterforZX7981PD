@@ -106,5 +106,9 @@ ubus schema, all scan termination paths confirm release or fail closed, and
 generation/phase/PDU/status/empty invariants and a broker capabilities/owner
 handshake are checked before scanning. The broker reports service contract health
 separately from idle `serial_ready` state, so the pre-scan handshake does not require
-an already-open TTY. This does not relax
+an already-open TTY. The broker now binds the capability owner nonce to every
+scan call and reports `serial_owner` from the actual held TTY descriptor. Empty
+slot classification remains disabled unless a target-verified model-specific
+CMS error code is configured; a generic modem error is never treated as empty.
+This does not relax
 the target-side owner, ACL, fake-PTY, or lteat data-plane gates.
