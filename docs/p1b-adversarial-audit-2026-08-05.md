@@ -156,3 +156,36 @@ verification, complete `lteat` data-plane inventory/compatibility or an official
 atomic delegation interface, and a reversible canary with fresh backup. Until
 all pass, the default `lteat` backend and broker-disabled baseline remain in
 force; send/delete and owner switching remain disabled.
+
+## Independent follow-up audit - 2026-08-06 (Chandrasekhar, provisional)
+
+This second read-only audit was run against the repaired working tree before the
+source commit `da4a8d3`. The agent did not modify files, deploy, authenticate to
+the target, or switch the serial owner. It returned **Provisional NO-GO**.
+
+### Confirmed by source/build evidence
+
+- `empty_cms_error_code` defaults to disabled; the C broker has exact CMS-error
+  parsing, separate empty/non-empty counting, and an empty reply without PDU or
+  status fields.
+- `owner_nonce` is present in the broker capability and scan policies, validated
+  on begin/read/end, and propagated and checked by `backend-smsat.uc`.
+- Broker r5 and smsd r20 hashes match the isolated OpenWrt build outputs.
+- Host/static tests and cross-build pass, while the build log explicitly records
+  `UCODE_HOST_TEST_SKIPPED=target-only-ucode`.
+
+### Remaining blockers
+
+1. **P0:** No verified `lteat` data-plane compatibility, unique-owner protocol,
+   or atomic handoff exists. The broker still opens `/dev/ttyUSB2` while `lteat`
+   remains the default backend.
+2. **P0:** The target's real empty-slot `AT+CMGR` response and CMS error code are
+   unverified; with the classifier disabled, non-full storage remains fail-closed.
+3. **P1:** Target UCode execution, real C broker + fake-PTY + ubus end-to-end
+   tests, private `modem.smsat` ACL/negative access tests, and target-side
+   `owner_nonce`/`serial_owner` behavior are not verified.
+
+The audit therefore rates host/static/build as GO and the disabled-state
+candidate as conditional GO, but installation/enabling, owner switching, real
+SMS reading, sending, and deletion remain NO-GO. The untracked user file
+`4d4yapi.md` was not touched.
