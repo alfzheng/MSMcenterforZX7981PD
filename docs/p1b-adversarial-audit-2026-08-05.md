@@ -23,11 +23,15 @@ ZX7981PD、未部署。审计在本轮后续状态机修复之前完成，因此
 | P1 | 私有 `modem.smsat` ACL 尚未完成 | LuCI/普通 SSH/非授权本地进程的 PDU 边界未证明 | 未修复，集成阻断 |
 | P1 | capabilities/schema 与 send/delete 设计承诺不完整 | 缺少明确 supported storage/health/send 能力；删除仍需独立门禁 | 未修复；删除和发送不可在本阶段启用 |
 | P2 | 配置 baud 曾未生效 | 配置与实际 termios 不一致 | 已修复并纳入后续构建；需复审 |
+| P1 | `modem-smsd` 尚未消费 broker 私有 scan 契约 | broker 单独可编译不等于现有读服务可安全接入 | 已加入候选 `backend-smsat.uc`；默认仍为 lteat，需 target ucode/ubus 复审 |
 
 ## 已执行验证
 
 - OpenWrt 25.12.5 aarch64 SDK 构建成功，成功哨兵为
   `__P1B_BROKER_BUILD_OK__`；最新隔离构建端口为 4526。
+- 最新集成候选构建同时产出 `modem-smsd-0.1.0-r18.apk` 和 broker r1，
+  成功哨兵为 `__P1C_INTEGRATION_BUILD_OK__`；r18 本地 SHA-256 为
+  `6eb39734513f5f6bfa826c62321fd8af3ce178517da634c07186f79c74087f90`。
 - 最新 broker APK 本地 SHA-256：
   `47ca950ca45bd6a0001e099e8becb77beddccc203a6ede7a1554f5e169bdf437`。
 - `tests/broker-package.js`：通过；检查默认禁用、依赖、独占 TTY、lease watchdog、
@@ -39,6 +43,8 @@ ZX7981PD、未部署。审计在本轮后续状态机修复之前完成，因此
 - 既有 `frontend-errors.js`、`frontend-storage.js`、`static.ps1`：通过。
 - 测试仍是 host-side 模型/帧解析测试，尚未驱动交叉编译后的 C broker，也尚未做
   fake PTY + ubus 端到端测试。
+- 集成构建发现 SDK 只有 target-architecture `ucode`，x86 构建主机无法直接执行
+  `tests/backend-smsat.uc`；因此该 ucode 测试被明确标记 skipped，不能算通过。
 
 ## 尚未证实的事项
 

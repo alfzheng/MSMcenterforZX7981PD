@@ -87,3 +87,15 @@ current proprietary `lteat` implementation already satisfies the contract.
 No target owner switch is authorized by this design document. The current r17
 diagnostic package remains the deployed fail-closed baseline until the broker
 passes the independent audit and the complete target gate.
+
+## Current integration checkpoint — 2026-08-06
+
+The candidate `backend-smsat.uc` adapter now translates the private
+`scan_begin/scan_read/scan_end` contract into the existing `modem-smsd` read
+interface. It keeps `send_available=false` and device deletion disabled. The
+default UCI backend remains `lteat`; selecting `smsat` is not a deployment
+approval and does not provide the `lteat` data-plane compatibility surface.
+The candidate `modem-smsd` package is r18 and was cross-compiled together with
+the broker. The SDK environment has only a target-architecture `ucode`
+binary, so the adapter test source was not executed on the x86 build host;
+target-side ucode execution remains a gate.

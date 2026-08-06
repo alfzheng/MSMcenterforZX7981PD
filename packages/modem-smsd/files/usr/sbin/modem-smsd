@@ -57,6 +57,10 @@ const backend_options = {
 const backend = backend_module.create(bus, backend_options);
 const send_backend = backend_module.create(send_bus, backend_options);
 
+function send_backend_available() {
+	return send_backend.send_available ? send_backend.send_available() : send_backend.available();
+}
+
 let cache = { messages: [], by_id: {}, updated_at: 0, loaded: false, loading: false, errors: [], storage: {}, storage_records: {} };
 let operations = [];
 let operation_busy = false;
@@ -892,6 +896,7 @@ const methods = {
 			capabilities.transport = capabilities.transport ?? backend.transport;
 			capabilities.backend_available = backend.available();
 			capabilities.sms_supported = capabilities.backend_available;
+			capabilities.send_supported = send_backend_available();
 			capabilities.sms_error_code = capabilities.backend_available ? null : 'SMS_UNSUPPORTED';
 			capabilities.storages = config.storage_order;
 			capabilities.cache_seconds = config.cache_seconds;
@@ -1026,7 +1031,7 @@ const methods = {
 		args: { to: '', text: '', request_id: '', ubus_rpc_session: '' },
 		call: function(req) {
 			let args = req.args;
-			if (!send_backend.available()) {
+			if (!send_backend_available()) {
 				req.reply(error_result('SMS_UNSUPPORTED'));
 				return;
 			}
