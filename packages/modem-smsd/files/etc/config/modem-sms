@@ -26,3 +26,12 @@ config backend 'lteat'
 	# Quectel get_sms may return a changing partial SM snapshot; retry up to twenty reads.
 	option read_retry_max '20'
 	option send_call_timeout_seconds '120'
+
+# Candidate only. The broker package is disabled by default and this backend
+# must not be selected until the lteat data-plane compatibility gate passes.
+config backend 'smsat'
+	option object 'modem.smsat'
+	option default_storage 'SM'
+	option storage_order 'SM ME'
+	option read_call_timeout_seconds '300'
+	option send_call_timeout_seconds '30'

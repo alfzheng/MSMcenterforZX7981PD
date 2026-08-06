@@ -14,7 +14,18 @@ $requiredFiles = @(
     'packages/modem-smsd/files/usr/bin/modem-smsctl',
     'packages/modem-smsd/files/usr/share/modem-sms/core.uc',
     'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc',
+    'packages/modem-smsd/files/usr/share/modem-sms/backend-smsat.uc',
+    'packages/modem-sms-broker/Makefile',
+    'packages/modem-sms-broker/src/modem-sms-broker.c',
+    'packages/modem-sms-broker/files/etc/config/modem-sms-broker',
+    'packages/modem-sms-broker/files/etc/init.d/modem-sms-broker',
     'tests/backend.uc',
+    'tests/backend-smsat.uc',
+    'tests/broker-package.js',
+    'tests/broker-serial.js',
+    'tests/broker-snapshot.js',
+    'tests/broker-fake-pty.c',
+    'tests/broker-target-integration.sh',
     'packages/luci-app-modem-sms/Makefile',
     'packages/luci-app-modem-sms/htdocs/luci-static/resources/view/modem/sms.js',
     'packages/modem-sms-archived/Makefile',
@@ -70,10 +81,13 @@ foreach ($source in $ucodeSources) {
 }
 
 $backend = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/share/modem-sms/backend-lteat.uc') -Raw -Encoding UTF8
+$smsatBackend = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/share/modem-sms/backend-smsat.uc') -Raw -Encoding UTF8
 $daemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/sbin/modem-smsd') -Raw -Encoding UTF8
 $cli = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/bin/modem-smsctl') -Raw -Encoding UTF8
 $backendConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/etc/config/modem-sms') -Raw -Encoding UTF8
 $daemonMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/Makefile') -Raw -Encoding UTF8
+$brokerMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-broker/Makefile') -Raw -Encoding UTF8
+$brokerConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-broker/files/etc/config/modem-sms-broker') -Raw -Encoding UTF8
 $luciMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/luci-app-modem-sms/Makefile') -Raw -Encoding UTF8
 if (-not $backend.Contains("options.switch_argument ?? 'cmd'")) {
     throw 'lteat adapter must default to the target contract argument cmd'
@@ -104,13 +118,35 @@ if (-not $backend.Contains('features: { read: true, send: true, delete: false'))
 }
 if (-not $backend.Contains('function contract_available(required_methods, require_signature)') -or
     -not $backend.Contains('function delete_available()') -or
-    -not $backend.Contains('return contract_available([switch_method, list_method, send_method], false)') -or
+    -not $backend.Contains('return contract_available([switch_method, list_method], false)') -or
+    -not $backend.Contains('function send_available()') -or
+    -not $backend.Contains('return contract_available([switch_method, send_method], false)') -or
     -not $backend.Contains('return contract_available([switch_method, list_method, send_method, delete_method], true)')) {
     throw 'backend read/send availability must be independent from delete method presence'
+}
+if (-not $smsatBackend.Contains('scan_begin') -or
+    -not $smsatBackend.Contains('scan_read') -or
+    -not $smsatBackend.Contains('scan_end') -or
+    -not $smsatBackend.Contains('send_available: function() { return false; }') -or
+    -not $smsatBackend.Contains('BROKER_SCAN_CONTENT_CHANGED') -or
+    -not $smsatBackend.Contains('BROKER_SCAN_RELEASE_UNCONFIRMED') -or
+    -not $smsatBackend.Contains('function capabilities_ok(reply)') -or
+    -not $smsatBackend.Contains("contract_version: 'smsat-v1'") -or
+    -not $smsatBackend.Contains('restore_storage: function(storage, callback) { callback(0); }') -or
+    -not $daemonMakefile.Contains('$(INSTALL_DATA) ./files/usr/share/modem-sms/backend-smsat.uc')) {
+    throw 'smsat adapter must use the private two-pass broker contract and keep send disabled'
+}
+if (-not $backendConfig.Contains("config backend 'smsat'") -or
+    -not $backendConfig.Contains("option object 'modem.smsat'")) {
+    throw 'smsat candidate backend configuration is missing'
 }
 if (-not $daemon.Contains("capabilities.features.delete = false") -or
     -not $daemon.Contains("error_result('DEVICE_DELETE_DISABLED')")) {
     throw 'r5+ daemon must advertise and enforce the device-delete safety gate'
+}
+if (-not $daemon.Contains('function send_backend_available()') -or
+    -not $daemon.Contains('capabilities.send_supported = send_backend_available()')) {
+    throw 'daemon must keep read availability separate from broker send availability'
 }
 if (-not $daemon.Contains('archive_capabilities:') -or
     -not $daemon.Contains('messages_page:') -or
@@ -219,8 +255,13 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=17') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
-	throw 'modem-smsd must use r17 and LuCI must use r8 for storage diagnostics'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=20') -or
+    -not $brokerMakefile.Contains('PKG_RELEASE:=8') -or
+    -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
+	throw 'modem-smsd must use r20, broker must use r8, and LuCI must use r8 for storage diagnostics'
+}
+if (-not $brokerConfig.Contains("option empty_cms_error_code ''")) {
+    throw 'broker empty-slot classifier must remain disabled by default'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'
