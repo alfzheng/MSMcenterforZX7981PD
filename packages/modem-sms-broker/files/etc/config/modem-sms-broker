@@ -1,0 +1,8 @@
+config broker 'main'
+	option enabled '0'
+	option object 'modem.smsat'
+	option tty '/dev/ttyUSB2'
+	option baud '115200'
+	option read_timeout_ms '2000'
+	option lease_timeout_ms '300000'
+	option response_limit '32768'
