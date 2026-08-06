@@ -91,12 +91,15 @@ The source remediation in this checkpoint covers all of those findings:
 5. Each read scan now performs a broker capabilities handshake, requiring the
    expected schema, backend/transport identity, exclusive-owner flag, indexed-read
    flag, disabled device deletion, and a numeric owner nonce before `scan_begin`.
+   The broker now reports `ok=true` while idle and exposes `serial_ready` separately,
+   so a normal pre-scan capabilities probe does not falsely fail before the TTY is
+   opened.
 
 Local JS/static gates and the isolated OpenWrt build passed. The latest candidate
 artifacts are `modem-smsd-0.1.0-r20.apk` (SHA-256
 `EF4FE71D63B0E693298B27B6330BBD4ACA8EF07C35E1AA6480AF25D4391EAFA1`) and
 `modem-sms-broker-0.1.0-r1.apk` (SHA-256
-`47CA950CA45BD6A0001E099E8BECB77BEDDCCC203A6EDE7A1554F5E169BDF437`).
+`8877679FF779F7000A6435F4164B7465831725E4E2872765C1534A252290DD5C`).
 The target-only `ucode` runtime was not available on the x86 build host, so
 `tests/backend-smsat.uc` remains explicitly skipped rather than counted as passed.
 The target owner switch, ACL validation, fake-PTY/ubus end-to-end test, and any

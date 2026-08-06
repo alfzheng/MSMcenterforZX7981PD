@@ -498,11 +498,10 @@ static int method_capabilities(struct ubus_context *ctx, struct ubus_object *obj
 	blobmsg_add_string(&g_blob, "backend_id", "smsat-v1");
 	blobmsg_add_string(&g_blob, "transport", "exclusive-tty");
 	blobmsg_add_u8(&g_blob, "serial_owner", 1);
+	blobmsg_add_u8(&g_blob, "serial_ready", g_state.fd >= 0);
 	blobmsg_add_u64(&g_blob, "owner_nonce", g_state.owner_nonce);
 	blobmsg_add_u8(&g_blob, "indexed_read", 1);
 	blobmsg_add_u8(&g_blob, "device_delete", 0);
-	if (g_state.fd < 0)
-		blobmsg_add_string(&g_blob, "error_code", "BROKER_TTY_UNAVAILABLE");
 	return ubus_send_reply(ctx, request, g_blob.head);
 }
 

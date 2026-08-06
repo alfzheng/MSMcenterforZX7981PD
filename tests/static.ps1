@@ -77,6 +77,7 @@ $daemon = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/fi
 $cli = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/usr/bin/modem-smsctl') -Raw -Encoding UTF8
 $backendConfig = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/files/etc/config/modem-sms') -Raw -Encoding UTF8
 $daemonMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-smsd/Makefile') -Raw -Encoding UTF8
+$brokerMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/modem-sms-broker/Makefile') -Raw -Encoding UTF8
 $luciMakefile = Get-Content -LiteralPath (Join-Path $workspace 'packages/luci-app-modem-sms/Makefile') -Raw -Encoding UTF8
 if (-not $backend.Contains("options.switch_argument ?? 'cmd'")) {
     throw 'lteat adapter must default to the target contract argument cmd'
@@ -244,8 +245,10 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=20') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
-	throw 'modem-smsd must use r20 and LuCI must use r8 for storage diagnostics'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=20') -or
+    -not $brokerMakefile.Contains('PKG_RELEASE:=2') -or
+    -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
+	throw 'modem-smsd must use r20, broker must use r2, and LuCI must use r8 for storage diagnostics'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'

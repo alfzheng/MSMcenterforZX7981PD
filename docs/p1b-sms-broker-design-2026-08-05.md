@@ -104,5 +104,7 @@ The 2026-08-06 independent P1C audit findings were addressed in source: the
 adapter is included in the package, scan tokens remain numeric for the int64
 ubus schema, all scan termination paths confirm release or fail closed, and
 generation/phase/PDU/status/empty invariants and a broker capabilities/owner
-handshake are checked before scanning. This does not relax
+handshake are checked before scanning. The broker reports service contract health
+separately from idle `serial_ready` state, so the pre-scan handshake does not require
+an already-open TTY. This does not relax
 the target-side owner, ACL, fake-PTY, or lteat data-plane gates.

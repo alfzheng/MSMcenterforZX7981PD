@@ -17,6 +17,7 @@ assert.match(source, /BROKER_EMPTY_UNCERTAIN/, 'generic modem errors must fail c
 assert.match(source, /BROKER_PDU_LENGTH_MISMATCH/, 'PDU length must be checked');
 assert.match(source, /uloop_timeout_set\(&g_state\.lease_timer/, 'scan lease must expire');
 assert.match(source, /scan_begin|scan_read|scan_end/, 'versioned scan methods must exist');
+assert.match(source, /"serial_ready"/, 'capabilities must distinguish service health from an idle serial');
 assert.doesNotMatch(source, /UBUS_METHOD(?:_NOARG)?\("(?:send_sms|delete_sms)"/, 'send/delete remain gated');
 assert.match(makefile, /\+libubus \+libubox \+libuci/, 'runtime dependencies must be explicit');
 
