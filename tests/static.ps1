@@ -119,6 +119,8 @@ if (-not $smsatBackend.Contains('scan_begin') -or
     -not $smsatBackend.Contains('send_available: function() { return false; }') -or
     -not $smsatBackend.Contains('BROKER_SCAN_CONTENT_CHANGED') -or
     -not $smsatBackend.Contains('BROKER_SCAN_RELEASE_UNCONFIRMED') -or
+    -not $smsatBackend.Contains('function capabilities_ok(reply)') -or
+    -not $smsatBackend.Contains("contract_version: 'smsat-v1'") -or
     -not $smsatBackend.Contains('restore_storage: function(storage, callback) { callback(0); }') -or
     -not $daemonMakefile.Contains('$(INSTALL_DATA) ./files/usr/share/modem-sms/backend-smsat.uc')) {
     throw 'smsat adapter must use the private two-pass broker contract and keep send disabled'
@@ -242,8 +244,8 @@ if ($daemon.Contains('backend.delete_record(')) {
 if ($cli.Contains("command == 'delete'")) {
     throw 'r5+ SSH CLI must not expose a device-delete command'
 }
-if (-not $daemonMakefile.Contains('PKG_RELEASE:=19') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
-	throw 'modem-smsd must use r19 and LuCI must use r8 for storage diagnostics'
+if (-not $daemonMakefile.Contains('PKG_RELEASE:=20') -or -not $luciMakefile.Contains('PKG_RELEASE:=8')) {
+	throw 'modem-smsd must use r20 and LuCI must use r8 for storage diagnostics'
 }
 if (-not $archiveMakefile.Contains('PKG_RELEASE:=12')) {
     throw 'modem-sms-archived must use PKG_RELEASE:=12'

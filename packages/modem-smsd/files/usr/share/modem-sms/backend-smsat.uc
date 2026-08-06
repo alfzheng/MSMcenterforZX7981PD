@@ -101,6 +101,16 @@ function factory(connection, options) {
 			`${reply.error_code}` : fallback;
 	}
 
+	function capabilities_ok(reply) {
+		return schema_ok(reply) && flag(reply.ok) &&
+			`${reply.backend_id ?? ''}` === 'smsat-v1' &&
+			`${reply.transport ?? ''}` === 'exclusive-tty' &&
+			flag(reply.serial_owner) === true &&
+			flag(reply.indexed_read) === true &&
+			flag(reply.device_delete) === false &&
+			integer(reply.owner_nonce) != null && reply.owner_nonce > 0;
+	}
+
 	function list_storage(storage, callback) {
 		if (!match(storage, /^(SM|ME)$/)) {
 			callback(fail('INVALID_STORAGE'));
@@ -119,6 +129,7 @@ function factory(connection, options) {
 			callback(result);
 		}
 
+		function begin_scan() {
 		invoke('scan_begin', { storage: storage }, function(begin_code, begin) {
 			let begin_scan_id = type(begin) == 'object' && scan_id_ok(begin.scan_id) ?
 				begin.scan_id : null;
@@ -273,6 +284,16 @@ function factory(connection, options) {
 			}
 			read_next();
 		});
+		}
+
+		invoke('capabilities', {}, function(capability_code, capabilities) {
+			if (capability_code || !capabilities_ok(capabilities)) {
+				finish(fail(error_code(capabilities, 'BROKER_CAPABILITIES_INVALID'), null,
+					{ backend_status: capability_code }));
+				return;
+			}
+			begin_scan();
+		});
 	}
 
 	return {
@@ -289,8 +310,12 @@ function factory(connection, options) {
 		restore_storage: function(storage, callback) { callback(0); },
 		capabilities: function() {
 			return {
+				schema_version: 1,
+				contract_version: 'smsat-v1',
 				backend_id: 'smsat-v1',
 				transport: 'private-ubus-broker',
+				owner: { object: object_name, exclusive_tty: true },
+				health: 'broker-capabilities-required',
 				features: { read: true, send: false, delete: false, indexed_read: true,
 					concat: false, read_may_mark_read: true },
 				read_may_mark_read: true,

@@ -78,7 +78,7 @@ were not checked, empty/PDU/status semantics were too permissive, and the adapte
 
 The source remediation in this checkpoint covers all of those findings:
 
-1. `backend-smsat.uc` is now installed by `modem-smsd` r19.
+1. `backend-smsat.uc` is now installed by `modem-smsd` r20.
 2. Every scan failure attempts `scan_end`; a failed or malformed release returns
    `BROKER_SCAN_RELEASE_UNCONFIRMED` instead of hiding the release result.
 3. The adapter preserves numeric scan tokens, checks schema version and generation,
@@ -88,10 +88,13 @@ The source remediation in this checkpoint covers all of those findings:
 4. Broker-backed `restore_storage()` is an explicit no-op because `scan_end` already
    performs the CPMS recheck and serial release. The legacy `lteat` adapter now
    exposes an explicit `send_available()` capability separate from read availability.
+5. Each read scan now performs a broker capabilities handshake, requiring the
+   expected schema, backend/transport identity, exclusive-owner flag, indexed-read
+   flag, disabled device deletion, and a numeric owner nonce before `scan_begin`.
 
 Local JS/static gates and the isolated OpenWrt build passed. The latest candidate
-artifacts are `modem-smsd-0.1.0-r19.apk` (SHA-256
-`FDA3640F991210602508533167569AE79E7A2EDE37B133B3B3097A4B374BD955`) and
+artifacts are `modem-smsd-0.1.0-r20.apk` (SHA-256
+`EF4FE71D63B0E693298B27B6330BBD4ACA8EF07C35E1AA6480AF25D4391EAFA1`) and
 `modem-sms-broker-0.1.0-r1.apk` (SHA-256
 `47CA950CA45BD6A0001E099E8BECB77BEDDCCC203A6EDE7A1554F5E169BDF437`).
 The target-only `ucode` runtime was not available on the x86 build host, so

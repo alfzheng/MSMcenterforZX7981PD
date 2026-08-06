@@ -95,7 +95,7 @@ The candidate `backend-smsat.uc` adapter now translates the private
 interface. It keeps `send_available=false` and device deletion disabled. The
 default UCI backend remains `lteat`; selecting `smsat` is not a deployment
 approval and does not provide the `lteat` data-plane compatibility surface.
-The candidate `modem-smsd` package is r19 and was cross-compiled together with
+The candidate `modem-smsd` package is r20 and was cross-compiled together with
 the broker. The SDK environment has only a target-architecture `ucode`
 binary, so the adapter test source was not executed on the x86 build host;
 target-side ucode execution remains a gate.
@@ -103,5 +103,6 @@ target-side ucode execution remains a gate.
 The 2026-08-06 independent P1C audit findings were addressed in source: the
 adapter is included in the package, scan tokens remain numeric for the int64
 ubus schema, all scan termination paths confirm release or fail closed, and
-generation/phase/PDU/status/empty invariants are checked. This does not relax
+generation/phase/PDU/status/empty invariants and a broker capabilities/owner
+handshake are checked before scanning. This does not relax
 the target-side owner, ACL, fake-PTY, or lteat data-plane gates.

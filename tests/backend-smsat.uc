@@ -15,7 +15,11 @@ let connection = {
 	},
 	defer: function(object, method, args, callback) {
 		equal(object, 'modem.smsat', 'broker object');
-		if (method == 'scan_begin')
+		if (method == 'capabilities')
+			callback(0, { schema_version: 1, ok: true, backend_id: 'smsat-v1',
+				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 11,
+				indexed_read: true, device_delete: false });
+		else if (method == 'scan_begin')
 			callback(0, { schema_version: 1, ok: true, scan_id: 7, generation: 4,
 				storage: 'SM', used: 1, total: 2 });
 		else if (method == 'scan_read') {
@@ -57,7 +61,11 @@ let changed_reads = 0;
 let changed_connection = {
 	list: connection.list,
 	defer: function(object, method, args, callback) {
-		if (method == 'scan_begin')
+		if (method == 'capabilities')
+			callback(0, { schema_version: 1, ok: true, backend_id: 'smsat-v1',
+				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 12,
+				indexed_read: true, device_delete: false });
+		else if (method == 'scan_begin')
 			callback(0, { schema_version: 1, ok: true, scan_id: 8, generation: 5,
 				storage: 'SM', used: 1, total: 1 });
 		else if (method == 'scan_read') {
@@ -84,7 +92,11 @@ let release_connection = {
 	list: connection.list,
 	defer: function(object, method, args, callback) {
 		push(release_calls, method);
-		if (method == 'scan_begin')
+		if (method == 'capabilities')
+			callback(0, { schema_version: 1, ok: true, backend_id: 'smsat-v1',
+				transport: 'exclusive-tty', serial_owner: true, owner_nonce: 13,
+				indexed_read: true, device_delete: false });
+		else if (method == 'scan_begin')
 			callback(0, { schema_version: 1, ok: true, scan_id: 9, generation: 6,
 				storage: 'SM', used: 1, total: 1 });
 		else if (method == 'scan_read')
@@ -101,6 +113,6 @@ backend_module.create(release_connection, {}).list_storage('SM', function(reply)
 equal(release_result.ok, false, 'release failure must fail closed');
 equal(release_result.error_code, 'BROKER_SCAN_RELEASE_UNCONFIRMED',
 	'release failure is explicit');
-equal(release_calls[2], 'scan_end', 'read failure still attempts scan_end');
+equal(release_calls[3], 'scan_end', 'read failure still attempts scan_end');
 
 print('backend-smsat.uc: broker adapter contract tests passed\n');
